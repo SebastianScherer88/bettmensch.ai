@@ -1,0 +1,3 @@
+argo-workflows
+pydantic
+hera

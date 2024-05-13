@@ -1,0 +1,14 @@
+|
+  apiVersion: argoproj.io/v1alpha1
+  kind: Workflow
+  metadata:
+    generateName: set-a-coin-from-template-ref-
+    name: set-a-coin-from-template-ref-t4nc6
+    namespace: argo
+  spec:
+    arguments:
+      parameters:
+      - name: coin
+        value: new coin
+    workflowTemplateRef:
+      name: set-a-coin-rl4sj

@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: flip-a-coin-
+  namespace: argo
+spec:
+  entrypoint: Coin-flip
+  templates:
+  - dag:
+      tasks:
+      - name: Flip-a-coin
+        template: flip-coin
+      - depends: Flip-a-coin
+        name: Heads
+        template: heads
+        when: '{{tasks.Flip-a-coin.outputs.result}} == heads'
+      - depends: Flip-a-coin
+        name: Tails
+        template: tails
+        when: '{{tasks.Flip-a-coin.outputs.result}} == tails'
+    name: Coin-flip
+  - name: flip-coin
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        import random
+        res = 'heads' if random.randint(0, 1) == 0 else 'tails'
+        print(res)
+  - name: heads
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        print('it was heads')
+  - name: tails
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        print('it was tail')

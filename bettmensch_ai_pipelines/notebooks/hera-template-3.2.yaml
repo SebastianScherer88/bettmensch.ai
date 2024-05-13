@@ -1,0 +1,123 @@
+|
+  apiVersion: argoproj.io/v1alpha1
+  kind: WorkflowTemplate
+  metadata:
+    generateName: 2ab-minus-bcd-
+    namespace: argo
+  spec:
+    arguments:
+      parameters:
+      - name: a
+      - name: b
+      - name: c
+      - name: d
+    entrypoint: 2ab-minus-bcd
+    podMetadata:
+      annotations:
+        annotation_key_b: annotation_value_b
+      labels:
+        label_key_b: label_value_b
+    templates:
+    - dag:
+        tasks:
+        - arguments:
+            parameters:
+            - name: a
+              value: '2'
+            - name: b
+              value: '{{workflow.parameters.a}}'
+          name: multiply-2-and-a
+          template: multiply
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{workflow.parameters.b}}'
+            - name: b
+              value: '{{workflow.parameters.c}}'
+          name: multiply-b-and-c
+          template: multiply
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{tasks.multiply-2-and-a.outputs.parameters.product}}'
+            - name: b
+              value: '{{workflow.parameters.b}}'
+          depends: multiply-2-and-a
+          name: multiply-2a-and-b
+          template: multiply
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{tasks.multiply-b-and-c.outputs.parameters.product}}'
+            - name: b
+              value: '{{workflow.parameters.d}}'
+          depends: multiply-b-and-c
+          name: multiply-bc-and-d
+          template: multiply
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{tasks.multiply-2a-and-b.outputs.parameters.product}}'
+            - name: b
+              value: '{{tasks.multiply-bc-and-d.outputs.parameters.product}}'
+          depends: multiply-2a-and-b && multiply-bc-and-d
+          name: subtract-2ab-and-bcd
+          template: subtract
+      name: 2ab-minus-bcd
+    - inputs:
+        parameters:
+        - name: a
+        - name: b
+      name: multiply
+      outputs:
+        parameters:
+        - name: product
+          valueFrom:
+            path: ./product.txt
+      script:
+        command:
+        - python
+        image: python:3.8
+        source: |-
+          import os
+          import sys
+          sys.path.append(os.getcwd())
+          import json
+          try: a = json.loads(r'''{{inputs.parameters.a}}''')
+          except: a = r'''{{inputs.parameters.a}}'''
+          try: b = json.loads(r'''{{inputs.parameters.b}}''')
+          except: b = r'''{{inputs.parameters.b}}'''
+
+          with open('./product.txt', 'w') as output:
+              output.write(str(a * b))
+    - inputs:
+        parameters:
+        - name: a
+        - name: b
+      name: subtract
+      outputs:
+        parameters:
+        - name: difference
+          valueFrom:
+            path: ./difference.txt
+      script:
+        command:
+        - python
+        image: python:3.8
+        source: |-
+          import os
+          import sys
+          sys.path.append(os.getcwd())
+          import json
+          try: a = json.loads(r'''{{inputs.parameters.a}}''')
+          except: a = r'''{{inputs.parameters.a}}'''
+          try: b = json.loads(r'''{{inputs.parameters.b}}''')
+          except: b = r'''{{inputs.parameters.b}}'''
+
+          with open('./difference.txt', 'w') as output:
+              output.write(str(a - b))
+    workflowMetadata:
+      annotations:
+        annotation_key_a: annotation_value_a
+      labels:
+        label_key_a: label_value_a

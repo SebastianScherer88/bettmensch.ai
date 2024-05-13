@@ -1,0 +1,5 @@
+streamlit
+streamlit-option-menu
+st-pages
+streamlit-extras
+opencv-python

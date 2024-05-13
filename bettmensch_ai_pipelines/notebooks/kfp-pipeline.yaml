@@ -1,0 +1,55 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: coin-flip-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.2.0, pipelines.kubeflow.org/pipeline_compilation_time: '2024-04-30T23:06:24.400587',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Flip a coin", "name":
+      "Coin-flip"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.2.0}
+spec:
+  entrypoint: coin-flip
+  templates:
+  - name: coin-flip
+    dag:
+      tasks:
+      - name: condition-1
+        template: condition-1
+        when: '"{{tasks.flip-a-coin.outputs.parameters.flip-a-coin-output}}" == "heads"'
+        dependencies: [flip-a-coin]
+      - name: condition-2
+        template: condition-2
+        when: '"{{tasks.flip-a-coin.outputs.parameters.flip-a-coin-output}}" == "tails"'
+        dependencies: [flip-a-coin]
+      - {name: flip-a-coin, template: flip-a-coin}
+  - name: condition-1
+    dag:
+      tasks:
+      - {name: heads, template: heads}
+  - name: condition-2
+    dag:
+      tasks:
+      - {name: tails, template: tails}
+  - name: flip-a-coin
+    container:
+      command:
+      - python
+      - -c
+      - "\nimport random\nres = \"heads\" if random.randint(0, 1) == 0 else \"tails\"\
+        \nwith open('/output', 'w') as f:\n    f.write(res)        \n        "
+      image: python:alpine3.6
+    outputs:
+      parameters:
+      - name: flip-a-coin-output
+        valueFrom: {path: /output}
+      artifacts:
+      - {name: flip-a-coin-output, path: /output}
+  - name: heads
+    container:
+      command: [sh, -c, echo "it was heads"]
+      image: alpine:3.6
+  - name: tails
+    container:
+      command: [sh, -c, echo "it was tails"]
+      image: alpine:3.6
+  arguments:
+    parameters: []

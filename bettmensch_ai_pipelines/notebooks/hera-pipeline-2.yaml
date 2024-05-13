@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: set-a-coin-
+  namespace: argo
+spec:
+  arguments:
+    parameters:
+    - name: coin
+      value: heads
+  entrypoint: Coin-set
+  templates:
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: coin
+            value: '{{workflow.parameters.coin}}'
+        name: Set-a-coin
+        template: set-coin
+      - arguments:
+          parameters:
+          - name: coin
+            value: '{{tasks.Set-a-coin.outputs.parameters.coin}}'
+        depends: Set-a-coin
+        name: Show-a-coin
+        template: show-coin
+    name: Coin-set
+  - inputs:
+      parameters:
+      - name: coin
+    name: set-coin
+    outputs:
+      parameters:
+      - name: coin
+        valueFrom:
+          path: ./coin_output.txt
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        import json
+        try: coin = json.loads(r'''{{inputs.parameters.coin}}''')
+        except: coin = r'''{{inputs.parameters.coin}}'''
+
+        with open('./coin_output.txt', 'w') as output:
+            output.write(coin)
+  - inputs:
+      parameters:
+      - name: coin
+    name: show-coin
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        import json
+        try: coin = json.loads(r'''{{inputs.parameters.coin}}''')
+        except: coin = r'''{{inputs.parameters.coin}}'''
+
+        print(f'it was {coin}')

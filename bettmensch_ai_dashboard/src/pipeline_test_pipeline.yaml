@@ -1,0 +1,214 @@
+dag:
+- depends: null
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source: null
+      value: '2'
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: a
+        output_type: parameters
+      value: null
+      value_from: null
+  name: multiply-2-and-a
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  template: multiply
+- depends: null
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: pipeline
+        output_name: b
+        output_type: parameters
+      value: null
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: c
+        output_type: parameters
+      value: null
+      value_from: null
+  name: multiply-b-and-c
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  template: multiply
+- depends:
+  - multiply-2-and-a
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-2-and-a
+        output_name: product
+        output_type: parameters
+      value: null
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: b
+        output_type: parameters
+      value: null
+      value_from: null
+  name: multiply-2a-and-b
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  template: multiply
+- depends:
+  - multiply-b-and-c
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-b-and-c
+        output_name: product
+        output_type: parameters
+      value: null
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: d
+        output_type: parameters
+      value: null
+      value_from: null
+  name: multiply-bc-and-d
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  template: multiply
+- depends:
+  - multiply-2a-and-b
+  - multiply-bc-and-d
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-2a-and-b
+        output_name: product
+        output_type: parameters
+      value: null
+      value_from: null
+    - name: b
+      source:
+        node: multiply-bc-and-d
+        output_name: product
+        output_type: parameters
+      value: null
+      value_from: null
+  name: subtract-2ab-and-bcd
+  outputs:
+    artifacts: null
+    parameters:
+    - name: difference
+      value_from:
+        path: ./difference.txt
+  template: subtract
+inputs:
+- name: a
+  value: null
+- name: b
+  value: null
+- name: c
+  value: null
+- name: d
+  value: null
+metadata:
+  component:
+    annotations:
+      annotation_key_b: annotation_value_b
+    labels:
+      label_key_b: label_value_b
+  flow:
+    annotations:
+      annotation_key_a: annotation_value_a
+    labels:
+      label_key_a: label_value_a
+  pipeline:
+    creation_timestamp: 2024-05-03 11:18:06+00:00
+    labels:
+      workflows.argoproj.io/creator: system-serviceaccount-argo-argo-server
+    name: 2ab-minus-bcd-7vt8p
+    namespace: argo
+    uid: 2a7f3780-d3bd-40cd-ac78-64a451f2e771
+templates:
+- inputs:
+    artifacts: null
+    parameters:
+    - name: a
+      value: null
+      value_from: null
+    - name: b
+      value: null
+      value_from: null
+  metadata: {}
+  name: multiply
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  script:
+    command:
+    - python
+    image: python:3.8
+    name: ''
+    resources: {}
+    source: "import os\nimport sys\nsys.path.append(os.getcwd())\nimport json\ntry:\
+      \ a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\
+      try: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\
+      \nwith open('./product.txt', 'w') as output:\n    output.write(str(a * b))"
+- inputs:
+    artifacts: null
+    parameters:
+    - name: a
+      value: null
+      value_from: null
+    - name: b
+      value: null
+      value_from: null
+  metadata: {}
+  name: subtract
+  outputs:
+    artifacts: null
+    parameters:
+    - name: difference
+      value_from:
+        path: ./difference.txt
+  script:
+    command:
+    - python
+    image: python:3.8
+    name: ''
+    resources: {}
+    source: "import os\nimport sys\nsys.path.append(os.getcwd())\nimport json\ntry:\
+      \ a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\
+      try: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\
+      \nwith open('./difference.txt', 'w') as output:\n    output.write(str(a - b))"

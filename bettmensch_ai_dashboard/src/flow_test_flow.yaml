@@ -1,0 +1,298 @@
+artifact_configuration:
+  gc_status:
+    artifact_repository:
+      archive_logs: true
+      s3:
+        access_key_secret:
+          key: accesskey
+          name: my-minio-cred
+        bucket: my-bucket
+        endpoint: minio:9000
+        insecure: true
+        secret_key_secret:
+          key: secretkey
+          name: my-minio-cred
+    config_map: artifact-repositories
+    key: default-v1
+    namespace: argo
+  repository_ref:
+    not_specified: true
+dag:
+- dependants:
+  - 2ab-minus-bcd-7vt8p-xvx2t-4258426195
+  depends: null
+  host_node_name: kind-control-plane
+  id: 2ab-minus-bcd-7vt8p-xvx2t-3849591687
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source: null
+      value: '2'
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: a
+        output_type: parameters
+      value: '1'
+      value_from: null
+  logs: null
+  name: multiply-2-and-a
+  outputs:
+    artifacts: null
+    exit_code: null
+    parameters:
+    - name: product
+      value: '2'
+      value_from:
+        path: ./product.txt
+  phase: Succeeded
+  pod_name: 2ab-minus-bcd-7vt8p-xvx2t.multiply-2-and-a
+  template: multiply
+  type: Pod
+- dependants:
+  - 2ab-minus-bcd-7vt8p-xvx2t-2008105311
+  depends: null
+  host_node_name: kind-control-plane
+  id: 2ab-minus-bcd-7vt8p-xvx2t-2932011581
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: pipeline
+        output_name: b
+        output_type: parameters
+      value: '2'
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: c
+        output_type: parameters
+      value: '3'
+      value_from: null
+  logs: null
+  name: multiply-b-and-c
+  outputs:
+    artifacts: null
+    exit_code: null
+    parameters:
+    - name: product
+      value: '6'
+      value_from:
+        path: ./product.txt
+  phase: Succeeded
+  pod_name: 2ab-minus-bcd-7vt8p-xvx2t.multiply-b-and-c
+  template: multiply
+  type: Pod
+- dependants:
+  - 2ab-minus-bcd-7vt8p-xvx2t-1383039418
+  depends:
+  - multiply-2-and-a
+  host_node_name: kind-control-plane
+  id: 2ab-minus-bcd-7vt8p-xvx2t-4258426195
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-2-and-a
+        output_name: product
+        output_type: parameters
+      value: '2'
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: b
+        output_type: parameters
+      value: '2'
+      value_from: null
+  logs: null
+  name: multiply-2a-and-b
+  outputs:
+    artifacts: null
+    exit_code: null
+    parameters:
+    - name: product
+      value: '4'
+      value_from:
+        path: ./product.txt
+  phase: Succeeded
+  pod_name: 2ab-minus-bcd-7vt8p-xvx2t.multiply-2a-and-b
+  template: multiply
+  type: Pod
+- dependants:
+  - 2ab-minus-bcd-7vt8p-xvx2t-1383039418
+  depends:
+  - multiply-b-and-c
+  host_node_name: kind-control-plane
+  id: 2ab-minus-bcd-7vt8p-xvx2t-2008105311
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-b-and-c
+        output_name: product
+        output_type: parameters
+      value: '6'
+      value_from: null
+    - name: b
+      source:
+        node: pipeline
+        output_name: d
+        output_type: parameters
+      value: '4'
+      value_from: null
+  logs: null
+  name: multiply-bc-and-d
+  outputs:
+    artifacts: null
+    exit_code: null
+    parameters:
+    - name: product
+      value: '24'
+      value_from:
+        path: ./product.txt
+  phase: Succeeded
+  pod_name: 2ab-minus-bcd-7vt8p-xvx2t.multiply-bc-and-d
+  template: multiply
+  type: Pod
+- dependants: null
+  depends:
+  - multiply-2a-and-b
+  - multiply-bc-and-d
+  host_node_name: kind-control-plane
+  id: 2ab-minus-bcd-7vt8p-xvx2t-1383039418
+  inputs:
+    artifacts: []
+    parameters:
+    - name: a
+      source:
+        node: multiply-2a-and-b
+        output_name: product
+        output_type: parameters
+      value: '4'
+      value_from: null
+    - name: b
+      source:
+        node: multiply-bc-and-d
+        output_name: product
+        output_type: parameters
+      value: '24'
+      value_from: null
+  logs: null
+  name: subtract-2ab-and-bcd
+  outputs:
+    artifacts: null
+    exit_code: null
+    parameters:
+    - name: difference
+      value: '-20'
+      value_from:
+        path: ./difference.txt
+  phase: Succeeded
+  pod_name: 2ab-minus-bcd-7vt8p-xvx2t.subtract-2ab-and-bcd
+  template: subtract
+  type: Pod
+inputs:
+- name: a
+  value: '1'
+- name: b
+  value: '2'
+- name: c
+  value: '3'
+- name: d
+  value: '4'
+metadata:
+  annotations:
+    annotation_key_a: annotation_value_a
+    workflows.argoproj.io/pod-name-format: v2
+  creation_timestamp: 2024-05-05 19:02:22+00:00
+  labels:
+    label_key_a: label_value_a
+    submit-from-ui: 'true'
+    workflows.argoproj.io/completed: 'true'
+    workflows.argoproj.io/creator: system-serviceaccount-argo-argo-server
+    workflows.argoproj.io/phase: Succeeded
+    workflows.argoproj.io/workflow-template: 2ab-minus-bcd-7vt8p
+  name: 2ab-minus-bcd-7vt8p-xvx2t
+  namespace: argo
+  uid: 53c1033a-5f22-4c74-a782-e8d3d99cc9b1
+state:
+  conditions:
+  - status: 'False'
+    type: PodRunning
+  - status: 'True'
+    type: Completed
+  finshed_at: null
+  phase: Succeeded
+  progress: 5/5
+  resources_duration:
+    cpu: 0
+    memory: 12
+  started_at: 2024-05-05 19:02:22+00:00
+  task_results_completion_status:
+    2ab-minus-bcd-7vt8p-xvx2t-1383039418: true
+    2ab-minus-bcd-7vt8p-xvx2t-2008105311: true
+    2ab-minus-bcd-7vt8p-xvx2t-2932011581: true
+    2ab-minus-bcd-7vt8p-xvx2t-3849591687: true
+    2ab-minus-bcd-7vt8p-xvx2t-4258426195: true
+templates:
+- inputs:
+    artifacts: null
+    parameters:
+    - name: a
+      value: null
+      value_from: null
+    - name: b
+      value: null
+      value_from: null
+  metadata: {}
+  name: multiply
+  outputs:
+    artifacts: null
+    parameters:
+    - name: product
+      value_from:
+        path: ./product.txt
+  script:
+    command:
+    - python
+    image: python:3.8
+    name: ''
+    resources: {}
+    source: "import os\nimport sys\nsys.path.append(os.getcwd())\nimport json\ntry:\
+      \ a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\
+      try: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\
+      \nwith open('./product.txt', 'w') as output:\n    output.write(str(a * b))"
+- inputs:
+    artifacts: null
+    parameters:
+    - name: a
+      value: null
+      value_from: null
+    - name: b
+      value: null
+      value_from: null
+  metadata: {}
+  name: subtract
+  outputs:
+    artifacts: null
+    parameters:
+    - name: difference
+      value_from:
+        path: ./difference.txt
+  script:
+    command:
+    - python
+    image: python:3.8
+    name: ''
+    resources: {}
+    source: "import os\nimport sys\nsys.path.append(os.getcwd())\nimport json\ntry:\
+      \ a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\
+      try: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\
+      \nwith open('./difference.txt', 'w') as output:\n    output.write(str(a - b))"
