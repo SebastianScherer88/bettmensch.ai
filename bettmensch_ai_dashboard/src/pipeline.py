@@ -143,7 +143,6 @@ class Pipeline(BaseModel):
         # '{{workflow.parameters.coin}}' -> 'workflow.parameters.coin'
         # '{{tasks.Set-a-coin.outputs.parameters.coin}}' -> 'tasks.Set-a-coin.outputs.parameters.coin'
         expression_content = expression.replace('{{','').replace('}}','')
-        #print(f"Trying to resolve value expression: {expression}")
         
         # 'workflow.parameters.coin' -> ['workflow','parameters','coin']
         # 'tasks.Set-a-coin.outputs.parameters.coin' -> ['tasks','Set-a-coin','outputs','parameters','coin']
@@ -346,9 +345,7 @@ class Pipeline(BaseModel):
                 G.nodes[node]["layer"] = layer
         
         node_positions_ar = nx.multipartite_layout(G, subset_key="layer")
-        
-        print(f"Original coordinates: {node_positions_ar}")
-        
+                
         node_positions = dict(
             [
                 (
@@ -357,9 +354,7 @@ class Pipeline(BaseModel):
                 ) for k,v in node_positions_ar.items()
             ]
         )
-        
-        print(f"Transformed coordinates: {node_positions}")
-            
+                    
         return node_positions
         
     def create_dag_visualization_schema(self,include_task_io: bool = True) -> DagVisualizationSchema:
