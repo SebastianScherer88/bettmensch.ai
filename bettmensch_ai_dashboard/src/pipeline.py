@@ -91,8 +91,8 @@ class NodeArtifactInput(NodeInput):
     path: Optional[str] = None
     
 class NodeInputs(BaseModel):
-    parameters: Optional[List[NodeParameterInput]] = None
-    artifacts: Optional[List[NodeArtifactInput]] = None
+    parameters: List[NodeParameterInput] = []
+    artifacts: List[NodeArtifactInput] = []
 
 # outputs
 class NodeOutput(BaseModel):
@@ -107,17 +107,17 @@ class NodeArtifactOutput(NodeOutput):
     
 
 class NodeOutputs(BaseModel):
-    parameters: Optional[List[NodeParameterOutput]] = None
-    artifacts: Optional[List[NodeArtifactOutput]] = None
+    parameters: List[NodeParameterOutput] = []
+    artifacts: List[NodeArtifactOutput] = []
 
 class PipelineNode(BaseModel):
     """A pipeline node is an ArgoWorkflow DAG type template's task.
     """
     name: str
     template: str
-    inputs: Optional[NodeInputs] = None
-    outputs: Optional[NodeOutputs] = None
-    depends: Optional[List[str]] = None
+    inputs: NodeInputs
+    outputs: NodeOutputs
+    depends: List[str] = []
 
 # --- Pipeline
 class Pipeline(BaseModel):
@@ -125,6 +125,14 @@ class Pipeline(BaseModel):
     templates: List[ScriptTemplate]
     inputs: List[PipelineInputParameter] = []
     dag: List[PipelineNode]
+    
+    def get_template(self, name: str) -> ScriptTemplate:
+        
+        return [template for template in self.templates if template.name == name][0]
+    
+    def get_dag_task(self, name: str) -> PipelineNode:
+        
+        return [task for task in self.dag if task.name == name][0]
     
     @staticmethod
     def resolve_value_expression(expression: str) -> Tuple[str, str,str]:
@@ -179,7 +187,7 @@ class Pipeline(BaseModel):
             pipeline_node = {
                 'name':task['name'],
                 'template':task['template'],
-                'depends':task["depends"].split(" && ") if task.get('depends') else None
+                'depends':task["depends"].split(" && ") if task.get('depends') else []
             }
             # the outputs can be obtained from the reference template's outputs
             pipeline_node['outputs'] = NodeOutputs(**templates_dict[pipeline_node['template']]['outputs'])
@@ -301,15 +309,10 @@ class Pipeline(BaseModel):
                         G.add_edge(upstream_node_name,task_node.name)
             else:
                 for interface_type in ['inputs','outputs']:
-                    interfaces = getattr(task_node,interface_type)
-
-                    if interfaces is None:
-                        continue
 
                     for argument_type in ['parameters','artifacts']:
-                        arguments = getattr(interfaces,argument_type,None)
-                        
-                        if arguments is None:
+                        arguments = getattr(getattr(task_node,interface_type),argument_type)
+                        if not arguments:
                             continue
                     
                         for argument in arguments:
@@ -397,15 +400,10 @@ class Pipeline(BaseModel):
             # - inputs/outputs and associated task_nodes
             else:
                 for interface_type in ['inputs','outputs']:
-                    interfaces = getattr(task_node,interface_type)
-
-                    if interfaces is None:
-                        continue
 
                     for argument_type in ['parameters','artifacts']:
-                        arguments = getattr(interfaces,argument_type,None)
-                        
-                        if arguments is None:
+                        arguments = getattr(getattr(task_node,interface_type),argument_type)
+                        if not arguments:
                             continue
                     
                         for argument in arguments:

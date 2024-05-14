@@ -24,7 +24,7 @@ def get_pipeline_meta_data(registered_pipelines) -> List[Dict]:
     
     return [registered_pipeline.metadata.to_dict() for registered_pipeline in registered_pipelines]
 
-def get_pipeline_summary_table(pipeline_meta_data) -> pd.DataFrame:
+def display_pipeline_summary_table(pipeline_meta_data) -> pd.DataFrame:
     """Generates a summary table displaying the key specs of the registered pipelines.
 
     Args:
@@ -34,9 +34,13 @@ def get_pipeline_summary_table(pipeline_meta_data) -> pd.DataFrame:
         pd.DataFrame: The pipeline summary table shown on the frontend.
     """
     
-    return pd.DataFrame(pipeline_meta_data)[['name','uid','creation_timestamp']]. \
+    st.markdown("## Registered pipelines")
+    
+    pipeline_summary_df = pd.DataFrame(pipeline_meta_data)[['name','uid','creation_timestamp']]. \
         rename(columns={'name':'Name','uid':'ID','creation_timestamp':'Created'}). \
         sort_values(by='Created',ignore_index=True)
+        
+    st.dataframe(pipeline_summary_df,hide_index=True)
         
 def get_pipeline_names(pipeline_meta_data) -> List[str]:
     """Generates a list of names of all registered pipelines.
@@ -128,21 +132,65 @@ def display_pipeline_dag(formatted_pipeline_data, selected_pipeline, display_pip
         
     return dag_visualization_schema, dag_visualization_element
 
-def display_pipeline_dag_selection(dag_visualization_element):
+def display_pipeline_dag_selection(formatted_pipeline_data, selected_pipeline, dag_visualization_element):
     """Generates a tabbed, in depth view of the user selected DAG element.
 
     Args:
         dag_visualization_element (_type_): The user selected element from the DAG visuals, as returned by `display_pipeline_dag`
     """
     
-    with st.expander("See explanation",expanded=dag_visualization_element is not None):
-        try:
-            element_type = dag_visualization_element['elementType']
-            element_id = dag_visualization_element['id']
-        except TypeError:
-            element_type = element_id = None
-        st.write(f"Currently selected {element_type} {element_id}")
+    try:
+        element_type = dag_visualization_element['elementType']
+        element_id = dag_visualization_element['id']
+        element_is_task_node = (element_type == 'node') and (len(element_id.split('_')) == 1)
         
+        if element_is_task_node:
+            st.markdown(f"### Selected task: {element_id}")
+            task_inputs_tab, task_outputs_tab, task_script_tab = st.tabs(["Inputs","Outputs","Script"])
+            pipeline = formatted_pipeline_data['object'][selected_pipeline]
+            task = pipeline.get_dag_task(element_id).model_dump()
+                
+            with task_inputs_tab:
+                task_inputs = task['inputs']['parameters'] + task['inputs']['artifacts']
+                task_inputs_df = pd.DataFrame(task_inputs)
+                task_inputs_formatted_df = pd.concat(
+                    [
+                        task_inputs_df.drop(['source'],axis=1),
+                        task_inputs_df['source'].apply(pd.Series)
+                    ],
+                    axis=1). \
+                    rename(columns={
+                            'name':'Name',
+                            'value': 'Default',
+                            'value_from': 'From',
+                            'node':'Upstream Task',
+                            'output_name':'Upstream Output',
+                            'output_type':'Upstream Type'
+                        },inplace=False
+                    )
+                st.dataframe(task_inputs_formatted_df,hide_index=True)
+                
+            with task_outputs_tab:
+                task_outputs = task['outputs']['parameters'] + task['outputs']['artifacts']
+                task_outputs_formatted_df = pd.DataFrame(task_outputs). \
+                    rename(columns={
+                            'name':'Name',
+                            'value': 'Default',
+                            'value_from': 'From',
+                        },inplace=False
+                    )
+                st.dataframe(task_outputs_formatted_df,hide_index=True)
+                
+            with task_script_tab:
+                st.json(pipeline.get_template(task['template']).model_dump()['script'])
+        else:
+            st.markdown(f"### Selected task: None")
+            st.write("Select a task by clicking on the corresponding node.")
+        
+    except TypeError as e:
+        st.markdown(f"### Selected task: None")
+        st.write("Select a task by clicking on the corresponding node.")
+                    
 def display_selected_pipeline(formatted_pipeline_data,selected_pipeline):
     """Utility to display DAG flow chart and all relevant specs in tabbed layout for a user selected pipeline.
 
@@ -151,12 +199,11 @@ def display_selected_pipeline(formatted_pipeline_data,selected_pipeline):
         selected_pipeline (_type_): _description_
     """
     
+    st.markdown(f"## Selected pipeline: {selected_pipeline}")
+    
     tab_dag, tab_metadata, tab_inputs, tab_templates = st.tabs(["DAG", "Meta data", "Inputs", "Templates",])
     
     with tab_dag:
-        st.markdown("### Spec")
-        st.json(formatted_pipeline_data['dag'][selected_pipeline],expanded=False)
-        
         st.markdown("### Diagram")
         display_pipeline_ios = st.toggle(f'Display pipeline & task I/O') 
         dag_visualization_schema, dag_visualization_element = display_pipeline_dag(
@@ -165,19 +212,26 @@ def display_selected_pipeline(formatted_pipeline_data,selected_pipeline):
             display_pipeline_ios
         )
         
-        display_pipeline_dag_selection(dag_visualization_element)
+        display_pipeline_dag_selection(formatted_pipeline_data, selected_pipeline, dag_visualization_element)
+        
+        st.markdown("### Spec")
+        st.json(formatted_pipeline_data['dag'][selected_pipeline],expanded=True)
         
     with tab_metadata:
         st.markdown("### Spec")
         st.json(formatted_pipeline_data['metadata'][selected_pipeline],expanded=True)
         
     with tab_inputs:
-        st.markdown("### Spec")
-        st.json(formatted_pipeline_data['inputs'][selected_pipeline],expanded=True)
+        pipeline_inputs = formatted_pipeline_data['inputs'][selected_pipeline]
+        pipeline_inputs_formatted_df = pd.DataFrame(pipeline_inputs). \
+            rename(columns={
+                    'name':'Name',
+                    'value': 'Default',
+                }
+            )
+        st.dataframe(pipeline_inputs_formatted_df,hide_index=True)
         
-    with tab_templates:
-        st.markdown("### Spec")
-        st.json(formatted_pipeline_data['templates'][selected_pipeline],expanded=True)
+    tab_templates.json(formatted_pipeline_data['templates'][selected_pipeline],expanded=True)
         
     return dag_visualization_schema, dag_visualization_element
     
@@ -197,19 +251,13 @@ def main():
     workflow_templates = get_workflow_templates(configuration)
     
     meta_data = get_pipeline_meta_data(workflow_templates)
-    summary_table = get_pipeline_summary_table(meta_data)
-    
-    # display summary table
-    st.markdown("## Registered pipelines")
-    summary_table
+    display_pipeline_summary_table(meta_data)
     
     names = get_pipeline_names(meta_data)
     
     formatted_pipeline_data = get_formatted_pipeline_data(workflow_templates, meta_data, names)
     
     selected_pipeline = display_pipeline_dropdown(names)
-    
-    st.markdown(f"## {selected_pipeline}")
     
     dag_visualization_schema, dag_visualization_element = display_selected_pipeline(formatted_pipeline_data,selected_pipeline)
 
