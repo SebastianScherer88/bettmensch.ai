@@ -7,6 +7,7 @@ class DagConnection(BaseModel):
     target: str # target node id
     animated: bool = False
     edge_type: str
+    focusable: bool = False
     style: Dict = {}
     
 class DagNode(BaseModel):
