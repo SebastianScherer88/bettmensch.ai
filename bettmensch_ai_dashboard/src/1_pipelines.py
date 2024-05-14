@@ -59,7 +59,7 @@ def display_pipelines_or_flows(query_resources: Callable, resource_type: str):
         rename(columns={'name':'Name','uid':'ID','creation_timestamp':'Created'}). \
         sort_values(by='Created',ignore_index=True)
     resource_meta_data_df
-    resource_uids = [resource_meta['uid'] for resource_meta in resource_meta_data]
+    resource_names = [resource_meta['name'] for resource_meta in resource_meta_data]
 
     visualize = {
         'resource':{},
@@ -69,22 +69,22 @@ def display_pipelines_or_flows(query_resources: Callable, resource_type: str):
         'templates': {},
     }
 
-    for i, (resource_id, resource) in enumerate(zip(resource_uids,resources)):
+    for i, (resource_name, resource) in enumerate(zip(resource_names,resources)):
         try:
             resource_dict = RESOURCE_MAP[resource_type].from_argo_workflow_cr(resource).model_dump()
-            visualize['resource'][resource_id] = RESOURCE_MAP[resource_type].from_argo_workflow_cr(resource)
-            visualize['metadata'][resource_id] = resource_meta_data[i]
-            visualize['inputs'][resource_id] = resource_dict['inputs']
-            visualize['dag'][resource_id] = resource_dict['dag']
-            visualize['templates'][resource_id] = resource_dict['templates']
+            visualize['resource'][resource_name] = RESOURCE_MAP[resource_type].from_argo_workflow_cr(resource)
+            visualize['metadata'][resource_name] = resource_meta_data[i]
+            visualize['inputs'][resource_name] = resource_dict['inputs']
+            visualize['dag'][resource_name] = resource_dict['dag']
+            visualize['templates'][resource_name] = resource_dict['templates']
         except Exception as e:
             print(e)
-            st.write(f"Oops! Could not collect data for {resource_type} {resource_id}: {e} Please make sure the workflow (template) was created with the bettmensch.ai SDK and was submitted successfully.")
+            st.write(f"Oops! Could not collect data for {resource_type} {resource_name}: {e} Please make sure the workflow (template) was created with the bettmensch.ai SDK and was submitted successfully.")
     
     col1, col2 = st.columns([2,1])
 
     with col1:
-        selected_pipeline = st.selectbox(f'Select a {resource_type[:-1]}:', options=resource_meta_data_df['ID'].tolist(), index=0)
+        selected_pipeline = st.selectbox(f'Select a {resource_type[:-1]}:', options=resource_meta_data_df['Name'].tolist(), index=0)
     with col2:
         st.text('')
         st.text('')
