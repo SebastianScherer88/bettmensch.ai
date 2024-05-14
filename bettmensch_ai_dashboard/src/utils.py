@@ -7,9 +7,21 @@ import argo_workflows
 from argo_workflows.api import workflow_template_service_api, workflow_service_api
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import IoArgoprojWorkflowV1alpha1WorkflowTemplate
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import IoArgoprojWorkflowV1alpha1Workflow
-from pipeline import Pipeline
-from flow import Flow
 
+PIPELINE_NODE_EMOJI_MAP = {
+            'task': '🔵',
+            'inputs':
+                {
+                    'task':'⤵️', # :arrow_heading_down:
+                    'pipeline':'⏬', # :arrow_double_down:
+                },
+            'outputs':
+                {
+                    'task': '↪️' # :arrow_right_hook:
+                }
+        }
+
+# --- Colouring
 LOGO_IMAGE = cv2.imread('C:/Users/bettmensch/Pictures/bettmensch.ai/logo_transparent.png')
 
 class CustomTheme(BaseModel):
@@ -100,7 +112,8 @@ def add_logo(sidebar: bool = False):
         background_color = colors.backgroundColor
         
     st.image(color_background(LOGO_IMAGE,hex_to_channel(background_color,"BGR")),channels="BGR")
-    
+
+# --- ArgoWorkflow server config
 def configure_argo_server():
     # get a sample pipeline from the ArgoWorkflow server
     configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")

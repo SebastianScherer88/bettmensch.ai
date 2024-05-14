@@ -6,8 +6,9 @@ from argo_workflows.api import workflow_template_service_api
 from pydantic import BaseModel
 from datetime import datetime
 import yaml
-from dag import DagConnection, DagNodePosition, DagNode, DagPanning, DagSchema
-from dag_builder.block_builder import Block
+from utils import PIPELINE_NODE_EMOJI_MAP
+from dag import DagConnection, DagNode, DagVisualizationSchema
+import networkx as nx
 
 # --- PipelineMetadata
 class WorkflowTemplateMetadata(BaseModel):
@@ -116,7 +117,7 @@ class PipelineNode(BaseModel):
     template: str
     inputs: Optional[NodeInputs] = None
     outputs: Optional[NodeOutputs] = None
-    depends: Optional[Union[str,List[str]]] = None
+    depends: Optional[List[str]] = None
 
 # --- Pipeline
 class Pipeline(BaseModel):
@@ -268,128 +269,221 @@ class Pipeline(BaseModel):
             dag=dag
         )
         
-    @staticmethod
-    def create_dag_interface_name(interface_type: Literal['input','output'],argument_name: str) -> str:
-        """Utility method to generate a baklavajs node interface name using the convention f"{interface_type[:-4].title()}:{argument_name}".
-
-        Args:
-            interface_type (Literal[&#39;input&#39;,&#39;output&#39;]): _description_
-            argument_name (str): _description_
-
-        Returns:
-            str: The name of the node interface.
-        """
-        return f"{interface_type[:-4].title()}: {argument_name}"
+    @classmethod
+    def transform_dag_visualization_node_position(cls, x_y: Tuple[float,float]) -> Tuple[float,float]:
+        
+        transformed_x_y = 350 * x_y[0], 150 * x_y[1]
+        
+        return transformed_x_y
         
     @staticmethod
-    def create_dag_interface_id(interface_type: Literal['input','output'],pipeline_node_name: str, argument_type: Literal['parameters','artifacts'],argument_name: str) -> str:
-        """Utility method to generate a baklavajs node interface id using the convention f"{interface_type}_{pipeline_node_name}_{argument_type}_{argument_name}".
-
+    def create_dag_visualization_node_positions(inputs: List[PipelineInputParameter], dag: List[PipelineNode],include_task_io: bool = True) -> Dict[str,Tuple[int,int]]:
+        """Utility to generate positional (x,y) coordinate tuples for each node of the dag that is getting visualized.
+        Uses the networkx library's utilities to arrange nodes in a dag-friendly directional manner for visualization.
+        Based on the DAG example at https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html.
         Args:
-            interface_type (Literal[&#39;inputs&#39;,&#39;output&#39;]): _description_
-            pipeline_node_name (str): _description_
-            argument_type (Literal[&#39;parameters&#39;,&#39;artifacts&#39;]): _description_
-            argument_name (str): _description_
+            dag (List[PipelineNode]): The dag object.
 
         Returns:
-            str: The id of the node interface
+            Dict[str,Tuple[int,int]]: A node uid->positional (x,y) coordinate mapping.
         """
-        return f"{interface_type}_{pipeline_node_name}_{argument_type}_{argument_name}"
         
-    def create_dag_visualization_assets(self) -> Tuple[DagSchema,List[type[Block]]]:
+        node_positions = {}
+        
+        G = nx.DiGraph()
+        
+        # add directed edges (adds nodes automatically)
+        for task_node in dag:
+            G.add_node(task_node.name)
+            
+            if not include_task_io:
+                if task_node.depends is not None:
+                    for upstream_node_name in task_node.depends:
+                        G.add_edge(upstream_node_name,task_node.name)
+            else:
+                for interface_type in ['inputs','outputs']:
+                    interfaces = getattr(task_node,interface_type)
+
+                    if interfaces is None:
+                        continue
+
+                    for argument_type in ['parameters','artifacts']:
+                        arguments = getattr(interfaces,argument_type,None)
+                        
+                        if arguments is None:
+                            continue
+                    
+                        for argument in arguments:
+                            # add the task io node
+                            task_io_node_name = f"{task_node.name}_{interface_type}_{argument_type}_{argument.name}"
+                            G.add_node(task_io_node_name)
+                            
+                            # connect that task io node with the task node
+                            if interface_type == 'inputs':
+                                upstream_node_name = task_io_node_name
+                                node_name = task_node.name
+                            else:
+                                upstream_node_name = task_node.name
+                                node_name = task_io_node_name
+                            
+                            G.add_edge(upstream_node_name,node_name)
+                            
+                            # connect the input type task io node with the upstream output type task io node - where appropriate
+                            if interface_type == 'inputs' and getattr(argument,'source',None) is not None:
+                                task_io_source = argument.source
+                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
+                                G.add_edge(upstream_node_name,task_io_node_name)
+        
+        if include_task_io:
+            for input in inputs:
+                G.add_node(f"pipeline_outputs_parameters_{input.name}")
+        
+        # add layer attribute - required for multipartite layout
+        for layer, nodes in enumerate(nx.topological_generations(G)):
+            # `multipartite_layout` expects the layer as a node attribute, so add the
+            # numeric layer value as a node attribute
+            for node in nodes:
+                G.nodes[node]["layer"] = layer
+        
+        node_positions_ar = nx.multipartite_layout(G, subset_key="layer")
+        
+        print(f"Original coordinates: {node_positions_ar}")
+        
+        node_positions = dict(
+            [
+                (
+                    k,
+                    Pipeline.transform_dag_visualization_node_position(list(v))
+                ) for k,v in node_positions_ar.items()
+            ]
+        )
+        
+        print(f"Transformed coordinates: {node_positions}")
+            
+        return node_positions
+        
+    def create_dag_visualization_schema(self,include_task_io: bool = True) -> DagVisualizationSchema:
         """Utility method to generate the assets the barfi/baklavajs rendering engine uses to display the Pipeline's dag property on the frontend.
         """
-                
+        
+        node_positions = self.create_dag_visualization_node_positions(self.inputs,self.dag,include_task_io)
         connections: List[Dict] = []
         nodes: List[Dict] = []
-        panning = DagPanning().model_dump()
-        scaling = 1
         
-        node_classes = []
-        
-        for i, pipeline_node in enumerate(self.dag):
-
-            schema_node_interfaces = []
-            node_class = Block(name=pipeline_node.name)
+        for task_node in self.dag:
             
-            for interface_type in ['inputs','outputs']:
-                interfaces = getattr(pipeline_node,interface_type)
-
-                if interfaces is None:
-                    continue
-
-                for argument_type in ['parameters','artifacts']:
-                    arguments = getattr(interfaces,argument_type,None)
-                    
-                    if arguments is None:
-                        continue
-                    
-                    for argument in arguments:
-                        interface_name = self.create_dag_interface_name(interface_type, argument.name)
-                        interface_id = self.create_dag_interface_id(interface_type,pipeline_node.name,argument_type,argument.name)
-                        interface_value = getattr(argument,"value",None)
-                        
-                        if interface_type == 'inputs':
-                            node_class.add_input(interface_name)
-                            
-                            if getattr(argument,"source",None) is not None:
-                                dag_connection_dict = {
-                                    "from":self.create_dag_interface_id("outputs",argument.source.node,argument.source.output_type,argument.source.output_name),
-                                    "to":interface_id
-                                }
-                                dag_connection_dict['id'] = f"{dag_connection_dict['from']}->{dag_connection_dict['to']}"
-                                DagConnection(**dag_connection_dict).model_validate(dag_connection_dict)
-                                connections.append(dag_connection_dict)
-                        
-                        elif interface_type == 'outputs':
-                            node_class.add_output(interface_name)
-                        
-                        schema_node_interfaces.append([interface_name, {"id":interface_id, "value":interface_value}])
-                        
-            node_classes.append(node_class)
-
-            dag_schema_node = DagNode(
-                id = pipeline_node.name,
-                interfaces=schema_node_interfaces,
-                name = pipeline_node.name,
-                type = pipeline_node.name,
-                position = DagNodePosition(
-                    x = i * 200 + 50,
-                    y = 200
+            task_node_name = task_node.name
+            
+            nodes.append(
+                DagNode(
+                    id=task_node_name,
+                    pos =node_positions[task_node_name],
+                    data = {"label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"},
                 )
             )
-            nodes.append(dag_schema_node.model_dump())
+            
+            # we only create task_node <-> task_node connections if we dont display the tasks' IO specs
+            if not include_task_io:
+                if task_node.depends is not None:
+                    for upstream_node_name in task_node.depends:
+                        connections.append(
+                            DagConnection(
+                                id=f"{upstream_node_name}->{task_node_name}",
+                                source = upstream_node_name,
+                                target = task_node_name,
+                                animated = True,
+                                edge_type = "smoothstep",
+                            )
+                        )
+            # if we include the tasks' IO specs, we need to draw 
+            # - io nodes and
+            # connections between 
+            # - inputs and outputs, and 
+            # - inputs/outputs and associated task_nodes
+            else:
+                for interface_type in ['inputs','outputs']:
+                    interfaces = getattr(task_node,interface_type)
+
+                    if interfaces is None:
+                        continue
+
+                    for argument_type in ['parameters','artifacts']:
+                        arguments = getattr(interfaces,argument_type,None)
+                        
+                        if arguments is None:
+                            continue
+                    
+                        for argument in arguments:
+                            # add the task io node
+                            task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"
+                            nodes.append(
+                                DagNode(
+                                    id=task_io_node_name,
+                                    pos = node_positions[task_io_node_name],
+                                    data = {
+                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {argument.name}",
+                                        "value":getattr(argument,'value',None)
+                                    },
+                                    style={
+                                        'backgroundColor': 'lightgrey'
+                                    },
+                                )
+                            )
+                            
+                            # connect that task io node with the task node
+                            if interface_type == 'inputs':
+                                upstream_node_name = task_io_node_name
+                                node_name = task_node_name
+                            else:
+                                upstream_node_name = task_node_name
+                                node_name = task_io_node_name
+                            
+                            connections.append(
+                                DagConnection(
+                                    id=f"{upstream_node_name}->{node_name}",
+                                    source = upstream_node_name,
+                                    target = node_name,
+                                    animated = False,
+                                    edge_type = "smoothstep",
+                                )
+                            )
+                            
+                            # connect the input type task io node with the upstream output type task io node - where appropriate
+                            if interface_type == 'inputs' and getattr(argument,'source',None) is not None:
+                                task_io_source = argument.source
+                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
+                                connections.append(
+                                    DagConnection(
+                                        id=f"{upstream_node_name}->{task_io_node_name}",
+                                        source = upstream_node_name,
+                                        target = task_io_node_name,
+                                        animated = True,
+                                        edge_type = "smoothstep",
+                                    )
+                                )
         
-        entrypoint_node_class = Block(name="pipeline")
-        [entrypoint_node_class.add_output(name=self.create_dag_interface_name("inputs",input.name)) for input in self.inputs]
-        node_classes.append(entrypoint_node_class)
-        
-        dag_schema_entrypoint_node = DagNode(
-            id = "pipeline",
-            interfaces=[
-                [
-                    self.create_dag_interface_name("inputs",input.name),
-                    {
-                        "id": self.create_dag_interface_id("outputs","pipeline","parameters",input.name),
-                        "value": input.value
-                    }
-                 ] for input in self.inputs
-            ],
-            name = f"pipeline {self.metadata.pipeline.name}",
-            type = "pipeline",
-            position = DagNodePosition(
-                x = -200 + 50,
-                y = 200
-            )
+        if include_task_io:
+            for input in self.inputs:
+                node_name = f"pipeline_outputs_parameters_{input.name}"
+                nodes.append(
+                        DagNode(
+                        id=node_name,
+                        pos=node_positions[node_name],
+                        data={
+                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {input.name}",
+                            "value": input.value
+                        },
+                        style={
+                            'backgroundColor': 'lightblue'
+                        },
+                        node_type="input"
+                    )
+                )
+            
+        return DagVisualizationSchema(
+            connections=connections,
+            nodes=nodes
         )
-        nodes.append(dag_schema_entrypoint_node.model_dump())
-        
-        return {
-            "connections": connections,
-            "nodes": nodes,
-            "panning":panning,
-            "scaling": scaling
-        }, node_classes
         
 def main_test():
     '''Unit test the Pipeline class.'''

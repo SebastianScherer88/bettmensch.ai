@@ -1,33 +1,27 @@
-from pydantic import BaseModel, Field
-from typing import Tuple, List, Optional, Any, Union, Dict
+from pydantic import BaseModel
+from typing import Tuple, List, Dict
 
 class DagConnection(BaseModel):
-    from_field: str = Field(..., alias='from',serialization_alias="from") # origin node id
     id: str # connection id
-    to: str # target node id
-    
-class DagNodePosition(BaseModel):
-    x: int
-    y: int
+    source: str # origin node id
+    target: str # target node id
+    animated: bool = False
+    edge_type: str
+    style: Dict = {}
     
 class DagNode(BaseModel):
-    customClasses: str = ''
     id: str
-    interfaces: List[List[Union[str,Dict]]] # an interface is a list/tuple (interface_name, interface_id, interface_value)
-    name: str
-    state: Dict = {}
-    twoColumn: bool = True
-    type: str
-    width: int = 150
-    options: List[List[Any]] = []
-    position: DagNodePosition
+    pos: Tuple[float,float]
+    data: Dict= {"label": None}
+    style: Dict = {
+        'backgroundColor': 'lightblue', # roughly the same color as the light blue logo
+        'fontWeight': 750,
+        'color':'white'
+    }
+    node_type: str = "default"
+    source_position: str = "bottom"
+    target_position: str = "top"
 
-class DagPanning(BaseModel):
-    x: int = 100
-    y: int = 250
-
-class DagSchema(BaseModel):
+class DagVisualizationSchema(BaseModel):
     connections: List[DagConnection]
     nodes: List[DagNode]
-    panning: DagPanning
-    scaling: float

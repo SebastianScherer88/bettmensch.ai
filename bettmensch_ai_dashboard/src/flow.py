@@ -5,10 +5,9 @@ from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import IoArgopr
 from argo_workflows.api import workflow_service_api
 from pydantic import BaseModel
 from datetime import datetime
-from pipeline import ScriptTemplate, Pipeline, PipelineInputParameter, NodeInputs, NodeOutput
+from pipeline import ScriptTemplate, Pipeline, PipelineNode, PipelineInputParameter, NodeInputs, NodeOutput
 import yaml
-from dag import DagConnection, DagNodePosition, DagNode, DagPanning, DagSchema
-from dag_builder.block_builder import Block
+from dag import DagConnection, DagNode, DagVisualizationSchema
 
 # --- FlowMetadata
 class FlowMetadata(BaseModel):
@@ -201,100 +200,45 @@ class Flow(BaseModel):
             dag=dag
         )
         
-    def create_dag_visualization_assets(self) -> Tuple[DagSchema,List[type[Block]]]:
+    def create_dag_visualization_schema(self) -> DagVisualizationSchema:
         """Utility method to generate the assets the barfi/baklavajs rendering engine uses to display the Pipeline's dag property on the frontend.
         """
-                
+        
+        node_positions = Pipeline.create_dag_visualization_node_positions(self.dag)
         connections: List[Dict] = []
         nodes: List[Dict] = []
-        panning = DagPanning().model_dump()
-        scaling = 1
         
-        node_classes = []
-        
-        for i, pipeline_node in enumerate(self.dag):
-
-            schema_node_interfaces = []
-            node_class = Block(name=pipeline_node.name)
+        for pipeline_node in self.dag:
             
-            for interface_type in ['inputs','outputs']:
-                interfaces = getattr(pipeline_node,interface_type)
-
-                if interfaces is None:
-                    continue
-
-                for argument_type in ['parameters','artifacts']:
-                    arguments = getattr(interfaces,argument_type,None)
-                    
-                    if arguments is None:
-                        continue
-                    
-                    for argument in arguments:
-                        interface_name = Pipeline.create_dag_interface_name(interface_type, argument.name)
-                        interface_id = Pipeline.create_dag_interface_id(interface_type,pipeline_node.name,argument_type,argument.name)
-                        interface_value = getattr(argument,"value",None)
-                        
-                        if interface_type == 'inputs':
-                            node_class.add_input(interface_name)
-                            
-                            if getattr(argument,"source",None) is not None:
-                                dag_connection_dict = {
-                                    "from":Pipeline.create_dag_interface_id("outputs",argument.source.node,argument.source.output_type,argument.source.output_name),
-                                    "to":interface_id
-                                }
-                                dag_connection_dict['id'] = f"{dag_connection_dict['from']}->{dag_connection_dict['to']}"
-                                DagConnection(**dag_connection_dict).model_validate(dag_connection_dict)
-                                connections.append(dag_connection_dict)
-                        
-                        elif interface_type == 'outputs':
-                            node_class.add_output(interface_name)
-                        
-                        schema_node_interfaces.append([interface_name, {"id":interface_id, "value":interface_value}])
-                        
-            node_classes.append(node_class)
-
-            dag_schema_node = DagNode(
-                id = pipeline_node.name,
-                interfaces=schema_node_interfaces,
-                name = pipeline_node.name,
-                type = pipeline_node.name,
-                position = DagNodePosition(
-                    x = i * 200 + 50,
-                    y = 200
+            pipeline_node_name = pipeline_node.name
+            
+            nodes.append(
+                DagNode(
+                    id=pipeline_node_name,
+                    pos =node_positions[pipeline_node_name],
+                    data = {"label": pipeline_node_name},
+                    # node_type = "default"
+                    # source_position = "top"
+                    # target_position = "bottom"
                 )
             )
-            nodes.append(dag_schema_node.model_dump())
-        
-        entrypoint_node_class = Block(name="pipeline")
-        [entrypoint_node_class.add_output(name=Pipeline.create_dag_interface_name("inputs",input.name)) for input in self.inputs]
-        node_classes.append(entrypoint_node_class)
-        
-        dag_schema_entrypoint_node = DagNode(
-            id = "pipeline",
-            interfaces=[
-                [
-                    Pipeline.create_dag_interface_name("inputs",input.name),
-                    {
-                        "id": Pipeline.create_dag_interface_id("outputs","pipeline","parameters",input.name),
-                        "value": input.value
-                    }
-                 ] for input in self.inputs
-            ],
-            name = "pipeline",
-            type = "pipeline",
-            position = DagNodePosition(
-                x = -200 + 50,
-                y = 200
-            )
+            
+            if pipeline_node.depends is not None:
+                for upstream_node_name in pipeline_node.depends:
+                    connections.append(
+                        DagConnection(
+                            id=f"{upstream_node_name}->{pipeline_node_name}",
+                            source = upstream_node_name,
+                            target = pipeline_node_name,
+                            animated = True,
+                            edge_type = "smoothstep",
+                        )
+                    )
+            
+        return DagVisualizationSchema(
+            connections=connections,
+            nodes=nodes
         )
-        nodes.append(dag_schema_entrypoint_node.model_dump())
-        
-        return {
-            "connections": connections,
-            "nodes": nodes,
-            "panning":panning,
-            "scaling": scaling
-        }, node_classes
         
 def main_test():
     '''Unit test the Pipeline class.'''
