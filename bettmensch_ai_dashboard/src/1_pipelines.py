@@ -231,7 +231,9 @@ def display_selected_pipeline(formatted_pipeline_data,selected_pipeline):
             )
         st.dataframe(pipeline_inputs_formatted_df,hide_index=True)
         
-    tab_templates.json(formatted_pipeline_data['templates'][selected_pipeline],expanded=True)
+    with tab_templates:
+        st.markdown("### Spec")
+        st.json(formatted_pipeline_data['templates'][selected_pipeline],expanded=True)
         
     return dag_visualization_schema, dag_visualization_element
     
