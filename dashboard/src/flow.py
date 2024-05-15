@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import Dict, Optional, List, Union, Literal, Tuple
+from typing import Dict, Optional, List, Union, Literal
 import argo_workflows
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import IoArgoprojWorkflowV1alpha1Workflow
 from argo_workflows.api import workflow_service_api
 from pydantic import BaseModel
 from datetime import datetime
-from pipeline import ScriptTemplate, Pipeline, PipelineNode, PipelineInputParameter, NodeInputs, NodeOutput
+from pipeline import ScriptTemplate, Pipeline, PipelineInputParameter, NodeInputs, NodeOutput
 import yaml
 from dag import DagConnection, DagNode, DagVisualizationSchema
 from utils import PIPELINE_NODE_EMOJI_MAP
@@ -80,6 +80,14 @@ class Flow(BaseModel):
     templates: List[ScriptTemplate]
     inputs: List[FlowInputParameter] = []
     dag: List[FlowNode]
+    
+    def get_template(self, name: str) -> ScriptTemplate:
+        
+        return [template for template in self.templates if template.name == name][0]
+    
+    def get_dag_task(self, name: str) -> FlowNode:
+        
+        return [task for task in self.dag if task.name == name][0]
         
     @classmethod
     def build_dag(cls, workflow_status: Dict) -> List[FlowNode]:
