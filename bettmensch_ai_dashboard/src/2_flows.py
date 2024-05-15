@@ -36,9 +36,7 @@ def display_pipelines_or_flows(query_resources: Callable, resource_type: str):
         """
         # :arrow_forward: Flows
         
-        A `Flow` is the *execution* of a `Pipeline` with specified input parameters and other optional runtime specs that can be used to declare instance selection taints/tolerations, device resources, etc.
-    
-        This section displays all submitted (pending, running or completed) `Flow`s.
+        A `Flow` is the *execution* of a `Pipeline` with specified input parameters and other optional runtime specs.
         """
     )
     

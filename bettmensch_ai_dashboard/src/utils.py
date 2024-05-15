@@ -9,7 +9,7 @@ from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import IoArgoprojWorkflowV1alpha1Workflow
 
 PIPELINE_NODE_EMOJI_MAP = {
-            'task': '🔵',
+            'task': '🔵', # :large_blue_circle:
             'inputs':
                 {
                     'task':'⤵️', # :arrow_heading_down:
