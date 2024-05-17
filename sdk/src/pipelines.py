@@ -1,31 +1,7 @@
 from typing import List, Union, Any, Tuple, Dict, Optional
 
-   
-# pipeline input
-# - when defined:
-#       take name & value from [Input] 
-# - when stored as attributes: [PipelineInput]
-#       need to take name, value & the pipeline owner reference
-
-# component input:
-# - when defined: one of [Input], [PipelineInput], [ComponentOutput]
-#       3 options:
-#           1. take name & value if: [Input]
-#           2. take name & pipeline input if: [PipelineInput]
-#           3. take name & component output if: [ComponentOutput]
-# - when stored as component attribute: [ComponentInput]
-#       3 options:
-#           1. take name, value & leave source empty
-#           2. take name, leave value empty & take pipeline input reference
-#           3. take name, leave value empmty & take component output reference
-
-# component output:
-# - when defined: [Output]
-#       take name
-# - when stored as attributes: [ComponentOutput]
-#       need to take name & the component owner reference
-
 class PipelineContext(object):
+    """Globally accessible pipeline meta data storage utility."""
     
     def __init__(self):
         self.pipeline: Optional[Pipeline] = None
@@ -105,6 +81,8 @@ class BaseContainerMixin(object):
         return f"{self.type}.{self.name}"
         
 class Pipeline(BaseContainerMixin):
+    """Manages the PipelineContext meta data storage utility."""
+    
     def __init__(self,name: str, inputs: List[Input] = [], clear_context: bool = True):
         # pipelines dont have outputs
         super().__init__(name, inputs=inputs)
@@ -113,6 +91,10 @@ class Pipeline(BaseContainerMixin):
         self.inputs: Dict = self.generate_inputs(inputs)
         self.clear_context = clear_context
         
+    @property
+    def tasks(self) -> List:
+        return _pipeline_context.components
+     
     @property
     def id(self):
         return f"{self.type}"
@@ -130,6 +112,7 @@ class Pipeline(BaseContainerMixin):
         return result
     
     def __enter__(self):
+        # clear the global pipeline context when entering the pipeline instance's context, if specified
         if self.clear_context:
             _pipeline_context.clear()
             
@@ -222,6 +205,7 @@ def test_parameter_attachment():
     # p1
     for p1_input_name, p1_input in p1.inputs.items():
         print(f"Pipeline 1 input: {p1_input_name}: {p1_input.__dict__}")
+    print(f"Pipeline 1 tasks: {p1.tasks}")
         
     # c1
     for c1_input_name, c1_input in c1.inputs.items():
