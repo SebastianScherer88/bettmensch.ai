@@ -84,22 +84,19 @@ class ParameterMetaMixin(object):
         self.id = f"{self.owner}.{self.type}.{self.name}"
     
     def set_source(self, source: Any):
-        if not isinstance(source, (PipelineInput,ComponentOutput)):
+        if not isinstance(source, (ContainerInput,ComponentOutput)):
             raise TypeError(f"The specified parameter source {source} has to be either a PipelineInput or ComponentOutput type.")
         
         self.source = source.id # "pipeline-p1.input.input_1", "component-c1.output.output_1" etc. 
         
-class PipelineInput(ParameterMetaMixin,Input):
+class ContainerInput(ParameterMetaMixin,Input):
     ...
     
 class ComponentOutput(ParameterMetaMixin,Output):
     ...
-
-class ComponentInput(ParameterMetaMixin,Input):
-    ...
     
 class BaseContainerMixin(object):
-    def __init__(self,name: str, inputs: List[Union[Input,PipelineInput,ComponentOutput]] = [], outputs: List[Output] = []):
+    def __init__(self,name: str, inputs: List[Union[Input,ContainerInput]] = [], outputs: List[Output] = []):
         self.name = name
         self.type = 'container'
         
@@ -116,12 +113,12 @@ class Pipeline(BaseContainerMixin):
         self.inputs: Dict = self.generate_inputs(inputs)
         self.clear_context = clear_context
         
-    def generate_inputs(self,inputs:List[Input]) -> Dict[str,PipelineInput]:
+    def generate_inputs(self,inputs:List[Input]) -> Dict[str,ContainerInput]:
         
         result = {}
         
         for i in inputs:
-            pipeline_input = PipelineInput(name=i.name,value=i.value)
+            pipeline_input = ContainerInput(name=i.name,value=i.value)
             pipeline_input.set_owner(self)
 
             result[i.name] = pipeline_input
@@ -140,7 +137,7 @@ class Pipeline(BaseContainerMixin):
         _pipeline_context.deactivate()
     
 class Component(BaseContainerMixin):
-    def __init__(self,name: str, inputs: List[Union[Input,PipelineInput,ComponentOutput]] = [], outputs: List[Output] = []):
+    def __init__(self,name: str, inputs: List[Union[Input,ContainerInput]] = [], outputs: List[Output] = []):
         super().__init__(name,inputs=inputs,outputs=outputs)
         self.type = 'component'
         
@@ -149,17 +146,17 @@ class Component(BaseContainerMixin):
         
         _pipeline_context.add_component(self)
         
-    def generate_inputs(self,inputs: List[Union[Input,PipelineInput,ComponentOutput]]) -> Dict[str,ComponentInput]:
+    def generate_inputs(self,inputs: List[Union[Input,ContainerInput,ComponentOutput]]) -> Dict[str,ContainerInput]:
         
         result = {}
         
         for i in inputs:
-            if isinstance(i,(Input,PipelineInput)):
-                component_input = ComponentInput(name=i.name,value=i.value)
+            if isinstance(i,(Input,ContainerInput)):
+                component_input = ContainerInput(name=i.name,value=i.value)
             else:
-                component_input = ComponentInput(name=i.name)
+                component_input = ContainerInput(name=i.name)
                 
-            if isinstance(i,(PipelineInput,ComponentOutput)):
+            if isinstance(i,(ContainerInput,ComponentOutput)):
                 component_input.set_source(i)
                 
             component_input.set_owner(self)
