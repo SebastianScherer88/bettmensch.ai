@@ -207,10 +207,12 @@ def test_context_editing():
 
 def test_parameter_attachment():
     p1 = Pipeline('p1',inputs=[Input('param1',1),Input('param2',)]) # creates p1.inputs.param1 & p1.inputs.param2 handles
-                
-    c1 = Component('c1',inputs=[p1.inputs['param1'],p1.inputs['param2'],Input('param3','a')],outputs=[Output('out1')])
     
-    c2 = Component('c2',inputs=[c1.outputs['out1'],p1.inputs['param2']],outputs=[Output('out1')])
+    with p1:
+                
+        c1 = Component('c1',inputs=[p1.inputs['param1'],p1.inputs['param2'],Input('param3','a')],outputs=[Output('out1')])
+        
+        c2 = Component('c2',inputs=[c1.outputs['out1'],p1.inputs['param2']],outputs=[Output('out1')])
         
     # p1
     for p1_input_name, p1_input in p1.inputs.items():
@@ -232,4 +234,4 @@ def test_parameter_attachment():
         
 if __name__ == "__main__":
     test_context_editing()
-    #test_parameter_attachment()
+    test_parameter_attachment()
