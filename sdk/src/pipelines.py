@@ -102,17 +102,21 @@ class BaseContainerMixin(object):
         
     @property
     def id(self):
-        return f"container.{self.type}.{self.name}"
+        return f"{self.type}.{self.name}"
         
 class Pipeline(BaseContainerMixin):
     def __init__(self,name: str, inputs: List[Input] = [], clear_context: bool = True):
         # pipelines dont have outputs
         super().__init__(name, inputs=inputs)
-        self.type = 'pipeline'
+        self.type = 'workflow'
         
         self.inputs: Dict = self.generate_inputs(inputs)
         self.clear_context = clear_context
         
+    @property
+    def id(self):
+        return f"{self.type}"
+    
     def generate_inputs(self,inputs:List[Input]) -> Dict[str,ContainerInput]:
         
         result = {}
@@ -139,7 +143,8 @@ class Pipeline(BaseContainerMixin):
 class Component(BaseContainerMixin):
     def __init__(self,name: str, inputs: List[Union[Input,ContainerInput]] = [], outputs: List[Output] = []):
         super().__init__(name,inputs=inputs,outputs=outputs)
-        self.type = 'component'
+        self.type = 'task'
+        self.depends_on: List[str] = []
         
         self.inputs: Dict = self.generate_inputs(inputs)
         self.outputs: Dict = self.generate_outputs(outputs)
@@ -158,6 +163,9 @@ class Component(BaseContainerMixin):
                 
             if isinstance(i,(ContainerInput,ComponentOutput)):
                 component_input.set_source(i)
+                
+                if isinstance(i,ComponentOutput) and (i.owner not in self.depends_on):
+                    self.depends_on.append(i.owner)
                 
             component_input.set_owner(self)
 
@@ -222,12 +230,16 @@ def test_parameter_attachment():
     for c1_output_name, c1_output in c1.outputs.items():
         print(f"Component 1 output: {c1_output_name}: {c1_output.__dict__}")
         
+    print(f"Component 1 dependencies: {c1.depends_on}")
+        
     # c2
     for c2_input_name, c2_input in c2.inputs.items():
         print(f"Component 2 input: {c2_input_name}: {c2_input.__dict__}")
         
     for c2_output_name, c2_output in c2.outputs.items():
         print(f"Component 2 output: {c2_output_name}: {c2_output.__dict__}")
+        
+    print(f"Component 2 dependencies: {c2.depends_on}")
         
 if __name__ == "__main__":
     test_context_editing()
