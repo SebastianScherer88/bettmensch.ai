@@ -391,8 +391,7 @@ def test_hera_component():
             a_plus_b_task = a_plus_b.to_hera_task()
             a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera_task()
             
-    with open(f'{wft.name}.yaml','w') as wft_file:
-        yaml.dump(wft.to_yaml(),wft_file)
+    wft.to_file('.')
         
 if __name__ == "__main__":
     test_hera_component()

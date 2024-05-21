@@ -145,6 +145,15 @@ class Pipeline(object):
     def __exit__(self, *args, **kwargs):
         _pipeline_context.deactivate()
         
+    def export(self,dir: str = '.'):
+        """Writes workflow_template attribute as f"{self.name}.yaml" WorkflowTemplate CR manifest to specified file path.
+
+        Args:
+            dir (str): The directory to write to.
+        """
+        
+        self.workflow_template.to_file(dir)
+        
     def register(self):
         """Register the Pipeline instance on bettmensch_ai"""
         pass
@@ -196,9 +205,7 @@ def test_pipeline():
         
     print(f"Pipeline type: {type(a_plus_b_plus_c)}")
     
-    with open(f'{a_plus_b_plus_c.name}.yaml','w') as pipeline_file:
-        yaml.dump(a_plus_b_plus_c.workflow_template.to_yaml(),pipeline_file)
-    
+    a_plus_b_plus_c.export()    
     
 if __name__ == "__main__":
     test_pipeline()
