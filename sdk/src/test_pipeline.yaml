@@ -1,0 +1,69 @@
+|
+  apiVersion: argoproj.io/v1alpha1
+  kind: WorkflowTemplate
+  metadata:
+    name: test_pipeline
+    namespace: argo
+  spec:
+    arguments:
+      parameters:
+      - name: a
+        value: 'null'
+      - name: b
+        value: 'null'
+      - name: c
+        value: 'null'
+    entrypoint: bettmensch_ai_dag
+    templates:
+    - dag:
+        tasks:
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{workflow.parameters.a}}'
+            - name: b
+              value: '{{workflow.parameters.b}}'
+          depends: tasks.add-0
+          name: tasks.add-0
+          template: add
+        - arguments:
+            parameters:
+            - name: a
+              value: '{{tasks.add-0.outputs.parameters.sum}}'
+            - name: b
+              value: '{{workflow.parameters.c}}'
+          depends: tasks.add-0
+          name: tasks.add-1
+          template: add
+      name: bettmensch_ai_dag
+    - inputs:
+        parameters:
+        - name: a
+        - name: b
+        - name: sum
+      name: add
+      outputs:
+        parameters:
+        - name: sum
+          valueFrom:
+            path: ./temp/outputs\sum
+      script:
+        command:
+        - python
+        image: python:3.8
+        source: |-
+          import os
+          import sys
+          sys.path.append(os.getcwd())
+
+          # --- preprocessing
+          import json
+          try: a = json.loads(r'''{{inputs.parameters.a}}''')
+          except: a = r'''{{inputs.parameters.a}}'''
+          try: b = json.loads(r'''{{inputs.parameters.b}}''')
+          except: b = r'''{{inputs.parameters.b}}'''
+
+          from bettmensch_ai.arguments import ComponentOutput
+          sum = ComponentOutput("sum")
+
+          sum.assign(a + b)
