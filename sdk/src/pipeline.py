@@ -31,7 +31,7 @@ class Pipeline(object):
         self.workflow_template = self.build_workflow_template()
      
     @property
-    def id(self):
+    def parameter_owner_name(self) -> str:
         return f"{self.type}"
     
     @property
@@ -123,76 +123,6 @@ class Pipeline(object):
     
     def __exit__(self, *args, **kwargs):
         _pipeline_context.deactivate()
-    
-# def test_context_editing():
-#     print(f"0 Pipeline context activated: {_pipeline_context.active}")
-#     print(f"0 Pipeline context components: {_pipeline_context.components}")
-    
-#     with Pipeline('pipeline_1') as p1:
-#         print(f"1 Pipeline context activated: {_pipeline_context.active}")
-#         print(f"1 Pipeline context components: {_pipeline_context.components}")
-    
-#     print(f"2 Pipeline context activated: {_pipeline_context.active}")
-#     print(f"2 Pipeline context components: {_pipeline_context.components}")
-    
-#     #c1 = Component('component_1') # pipeline context not active exception
-        
-#     with Pipeline('pipeline_2') as p2:
-#         c1 = Component('component_1')
-#         print(f"3 Pipeline context activated: {_pipeline_context.active}")
-#         print(f"3 Pipeline context components: {[comp.id for comp in _pipeline_context.components]}")
-        
-#         c2 = Component('component_2')
-#         print(f"4 Pipeline context activated: {_pipeline_context.active}")
-#         print(f"4 Pipeline context components: {[comp.id for comp in _pipeline_context.components]}")
-            
-#     print(f"5 Pipeline context activated: {_pipeline_context.active}")
-#     print(f"5 Pipeline context components: {[comp.id for comp in _pipeline_context.components]}")
-
-# def test_parameter_attachment():
-#     p1 = Pipeline('p1',inputs=[Input('param1',1),Input('param2',)]) # creates p1.inputs.param1 & p1.inputs.param2 handles
-    
-#     with p1:
-                
-#         c1 = Component('c1',inputs=[p1.inputs['param1'],p1.inputs['param2'],Input('param3','a')],outputs=[Output('out1')])
-        
-#         c2 = Component('c2',inputs=[c1.outputs['out1'],p1.inputs['param2']],outputs=[Output('out1')])
-        
-#     # p1
-#     for p1_input_name, p1_input in p1.inputs.items():
-#         print(f"Pipeline 1 input: {p1_input_name}: {p1_input.__dict__}")
-#     print(f"Pipeline 1 tasks: {p1.tasks}")
-        
-#     # c1
-#     for c1_input_name, c1_input in c1.inputs.items():
-#         print(f"Component 1 input: {c1_input_name}: {c1_input.__dict__}")
-        
-#     for c1_output_name, c1_output in c1.outputs.items():
-#         print(f"Component 1 output: {c1_output_name}: {c1_output.__dict__}")
-        
-#     print(f"Component 1 dependencies: {c1.depends_on}")
-        
-#     # c2
-#     for c2_input_name, c2_input in c2.inputs.items():
-#         print(f"Component 2 input: {c2_input_name}: {c2_input.__dict__}")
-        
-#     for c2_output_name, c2_output in c2.outputs.items():
-#         print(f"Component 2 output: {c2_output_name}: {c2_output.__dict__}")
-        
-#     print(f"Component 2 dependencies: {c2.depends_on}")
-
-# def decorator_func(x, y):
- 
-#     def Inner(func):
- 
-#         def wrapper(*args, **kwargs):
-#             print("I like Geeksforgeeks")
-#             print("Summation of values - {}".format(x+y) )
- 
-#             func(*args, **kwargs)
-             
-#         return wrapper
-#     return Inner
 
 def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
     """Takes a calleable and generates a configured Component factory that will
@@ -220,14 +150,14 @@ def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
 def test_pipeline():
     
     @component
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput) -> None:
+    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None) -> None:
         
         sum.assign(a + b)
         
     @pipeline('test_pipeline','argo',True)
     def a_plus_b_plus_c(a: PipelineInput,
                         b: PipelineInput,
-                        c: PipelineInput = None):
+                        c: PipelineInput):
         
         a_plus_b = add(a = a, b = b)        
         a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = c)

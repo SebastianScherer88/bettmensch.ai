@@ -27,14 +27,14 @@ class PipelineContext(object):
     def get_component_name_counter(self, component_base_name: str) -> int:
         """Utility to get the counter for the name of a potential component to ensure uniqueness of identifier in the PipelineContext."""
         
-        counter = len([component for component in self.components if component_base_name in component.id])
+        counter = len([component for component in self.components if component_base_name in component.name])
         
         return counter
     
     def add_component(self,component):
         if self.active:
             component_counter = self.get_component_name_counter(component.base_name)
-            component.id = component.generate_id(component_counter)
+            component.name = component.generate_name(component_counter)
             self.components.append(component)
         else:
             raise Exception(f"Unable to add component {component.base_name} - pipeline context is not active.")
@@ -154,7 +154,7 @@ global_config.set_class_defaults(Script, constructor=ComponentInlineScriptRunner
 class Component(object):
     
     type = 'tasks'
-    id: str = None
+    name: str = None
     original_func: Callable = None
     built_func: Callable = None # the function including any output postprocessing logic - this is the one that will be decorated with hera's @script
     base_name: str = None
@@ -177,7 +177,11 @@ class Component(object):
         self.outputs = self.generate_outputs_from_func(func)
         self.built_func = self.build_func(func)
         self.task_factory = self.build_hera_task_factory()
-        
+    
+    @property
+    def parameter_owner_name(self) -> str:
+        return f"{self.type}.{self.name}"
+    
     @property
     def depends(self):
         if self._depends:
@@ -209,10 +213,10 @@ class Component(object):
         # return built_func
         return func
             
-    def generate_id(self, n: int):
+    def generate_name(self, n: int):
         """Utility method to invoke by the global PipelineContext to generate a context wide unique identifier for the task node."""
         
-        return f"{self.type}.{self.base_name}-{n}"
+        return f"{self.base_name}-{n}"
         
     def generate_inputs_from_func(self,func: Callable, inputs: Dict[str,Union[PipelineInput,ComponentOutput]]) -> Dict[str,ComponentInput]:
         """Generates component inputs from the underlying function as well as the Component's constructor method's calls kwargs. Also
@@ -259,8 +263,8 @@ class Component(object):
             component_input.set_owner(self)
                 
             # update component's dependencies with input's owner component
-            if isinstance(input,ComponentOutput) and (input.owner not in self._depends):
-                self._depends.append(input.owner)
+            if isinstance(input,ComponentOutput) and (input.owner.name not in self._depends):
+                self._depends.append(input.owner.name)
             
             # remove declared input from required inputs (if relevant)
             if name in required_func_inputs:
@@ -337,7 +341,7 @@ class Component(object):
             arguments = [
                 input.to_hera_parameter() for input in self.inputs.values()
             ],
-            name = self.id,
+            name = self.name,
             depends = self.depends
         )
         
