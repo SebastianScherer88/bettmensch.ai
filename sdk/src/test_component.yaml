@@ -2,18 +2,15 @@
   apiVersion: argoproj.io/v1alpha1
   kind: WorkflowTemplate
   metadata:
-    name: test_pipeline
+    name: test_component
     namespace: argo
   spec:
     arguments:
       parameters:
       - name: a
-        value: '1'
       - name: b
-        value: '2'
       - name: c
-        value: '3'
-    entrypoint: bettmensch_ai_dag
+    entrypoint: test_dag
     templates:
     - dag:
         tasks:
@@ -35,11 +32,13 @@
           depends: add-0
           name: add-1
           template: add
-      name: bettmensch_ai_dag
+      name: test_dag
     - inputs:
         parameters:
-        - name: a
-        - name: b
+        - default: '1'
+          name: a
+        - default: '2'
+          name: b
         - default: 'null'
           name: sum
       name: add

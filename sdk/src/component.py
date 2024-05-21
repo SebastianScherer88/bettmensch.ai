@@ -7,6 +7,7 @@ from hera.shared import global_config
 from hera.workflows import script, Script, Task, Parameter, models, WorkflowTemplate, DAG, InlineScriptConstructor
 from hera.workflows._unparse import roundtrip
 import inspect
+import yaml
 
 class PipelineContext(object):
     """Globally accessible pipeline meta data storage utility."""
@@ -40,8 +41,11 @@ class PipelineContext(object):
             raise Exception(f"Unable to add component {component.base_name} - pipeline context is not active.")
             
     def clear(self):
-        self.components = []
-        
+        if self.active:
+            self.components = []
+        else:
+            raise Exception(f"Unable to clear components from context - pipeline context is not active.")
+            
 _pipeline_context = PipelineContext()
 
 class ComponentInlineScriptRunner(InlineScriptConstructor):
@@ -71,7 +75,6 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             The string representation of the script to load.
         """
         
-        print('USING THE ComponentInlineScriptRunner')
         inputs = instance._build_inputs()
         outputs = instance._build_outputs()
         
@@ -118,9 +121,7 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             assert isinstance(instance.source, str)
             return instance.source
         args = inspect.getfullargspec(instance.source).args
-        
-        print(f"ARGS: {args}")
-        
+                
         script = ""
         # Argo will save the script as a file and run it with cmd:
         # - python /argo/staging/script
@@ -146,7 +147,6 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
         s = "\n".join(content[i + 1 :])
         script += textwrap.dedent(s)
-        print(f"BUILT SCRIPT CODE: {script}")
         return textwrap.dedent(script)
     
 global_config.set_class_defaults(Script, constructor=ComponentInlineScriptRunner())
@@ -156,7 +156,7 @@ class Component(object):
     type = 'tasks'
     name: str = None
     original_func: Callable = None
-    built_func: Callable = None # the function including any output postprocessing logic - this is the one that will be decorated with hera's @script
+    func: Callable = None
     base_name: str = None
     inputs: Dict[str,ComponentInput] = None
     outputs: Dict[str,ComponentOutput] = None
@@ -170,12 +170,11 @@ class Component(object):
         
     def build(self, func: Callable, component_inputs: Dict[str,Union[PipelineInput,ComponentOutput]]):
         
-        self.original_func = func
+        self.func = func
         self.base_name = func.__name__
         _pipeline_context.add_component(self)
         self.inputs = self.generate_inputs_from_func(func, component_inputs)
         self.outputs = self.generate_outputs_from_func(func)
-        self.built_func = self.build_func(func)
         self.task_factory = self.build_hera_task_factory()
     
     @property
@@ -188,31 +187,7 @@ class Component(object):
             return ' && '.join(self._depends)
         else:
             return ''
-            
-    def build_func(self,func: Callable) -> Callable:
-        """Extends specified function with output argument pre- and postprocessing."""
-        
-        # #@wraps(func)
-        # def built_func(*args,**kwargs) -> None:
-            
-        #     # add the component's ComponentOutputs to kwargs of function call. This will allow the decorated func to assign values to the 
-        #     # passed ComponentOutput from inside the function context using their respective `assign` method. We can then access those values 
-        #     # from outside the decorated func's context and write them to local files named after the outputs, so that the hera outputs
-        #     # can pick them up
-        #     kwargs.update(self.outputs)
-            
-        #     func(*args,**kwargs)
-            
-        #     # pick up outputs with their updated values attributes and write them to disk for hera to pick up
-        #     for output in self.outputs:
-        #         with open(output.path,'w') as output_file:
-        #             output_file.write(output.value)
-                    
-        #     return
-        
-        # return built_func
-        return func
-            
+                        
     def generate_name(self, n: int):
         """Utility method to invoke by the global PipelineContext to generate a context wide unique identifier for the task node."""
         
@@ -322,7 +297,7 @@ class Component(object):
         
         script_wrapper = script(**script_decorator_kwargs)
         
-        task_factory = script_wrapper(func=self.built_func)
+        task_factory = script_wrapper(func=self.func)
         
         return task_factory
     
@@ -347,18 +322,13 @@ class Component(object):
         
         return task
 
-# @bettmensch_ai.pipeline #-> instantiates pipeline, enters context, executes decorated callable in the context to start instantiating component instances and building up a pipeline, then returns that Pipeline
-# def a_plus_b_minus_c(a: ParamInput, b: ParamInput, c: ParamInput):
-    
-#     a_plus_b = add(a,b)
-
 def component(func: Callable) -> Callable:
     """Takes a calleable and generates a configured Component factory that will
     generate a Component version of the callable if invoked inside an active PipelineContext.
     
     Usage:
     @bettmensch_ai.component #-> component factory
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput):
+    def add(a: ComponentInput = 1, b: ComponentInput = 2, sum: ComponentOutput = None):
         sum.assign(a + b)
     
     Decorating the above `add` method should return a component factory that
@@ -375,73 +345,54 @@ def component(func: Callable) -> Callable:
     
     return component_factory
 
-def test_component():
-    
-    print("Testing component decoration")
-    
-    @component
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput) -> None:
-        
-        sum.assign(a + b)
-        
-    print(f"Created component factory: {add}")
-    
-    # mock active pipeline with 3 inputs
-    pipeline_input_a = PipelineInput(name='a',value=1)
-    pipeline_input_b = PipelineInput(name='b',value=2)
-    pipeline_input_c = PipelineInput(name='c',value=3)
-    
-    _pipeline_context.activate('mock_pipeline')
-    
-    # add components to pipeline context
-    a_plus_b = add(a = pipeline_input_a, b = pipeline_input_b)
-    print(f"Created component: {a_plus_b}")
-    
-    a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = pipeline_input_c)
-    print(f"Created component: {a_plus_b_plus_c}")
-    
-    # close pipeline context
-    _pipeline_context.deactivate()
-    
 def test_hera_component():
     
     print("Testing component decoration")
     
     @component
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput) -> None:
+    def add(a: ComponentInput = 1, b: ComponentInput = 2, sum: ComponentOutput = None) -> None:
         
         sum.assign(a + b)
         
     print(f"Created component factory: {add}")
     
+    class MockPipeline():
+        parameter_owner_name: str = "workflow"
+    
     # mock active pipeline with 3 inputs
     pipeline_input_a = PipelineInput(name='a',value=1)
+    pipeline_input_a.set_owner(MockPipeline())
     pipeline_input_b = PipelineInput(name='b',value=2)
+    pipeline_input_b.set_owner(MockPipeline())
     pipeline_input_c = PipelineInput(name='c',value=3)
+    pipeline_input_c.set_owner(MockPipeline())
     
     _pipeline_context.activate()
+    _pipeline_context.clear()
     
     # add components to pipeline context
     a_plus_b = add(a = pipeline_input_a, b = pipeline_input_b)
-    print(f"Created component: {a_plus_b}")
+    print(f"Created component: {a_plus_b.name}")
     
     a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = pipeline_input_c)
-    print(f"Created component: {a_plus_b_plus_c}")
+    print(f"Created component: {a_plus_b_plus_c.name}")
     
     # close pipeline context
     _pipeline_context.deactivate()
     
     with WorkflowTemplate(
-        name="test-wft", 
+        name="test_component", 
         entrypoint='test_dag',
         namespace="argo",
         arguments=[Parameter(name="a"),Parameter(name="b"),Parameter(name="c")],
-        ):
+        ) as wft:
         
         with DAG(name='test_dag'):
             a_plus_b_task = a_plus_b.to_hera_task()
             a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera_task()
+            
+    with open(f'{wft.name}.yaml','w') as wft_file:
+        yaml.dump(wft.to_yaml(),wft_file)
         
 if __name__ == "__main__":
-    #test_component()
     test_hera_component()

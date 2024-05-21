@@ -4,12 +4,15 @@ from arguments import PipelineInput, ComponentInput, ComponentOutput
 from component import PipelineContext, _pipeline_context, component
 from typing import Callable
 from hera.workflows import WorkflowTemplate, DAG
+from hera.shared import global_config
+from hera.auth import ArgoCLITokenGenerator
 import inspect
 import yaml
 
 class Pipeline(object):
     """Manages the PipelineContext meta data storage utility."""
     
+    _config = global_config
     type: str = 'workflow'
     name: str = None
     namespace: str = None
@@ -18,10 +21,32 @@ class Pipeline(object):
     workflow_template: WorkflowTemplate = None
     
     def __init__(self, name: str, namespace: str, func: Callable, clear_context: bool = True):
-        # pipelines dont have outputs        
+        """_summary_
+
+        Args:
+            name (str): Name of the pipeline
+            namespace (str): K8s namespace of the pipeline 
+            func (Callable): The decorated function defining the pipeline logic
+            clear_context (bool, optional): Whether the global pipeline context should be cleared when building. Defaults to True.
+        """
+        self.configure()
         self.build(name, namespace, func, clear_context)
         
+    def configure(self):
+        """Applies unsecure authentication configuration for an ArgoWorkflow server available on port 2746."""
+        self._config.host = "https://localhost:2746"
+        self._config.token = ArgoCLITokenGenerator
+        self._config.verify_ssl = False
+        
     def build(self, name: str, namespace: str, func: Callable, clear_context: bool):
+        """Builds the pipeline definition and stores resulting hera.workflows.WorkflowTemplate instance in the workflow_template attribute
+
+        Args:
+            name (str): Name of the pipeline
+            namespace (str): K8s namespace of the pipeline 
+            func (Callable): The decorated function defining the pipeline logic
+            clear_context (bool): Whether the global pipeline context should be cleared when building.
+        """
         
         self.name = name
         self.namespace = namespace
@@ -44,10 +69,6 @@ class Pipeline(object):
         
         return _pipeline_context
     
-    @property
-    def tasks(self) -> List:
-        return self.context.components
-    
     def generate_inputs_from_func(self,func: Callable) -> Dict[str,PipelineInput]:
         """Generates pipeline inputs from the underlying function. Also
         - checks for correct PipelineInput type annotations in the decorated original function
@@ -65,6 +86,7 @@ class Pipeline(object):
         """
         
         validate_func_args(func,argument_types=[PipelineInput])
+        func_args = get_func_args(func)
         func_inputs = get_func_args(func,'annotation',[PipelineInput])
         non_default_args = get_func_args(func,'default',[inspect._empty])
         required_func_inputs = dict([(k,v) for k,v in func_inputs.items() if k in non_default_args])
@@ -73,10 +95,9 @@ class Pipeline(object):
         
         for name in func_inputs:
             
-            print(f"Pipeline input: {name}")
-            
             # assemble component input
-            pipeline_input = PipelineInput(name=name)
+            default = func_args[name].default if func_args[name].default != inspect._empty else None
+            pipeline_input = PipelineInput(name=name,value=default)
                 
             pipeline_input.set_owner(self)
             
@@ -113,32 +134,43 @@ class Pipeline(object):
         return wft
                 
     def __enter__(self):
+        _pipeline_context.activate()
+        
         # clear the global pipeline context when entering the pipeline instance's context, if specified
         if self.clear_context:
             _pipeline_context.clear()
             
-        _pipeline_context.activate()
-        
         return self
     
     def __exit__(self, *args, **kwargs):
         _pipeline_context.deactivate()
+        
+    def register(self):
+        """Register the Pipeline instance on bettmensch_ai"""
+        pass
+        
+    def run(self, **kwargs):
+        """Create a Flow from the registered Pipeline instance."""
+        pass
 
 def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
-    """Takes a calleable and generates a configured Component factory that will
-    generate a Component version of the callable if its __call__ is invokes inside an active PipelineContext.
+    """Takes a calleable and returns a Pipeline instance with populated workflow_template attribute
+    holding an hera.workflows.WorkflowTemplate instance that implements the pipeline defined in the 
+    decorated callable.
     
     Usage:
-    @bettmensch_ai.component #-> component factory
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput):
+    @component
+    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None) -> None:
+        
         sum.assign(a + b)
-    
-    Decorating the above `add` method should return a component factory that
-    - generates a Component class instance when called from within an active PipelineContext
-      1. add a post function output processing step that ensures hera-compatible writing of output parameters to sensible local file paths
-      2. add the inputs parameter type inputs 'a' and 'b' to the component
-      3. add the parameter type output 'sum' to the component
-          3.1 this should facilitate the reference the file path from step 1. in the `from` argument further downstream at the stage of mapping to a ArgoWorkflowTemplate
+        
+    @pipeline('test_pipeline','argo',True)
+    def a_plus_b_plus_c(a: PipelineInput=1,
+                        b: PipelineInput=2,
+                        c: PipelineInput=3):
+        
+        a_plus_b = add(a = a, b = b)        
+        a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = c)
     """
     
     def pipeline_factory(func: Callable) -> Pipeline:
@@ -155,15 +187,14 @@ def test_pipeline():
         sum.assign(a + b)
         
     @pipeline('test_pipeline','argo',True)
-    def a_plus_b_plus_c(a: PipelineInput,
-                        b: PipelineInput,
-                        c: PipelineInput):
+    def a_plus_b_plus_c(a: PipelineInput=1,
+                        b: PipelineInput=2,
+                        c: PipelineInput=3):
         
         a_plus_b = add(a = a, b = b)        
         a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = c)
         
     print(f"Pipeline type: {type(a_plus_b_plus_c)}")
-    print(f"Pipeline Workflow template: {a_plus_b_plus_c.workflow_template}")
     
     with open(f'{a_plus_b_plus_c.name}.yaml','w') as pipeline_file:
         yaml.dump(a_plus_b_plus_c.workflow_template.to_yaml(),pipeline_file)

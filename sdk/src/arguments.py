@@ -3,38 +3,8 @@ from hera.workflows import Parameter
 import os
 
 # --- type annotations
-OUTPUT_BASE_PATH = './temp/outputs'
-
-# class InputParameter(object):
-#     ...
+OUTPUT_BASE_PATH = './temp/outputs'  
     
-# class OutputParameter(object):
-#     """Utility class for type annotation and retrieving function outputs from inside the function context."""
-    
-#     def __init__(self,name: str, type: type):
-#         self.name = name
-#         #self.type = type
-#         self.value: type = None
-    
-#     def assign(self, value: Any):
-#         # if not isinstance(value,self.type):
-#         #     raise TypeError(f"Value {value} is not of OutputParameter type {self.type}.")
-        
-#         self.value = value
-        
-# class OutputPath(object):
-#     """Utility class for type annotation and resolving making function file output locations available outside of function context."""
-    
-#     def __init__(self,name: str):
-#         self.name = name
-    
-#     @property
-#     def path(self):
-#         """Resolves to local file path inside component container."""
-        
-#         return os.path.join(OUTPUT_BASE_PATH,self.name)    
-    
-# --- container interfaces
 class Input(object):
     
     type = 'inputs'
@@ -84,26 +54,6 @@ class ParameterMetaMixin(object):
         
         self.source = "{{" + source.id + "}}" # "workflow.parameters.input_1", "tasks.component-c1-0.outputs.output_1" etc.
         
-    # @property
-    # def id(self) -> str:
-    #     """Utility method to generate a hera/ArgoWorkflow parameter reference to be used when constructing the hera DAG.
-
-    #     Returns:
-    #         str: The hera parameter reference expression.
-    #     """
-        
-    #     if self.owner == 'workflow':
-    #         return f"{self.owner.parameter_owner_name}.parameters.{self.name}"
-    #     else:
-    #         return f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
-        
-    # def to_hera_parameter(self) -> Parameter:
-        
-    #     if self.type == 'inputs':    
-    #         return Parameter(name=self.name,value=self.source)
-    #     elif self.type == 'outputs':
-    #         return Parameter(name=self.name,value=self.value)
-        
 class ContainerInput(ParameterMetaMixin,Input):
     ...
     
@@ -118,9 +68,12 @@ class PipelineInput(ContainerInput):
         return f"{self.owner.parameter_owner_name}.parameters.{self.name}"
         
     def to_hera_parameter(self) -> Parameter:
-        # PipelineInput annotated function arguments' default values arent currently retained, so we omit values during the export
-        # to enforece specification of all pipeline inputs when creating a Flow.
-        return Parameter(name=self.name)
+        # PipelineInput annotated function arguments' default values are retained by the Pipeline class. We only include a default value
+        # if its non-trivial
+        if self.value is not None:
+            return Parameter(name=self.name,value=self.value)
+        else:
+            return Parameter(name=self.name)
         
 class ComponentInput(PipelineInput):
     @property

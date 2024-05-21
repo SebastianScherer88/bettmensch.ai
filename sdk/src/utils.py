@@ -10,10 +10,10 @@ def get_func_args(func: Callable, attribute_name: str = '', attribute_value_rang
             attribute_value_range (List[Any], optional): The value range of the argument attribute to filter on. Defaults to [].
         """
         
-        func_args: Dict[str,inspect.Parameter] = inspect.signature(func).parameters.items()
+        func_args: Dict[str,inspect.Parameter] = inspect.signature(func).parameters
         
         if attribute_name and attribute_value_range:
-            func_args = dict([(k,param) for k,param in func_args if (getattr(param,attribute_name) in attribute_value_range)])
+            func_args = dict([(k,param) for k,param in func_args.items() if (getattr(param,attribute_name) in attribute_value_range)])
         
         return func_args
     
@@ -30,7 +30,7 @@ def validate_func_args(func: Callable, argument_types: List[type]):
         """
         
         func_args = get_func_args(func)
-        invalid_func_args: Dict[str,inspect.Parameter] = dict([(k,param) for k,param in func_args if (param.annotation not in argument_types)])
+        invalid_func_args: Dict[str,inspect.Parameter] = dict([(k,param) for k,param in func_args.items() if (param.annotation not in argument_types)])
         
         if invalid_func_args:
             raise TypeError(f"Invalid function argument type annotation(s): {invalid_func_args}."
