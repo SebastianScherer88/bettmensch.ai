@@ -7,12 +7,15 @@ def get_func_args(
     attribute_name: str = "",
     attribute_value_range: List[Any] = [],
 ) -> Dict[str, inspect.Parameter]:
-    """Utility method to retrieve function arguments with optional filtering on specified argument attribute.
+    """Utility method to retrieve function arguments with optional filtering on
+    specified argument attribute.
 
     Args:
         func (Callable): The function whose arguments will be retrieved.
-        attribute_name (str, optional): The name of the argument attribute to filter on. Defaults to ''.
-        attribute_value_range (List[Any], optional): The value range of the argument attribute to filter on. Defaults to [].
+        attribute_name (str, optional): The name of the argument attribute to
+            filter on. Defaults to ''.
+        attribute_value_range (List[Any], optional): The value range of the
+            argument attribute to filter on. Defaults to [].
     """
 
     func_args: Dict[str, inspect.Parameter] = inspect.signature(func).parameters
@@ -36,7 +39,8 @@ def validate_func_args(func: Callable, argument_types: List[type]):
         func (Callable): The function the we want to wrap in a Component.
 
     Raises:
-        TypeError: Raised if any of the func arguments input argument type annotations are something other than
+        TypeError: Raised if any of the func arguments input argument type
+            annotations are something other than
             - ComponentInput
             - ComponentOutput
     """
@@ -52,6 +56,7 @@ def validate_func_args(func: Callable, argument_types: List[type]):
 
     if invalid_func_args:
         raise TypeError(
-            f"Invalid function argument type annotation(s): {invalid_func_args}."
-            f"All function arguments need to be annotated with one of {argument_types} types."
+            f"Invalid function argument type annotation(s): "
+            f"{invalid_func_args}. All function arguments need to be annotated"
+            f"with one of {argument_types} types."
         )

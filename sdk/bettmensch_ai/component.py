@@ -40,7 +40,8 @@ class PipelineContext(object):
         self._active = False
 
     def get_component_name_counter(self, component_base_name: str) -> int:
-        """Utility to get the counter for the name of a potential component to ensure uniqueness of identifier in the PipelineContext."""
+        """Utility to get the counter for the name of a potential component to
+        ensure uniqueness of identifier in the PipelineContext."""
 
         counter = len(
             [
@@ -61,7 +62,8 @@ class PipelineContext(object):
             self.components.append(component)
         else:
             raise Exception(
-                f"Unable to add component {component.base_name} - pipeline context is not active."
+                f"Unable to add component {component.base_name} - pipeline "
+                "context is not active."
             )
 
     def clear(self):
@@ -69,7 +71,8 @@ class PipelineContext(object):
             self.components = []
         else:
             raise Exception(
-                f"Unable to clear components from context - pipeline context is not active."
+                f"Unable to clear components from context - pipeline context "
+                "is not active."
             )
 
 
@@ -80,8 +83,10 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
     """A custom script constructor that submits a script as a `source` to Argo.
 
-    This script constructor has been adapted from hera's InlineScriptConstructor to
-    - consider template input type annotations to disambiguate inputs and outputs,
+    This script constructor has been adapted from hera's
+    InlineScriptConstructor to
+    - consider template input type annotations to disambiguate inputs and
+        outputs,
     - add output instance initialization before the main function body
     - add output file writing after the main function body
     """
@@ -89,13 +94,15 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
     add_cwd_to_sys_path: Optional[bool] = None
 
     def _get_script_preprocessing(self, instance: Script) -> str:
-        """Constructs and returns a script that loads the parameters of the specified arguments. Adapted
-        to avoid listing ComponentOutput annotated source arguments in inputs, and instead add a file write
-        section to the correct local path.
+        """Constructs and returns a script that loads the parameters of the
+        specified arguments. Adapted to avoid listing ComponentOutput annotated
+        source arguments in inputs, and instead add a file write section to the
+        correct local path.
 
-        Since Argo passes parameters through `{{input.parameters.name}}` it can be very cumbersome for users to
-        manage that. This creates a script that automatically imports json and loads/adds code to interpret
-        each independent argument into the script.
+        Since Argo passes parameters through `{{input.parameters.name}}` it can
+        be very cumbersome for users to manage that. This creates a script that
+        automatically imports json and loads/adds code to interpret each
+        independent argument into the script.
 
         Returns:
         -------
@@ -119,10 +126,13 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         for param in sorted(
             actual_input_parameters or [], key=lambda x: x.name
         ):
-            # Hera does not know what the content of the `InputFrom` is, coming from another task. In some cases
-            # non-JSON encoded strings are returned, which fail the loads, but they can be used as plain strings
-            # which is why this captures that in an except. This is only used for `InputFrom` cases as the extra
-            # payload of the script is not necessary when regular input is set on the task via `func_params`
+            # Hera does not know what the content of the `InputFrom` is, coming
+            # from another task. In some cases non-JSON encoded strings are
+            # returned, which fail the loads, but they can be used as plain
+            # strings which is why this captures that in an except. This is
+            # only used for `InputFrom` cases as the extra payload of the
+            # script is not necessary when regular input is set on the task via
+            # `func_params`
             if param.value_from is None:
                 preprocess += f"""try: {param.name} = json.loads(r'''{{{{inputs.parameters.{param.name}}}}}''')\n"""
                 preprocess += f"""except: {param.name} = r'''{{{{inputs.parameters.{param.name}}}}}'''\n"""
@@ -148,9 +158,10 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
     def generate_source(self, instance: Script) -> str:
         """Assembles and returns a script representation of the given function.
 
-        This also assembles any extra script material prefixed to the string source.
-        The script is expected to be a callable function the client is interested in submitting
-        for execution on Argo and the `script_extra` material represents the parameter loading part obtained, likely,
+        This also assembles any extra script material prefixed to the string
+        source. The script is expected to be a callable function the client is
+        interested in submitting for execution on Argo and the `script_extra`
+        material represents the parameter loading part obtained, likely,
         through `get_param_script_portion`.
 
         Returns:
@@ -180,8 +191,8 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             script += "\n"
 
         # We use ast parse/unparse to get the source code of the function
-        # in order to have consistent looking functions and getting rid of any comments
-        # parsing issues.
+        # in order to have consistent looking functions and getting rid of any
+        # comments parsing issues.
         # See https://github.com/argoproj-labs/hera/issues/572
         content = roundtrip(
             textwrap.dedent(inspect.getsource(instance.source))
@@ -247,7 +258,8 @@ class Component(object):
             return ""
 
     def generate_name(self, n: int):
-        """Utility method to invoke by the global PipelineContext to generate a context wide unique identifier for the task node."""
+        """Utility method to invoke by the global PipelineContext to generate a
+        context wide unique identifier for the task node."""
 
         return f"{self.base_name}-{n}"
 
@@ -256,21 +268,28 @@ class Component(object):
         func: Callable,
         inputs: Dict[str, Union[PipelineInput, ComponentOutput]],
     ) -> Dict[str, ComponentInput]:
-        """Generates component inputs from the underlying function as well as the Component's constructor method's calls kwargs. Also
-        - checks for correct ComponentInput type annotations in the decorated original function
-        - ensures all original function inputs without default values are being specified
+        """Generates component inputs from the underlying function as well as
+        the Component's constructor method's calls kwargs. Also
+        - checks for correct ComponentInput type annotations in the decorated
+            original function
+        - ensures all original function inputs without default values are being
+            specified
 
         Args:
             func (Callable): The function the we want to wrap in a Component.
-            inputs (Dict[str,Union[PipelineInput,ComponentOutput]]): The PipelineInput or ComponentOutput instances that the
-                Component's constructor receives.
+            inputs (Dict[str,Union[PipelineInput,ComponentOutput]]): The
+                PipelineInput or ComponentOutput instances that the Component's
+                constructor receives.
 
         Raises:
-            TypeError: Raised if any of the inputs arent of the supported types [PipelineInput,ComponentOutput]
-            ValueError: Raised if the component is given an input that cannot be mapped onto any the underlying function's
-                arguments that have been annotated with the InputParameter type.
-            Exception: Raised if the component is not given an input for at least one of the underlying function's arguments
-                without default value.
+            TypeError: Raised if any of the inputs arent of the supported types
+                [PipelineInput,ComponentOutput]
+            ValueError: Raised if the component is given an input that cannot
+                be mapped onto any the underlying function's arguments that
+                have been annotated with the InputParameter type.
+            Exception: Raised if the component is not given an input for at
+                least one of the underlying function's arguments without
+                default value.
 
         Returns:
             Dict[str,ComponentInput]: The component's inputs.
@@ -330,7 +349,8 @@ class Component(object):
     def generate_outputs_from_func(
         self, func: Callable
     ) -> Dict[str, ComponentOutput]:
-        """Generates the Component's outputs based on the underlying function's arguments annotated with the OutputParameter type.
+        """Generates the Component's outputs based on the underlying function's
+        arguments annotated with the OutputParameter type.
 
         Args:
             func (Callable): The function the we want to wrap in a Component.
@@ -338,9 +358,6 @@ class Component(object):
         Returns:
             Dict[str,ComponentOutput]: The component's outputs.
         """
-
-        # func_args: Dict[str,inspect.Parameter] = inspect.signature(func).parameters.items()
-        # func_outputs: List[str] = [k for k,param in func_args if (param.annotation == OutputParameter)]
 
         func_outputs = get_func_args(func, "annotation", [ComponentOutput])
 
@@ -355,10 +372,13 @@ class Component(object):
         return result
 
     def build_hera_task_factory(self) -> Callable:
-        """Generates the task factory task_wrapper callable from the hera.workflows.script decorator definition. Needs to be called outide of an active hera context.
+        """Generates the task factory task_wrapper callable from the
+        hera.workflows.script decorator definition. Needs to be called outide
+        of an active hera context.
 
         Returns:
-            Task: A task that implements this Component instance in the hera library.
+            Task: A task that implements this Component instance in the hera
+                library.
         """
 
         script_decorator_kwargs = self.hera_template_kwargs.copy()
@@ -381,14 +401,17 @@ class Component(object):
         return task_factory
 
     def to_hera_task(self) -> Task:
-        """Generates a hera.workflow.Task instance. Needs to be called from within an active hera context, specifically:
+        """Generates a hera.workflow.Task instance. Needs to be called from
+            within an active hera context, specifically:
             - an outer layer hera.WorkflowTemplate context
             - an inner layer hera.DAG context.
-        Otherwise the `task_factory` invocation won't return the hera.workflows.Task instance, and it wont be added to
-        either hera.WorkflowTemplate or the hera.DAG.
+        Otherwise the `task_factory` invocation won't return the
+        hera.workflows.Task instance, and it wont be added to either
+        hera.WorkflowTemplate or the hera.DAG.
 
         Returns:
-            Task: A task that implements this Component instance in the hera library.
+            Task: A task that implements this Component instance in the hera
+                library.
         """
 
         task = self.task_factory(
@@ -404,7 +427,8 @@ class Component(object):
 
 def component(func: Callable) -> Callable:
     """Takes a calleable and generates a configured Component factory that will
-    generate a Component version of the callable if invoked inside an active PipelineContext.
+    generate a Component version of the callable if invoked inside an active
+    PipelineContext.
 
     Usage:
     @bettmensch_ai.component #-> component factory
@@ -412,11 +436,15 @@ def component(func: Callable) -> Callable:
         sum.assign(a + b)
 
     Decorating the above `add` method should return a component factory that
-    - generates a Component class instance when called from within an active PipelineContext
-      1. add a post function output processing step that ensures hera-compatible writing of output parameters to sensible local file paths
+    - generates a Component class instance when called from within an active
+        PipelineContext
+      1. add a post function output processing step that ensures hera-compatible
+        writing of output parameters to sensible local file paths
       2. add the inputs parameter type inputs 'a' and 'b' to the component
       3. add the parameter type output 'sum' to the component
-          3.1 this should facilitate the reference the file path from step 1. in the `from` argument further downstream at the stage of mapping to a ArgoWorkflowTemplate
+          3.1 this should facilitate the reference the file path from step 1.
+            in the `from` argument further downstream at the stage of mapping
+            to a ArgoWorkflowTemplate
     """
 
     def component_factory(

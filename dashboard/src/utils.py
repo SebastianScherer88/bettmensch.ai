@@ -78,7 +78,8 @@ def hex_to_channel(hex: str, channel: Literal["RGB", "BGR"]):
         return hex_to_bgr(hex)
     else:
         raise ValueError(
-            f"Channel argument {channel} is invalid. Supported channels: RGB,BGR"
+            f"Channel argument {channel} is invalid. Supported channels: "
+            "RGB,BGR"
         )
 
 
@@ -108,7 +109,8 @@ def color_background(
         DarkTheme().backgroundColor
     ),
 ):
-    """Takes an image array of shape (w,h,3) and replaces all white pixels with the new_background_color."""
+    """Takes an image array of shape (w,h,3) and replaces all white pixels with
+    the new_background_color."""
 
     background_mask = np.expand_dims((image == 255).all(-1).astype(int), -1)
     image_no_background = image - 255 * background_mask
