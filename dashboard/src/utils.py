@@ -4,12 +4,13 @@ import argo_workflows
 import cv2
 import numpy as np
 import streamlit as st
-from argo_workflows.api import (workflow_service_api,
-                                workflow_template_service_api)
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import \
-    IoArgoprojWorkflowV1alpha1Workflow
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import \
-    IoArgoprojWorkflowV1alpha1WorkflowTemplate
+from argo_workflows.api import workflow_service_api, workflow_template_service_api
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
+    IoArgoprojWorkflowV1alpha1Workflow,
+)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+    IoArgoprojWorkflowV1alpha1WorkflowTemplate,
+)
 from pydantic import BaseModel
 
 PIPELINE_NODE_EMOJI_MAP = {

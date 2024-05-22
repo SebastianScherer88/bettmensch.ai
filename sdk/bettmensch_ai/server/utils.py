@@ -1,12 +1,13 @@
 from typing import List
 
 import argo_workflows
-from argo_workflows.api import (workflow_service_api,
-                                workflow_template_service_api)
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import \
-    IoArgoprojWorkflowV1alpha1Workflow
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import \
-    IoArgoprojWorkflowV1alpha1WorkflowTemplate
+from argo_workflows.api import workflow_service_api, workflow_template_service_api
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
+    IoArgoprojWorkflowV1alpha1Workflow,
+)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+    IoArgoprojWorkflowV1alpha1WorkflowTemplate,
+)
 
 PIPELINE_NODE_EMOJI_MAP = {
     "task": "🔵",  # :large_blue_circle:

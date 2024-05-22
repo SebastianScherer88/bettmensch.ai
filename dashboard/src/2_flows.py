@@ -9,8 +9,7 @@ from bettmensch_ai import RegisteredFlow as Flow
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowEdge, StreamlitFlowNode
 from utils import add_logo  # , FLOW_NODE_EMOJI_MAP
-from utils import (PIPELINE_NODE_EMOJI_MAP, configuration, get_colors,
-                   get_workflows)
+from utils import PIPELINE_NODE_EMOJI_MAP, configuration, get_colors, get_workflows
 
 
 def get_flow_meta_data(submitted_flows) -> List[Dict]:
