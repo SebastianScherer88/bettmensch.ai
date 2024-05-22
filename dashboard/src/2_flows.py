@@ -6,7 +6,7 @@ st.set_page_config(
 )
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowNode, StreamlitFlowEdge
-from bettmensch_ai import Flow, DagVisualizationSchema, DagLayoutSetting
+from bettmensch_ai import RegisteredFlow as Flow, DagVisualizationSchema, DagLayoutSetting
 from utils import get_colors, add_logo, configuration, get_workflows, PIPELINE_NODE_EMOJI_MAP #, FLOW_NODE_EMOJI_MAP
 from typing import Dict, List, Tuple
 import pandas as pd
