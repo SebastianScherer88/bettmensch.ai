@@ -2,9 +2,9 @@ repos:
 - repo: https://github.com/pycqa/isort
   rev: 5.13.2
   hooks:
-    - id: isort
-      name: isort (python)
-      args: ["--profile", "black"]
+  - id: isort
+    name: isort (python)
+    args: ["--profile", "black","--line-length","80"]
 # - repo: https://github.com/pre-commit/pre-commit-hooks
 #   rev: v2.3.0
 #   hooks:
@@ -15,3 +15,4 @@ repos:
   rev: 22.10.0
   hooks:
   - id: black
+    args: ["--line-length","80"]
