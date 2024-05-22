@@ -6,9 +6,8 @@ st.set_page_config(
 )
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowNode, StreamlitFlowEdge
-from flow import Flow
-from dag import DagVisualizationSchema, DagLayoutSetting
-from utils import add_logo, configuration, get_workflows, PIPELINE_NODE_EMOJI_MAP #, FLOW_NODE_EMOJI_MAP
+from bettmensch_ai import Flow, DagVisualizationSchema, DagLayoutSetting
+from utils import get_colors, add_logo, configuration, get_workflows, PIPELINE_NODE_EMOJI_MAP #, FLOW_NODE_EMOJI_MAP
 from typing import Dict, List, Tuple
 import pandas as pd
 
@@ -133,7 +132,7 @@ def display_flow_dag(formatted_flow_data, selected_flow, display_flow_ios) -> Tu
     dag_visualization_element = streamlit_flow(
         nodes = [StreamlitFlowNode(**node.model_dump()) for node in dag_visualization_schema.nodes],
         edges = [StreamlitFlowEdge(**connection.model_dump()) for connection in dag_visualization_schema.connections],
-        **DagLayoutSetting().model_dump()
+        **DagLayoutSetting(style={"backgroundColor": get_colors('custom').secondaryBackgroundColor}).model_dump()
     )
         
     return dag_visualization_schema, dag_visualization_element

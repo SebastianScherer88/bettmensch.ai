@@ -6,11 +6,10 @@ st.set_page_config(
 )
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowNode, StreamlitFlowEdge
-from pipeline import Pipeline
-from dag import DagVisualizationSchema, DagLayoutSetting
-from utils import add_logo, configuration, get_workflow_templates, PIPELINE_NODE_EMOJI_MAP
+from utils import get_colors, add_logo, configuration, get_workflow_templates, PIPELINE_NODE_EMOJI_MAP
 from typing import Dict, List, Tuple
 import pandas as pd
+from bettmensch_ai import RegisteredPipeline as Pipeline, DagVisualizationSchema, DagLayoutSetting
 
 def get_pipeline_meta_data(registered_pipelines) -> List[Dict]:
     """Retrieves the metadata field from all the ArgoWorkflowTemplate CRs obtained by `get_workflow_templates`.
@@ -121,7 +120,7 @@ def display_pipeline_dag(formatted_pipeline_data, selected_pipeline, display_pip
     dag_visualization_element = streamlit_flow(
         nodes = [StreamlitFlowNode(**node.model_dump()) for node in dag_visualization_schema.nodes],
         edges = [StreamlitFlowEdge(**connection.model_dump()) for connection in dag_visualization_schema.connections],
-        **DagLayoutSetting().model_dump()
+        **DagLayoutSetting(style={"backgroundColor": get_colors('custom').secondaryBackgroundColor}).model_dump()
     )
         
     return dag_visualization_schema, dag_visualization_element
