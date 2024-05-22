@@ -6,9 +6,9 @@ from argo_workflows.api import workflow_template_service_api
 from pydantic import BaseModel
 from datetime import datetime
 import yaml
-from utils import PIPELINE_NODE_EMOJI_MAP
-from dag import DagConnection, DagNode, DagVisualizationSchema
 import networkx as nx
+from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
+from bettmensch_ai.server.dag import DagConnection, DagNode, DagVisualizationSchema
 
 # --- PipelineMetadata
 class WorkflowTemplateMetadata(BaseModel):

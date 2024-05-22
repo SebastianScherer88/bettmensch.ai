@@ -1,17 +1,17 @@
 from typing import List, Dict, Union
-from utils import get_func_args, validate_func_args
-from arguments import PipelineInput, ComponentInput, ComponentOutput, Parameter
-from component import PipelineContext, _pipeline_context, component
-from client import client
 from typing import Callable
-import argo_workflows
 from argo_workflows.api import workflow_template_service_api
 from hera.workflows import WorkflowTemplate, DAG, Workflow
 from hera.workflows.models import WorkflowTemplateRef
 from hera.shared import global_config
 from hera.auth import ArgoCLITokenGenerator
 import inspect
-from frontend import RegisteredPipeline, RegisteredFlow
+from bettmensch_ai.server import RegisteredPipeline, RegisteredFlow
+from bettmensch_ai.utils import get_func_args, validate_func_args
+from bettmensch_ai.arguments import PipelineInput, ComponentInput, ComponentOutput, Parameter
+from bettmensch_ai.component import PipelineContext, _pipeline_context, component
+from bettmensch_ai.client import client
+
 
 class Pipeline(object):
     """Manages the PipelineContext meta data storage utility."""
@@ -43,7 +43,7 @@ class Pipeline(object):
         
         if registered_pipeline is None:
             assert all([arg is not None for arg in (name,namespace,func)])
-            self.build_from_user(name, namespace, func, clear_context)
+            self.build_from_user(name, namespace, func)
         else:
             self.build_from_registry(registered_pipeline)
         
