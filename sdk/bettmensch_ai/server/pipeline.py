@@ -168,15 +168,19 @@ class Pipeline(BaseModel):
 
     @staticmethod
     def resolve_value_expression(expression: str) -> Tuple[str, str, str]:
-        """Utility to resolve a node argument's value expression to the node and output references.
+        """Utility to resolve a node argument's value expression to the node
+        and output references.
 
         Args:
             expression (str): A node argument value expression, e.g.
-            - '{{workflow.parameters.coin}}' # references the workflow parameter type argument "coin"
-            - '{{tasks.Set-a-coin.outputs.parameters.coin}}' # references the "Set-a-coin" node's parameter type argument "coin"
+            - '{{workflow.parameters.coin}}' # references the workflow parameter
+                type argument "coin"
+            - '{{tasks.Set-a-coin.outputs.parameters.coin}}' # references the
+                "Set-a-coin" node's parameter type argument "coin"
 
         Returns:
-            Tuple[str, str,str]: The (upstream_task,output_type,output_name) expressed in the expression, e.g.
+            Tuple[str, str,str]: The (upstream_task,output_type,output_name)
+                expressed in the expression, e.g.
                 - ('pipeline','parameters','coin')
                 - ('Set-a-coin','parameters','coin')
         """
@@ -220,9 +224,8 @@ class Pipeline(BaseModel):
         tasks = entrypoint_template["dag"]["tasks"]
 
         for task in tasks:
-            # import pdb
-            # pdb.set_trace()
-            # assemble task data structure: name, template and depends can be copied straight from the task entry of the dag template
+            # assemble task data structure: name, template and depends can be
+            # copied straight from the task entry of the dag template
             pipeline_node = {
                 "name": task["name"],
                 "template": task["template"],
@@ -235,8 +238,10 @@ class Pipeline(BaseModel):
                 **templates_dict[pipeline_node["template"]]["outputs"]
             )
 
-            # the inputs need to resolve the expressions to either the pipeline or reference task in the expression
-            # if no expression is used, the argument spec can be directly appended to the corresponding parameters/artifacts list
+            # the inputs need to resolve the expressions to either the pipeline
+            # or reference task in the expression if no expression is used, the
+            # argument spec can be directly appended to the corresponding
+            # parameters/artifacts list
             pipeline_node_inputs = {"parameters": [], "artifacts": []}
             try:
                 node_input_parameters = task["arguments"]["parameters"]
@@ -288,7 +293,8 @@ class Pipeline(BaseModel):
         cls,
         workflow_template_resource: IoArgoprojWorkflowV1alpha1WorkflowTemplate,
     ) -> Pipeline:
-        """Utility to generate a Pipeline instance from a IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
+        """Utility to generate a Pipeline instance from a
+        IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing the DAG.
@@ -347,14 +353,17 @@ class Pipeline(BaseModel):
         dag: List[PipelineNode],
         include_task_io: bool = True,
     ) -> Dict[str, Tuple[int, int]]:
-        """Utility to generate positional (x,y) coordinate tuples for each node of the dag that is getting visualized.
-        Uses the networkx library's utilities to arrange nodes in a dag-friendly directional manner for visualization.
-        Based on the DAG example at https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html.
+        """Utility to generate positional (x,y) coordinate tuples for each node
+        of the dag that is getting visualized. Uses the networkx library's
+        utilities to arrange nodes in a dag-friendly directional manner for
+        visualization. Based on the DAG example at
+        https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html.
         Args:
             dag (List[PipelineNode]): The dag object.
 
         Returns:
-            Dict[str,Tuple[int,int]]: A node uid->positional (x,y) coordinate mapping.
+            Dict[str,Tuple[int,int]]: A node uid->positional (x,y) coordinate
+                mapping.
         """
 
         node_positions = {}
@@ -394,7 +403,8 @@ class Pipeline(BaseModel):
 
                             G.add_edge(upstream_node_name, node_name)
 
-                            # connect the input type task io node with the upstream output type task io node - where appropriate
+                            # connect the input type task io node with the
+                            # upstream output type task io node - where appropriate
                             if (
                                 interface_type == "inputs"
                                 and getattr(argument, "source", None)
@@ -412,8 +422,8 @@ class Pipeline(BaseModel):
 
         # add layer attribute - required for multipartite layout
         for layer, nodes in enumerate(nx.topological_generations(G)):
-            # `multipartite_layout` expects the layer as a node attribute, so add the
-            # numeric layer value as a node attribute
+            # `multipartite_layout` expects the layer as a node attribute, so
+            # add the numeric layer value as a node attribute
             for node in nodes:
                 G.nodes[node]["layer"] = layer
 
@@ -431,7 +441,8 @@ class Pipeline(BaseModel):
     def create_dag_visualization_schema(
         self, include_task_io: bool = True
     ) -> DagVisualizationSchema:
-        """Utility method to generate the assets the barfi/baklavajs rendering engine uses to display the Pipeline's dag property on the frontend."""
+        """Utility method to generate the assets the barfi/baklavajs rendering
+        engine uses to display the Pipeline's dag property on the frontend."""
 
         node_positions = self.create_dag_visualization_node_positions(
             self.inputs, self.dag, include_task_io
@@ -453,7 +464,8 @@ class Pipeline(BaseModel):
                 )
             )
 
-            # we only create task_node <-> task_node connections if we dont display the tasks' IO specs
+            # we only create task_node <-> task_node connections if we dont
+            # display the tasks' IO specs
             if not include_task_io:
                 if task_node.depends is not None:
                     for upstream_node_name in task_node.depends:
@@ -516,7 +528,8 @@ class Pipeline(BaseModel):
                                 )
                             )
 
-                            # connect the input type task io node with the upstream output type task io node - where appropriate
+                            # connect the input type task io node with the
+                            # upstream output type task io node - where appropriate
                             if (
                                 interface_type == "inputs"
                                 and getattr(argument, "source", None)

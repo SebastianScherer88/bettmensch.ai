@@ -310,7 +310,8 @@ class Component(object):
 
             if name not in func_inputs:
                 raise ValueError(
-                    f"Attempting to declare unknown component input {name}. Known inputs: {func_inputs}."
+                    f"Attempting to declare unknown component input {name}. "
+                    f"Known inputs: {func_inputs}."
                 )
 
             # assemble component input
@@ -320,7 +321,8 @@ class Component(object):
                 component_input = ComponentInput(name=name)
             else:
                 raise TypeError(
-                    f"Input {input} must be of type PipelineInput or ComponentOutput."
+                    f"Input {input} must be of type PipelineInput or "
+                    "ComponentOutput."
                 )
 
             component_input.set_source(input)
