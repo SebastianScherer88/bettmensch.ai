@@ -1,20 +1,20 @@
 import streamlit as st
-st.set_page_config(
-    page_title="Bettmensch AI",
-    page_icon=":hotel:",
-    layout="wide"
-)
+
+st.set_page_config(page_title="Bettmensch AI", page_icon=":hotel:", layout="wide")
 from st_pages import Page, show_pages
 from utils import add_logo
 
 show_pages(
     [
         Page("src/0_home.py", "Home", ":hotel:"),
-        Page(path="src/1_pipelines.py", name="Pipelines", icon=":twisted_rightwards_arrows:"),
+        Page(
+            path="src/1_pipelines.py",
+            name="Pipelines",
+            icon=":twisted_rightwards_arrows:",
+        ),
         Page(path="src/2_flows.py", name="Flows", icon=":arrow_forward:"),
         Page(path="src/3_models.py", name="Models", icon=":books:"),
         Page(path="src/4_servers.py", name="Servers", icon=":rocket:"),
-        
     ]
 )
 

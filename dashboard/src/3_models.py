@@ -9,8 +9,10 @@ st.set_page_config(
 
 with st.sidebar:
     add_logo(sidebar=True)
-    selected = option_menu("", ["Models"], icons=['arrow-right-square'], menu_icon="books", default_index=0)
-    
+    selected = option_menu(
+        "", ["Models"], icons=["arrow-right-square"], menu_icon="books", default_index=0
+    )
+
 st.markdown(
     """
     # :books: Models
