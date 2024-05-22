@@ -2,11 +2,14 @@ import inspect
 from typing import Callable, Dict, List, Union
 
 from argo_workflows.api import workflow_template_service_api
-from bettmensch_ai.arguments import (ComponentInput, ComponentOutput,
-                                     Parameter, PipelineInput)
+from bettmensch_ai.arguments import (
+    ComponentInput,
+    ComponentOutput,
+    Parameter,
+    PipelineInput,
+)
 from bettmensch_ai.client import client
-from bettmensch_ai.component import (PipelineContext, _pipeline_context,
-                                     component)
+from bettmensch_ai.component import PipelineContext, _pipeline_context, component
 from bettmensch_ai.server import RegisteredFlow, RegisteredPipeline
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator

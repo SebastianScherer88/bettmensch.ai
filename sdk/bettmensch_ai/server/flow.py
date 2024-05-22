@@ -6,13 +6,17 @@ from typing import Dict, List, Literal, Optional, Union
 import argo_workflows
 import yaml
 from argo_workflows.api import workflow_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import \
-    IoArgoprojWorkflowV1alpha1Workflow
-from bettmensch_ai.server.dag import (DagConnection, DagNode,
-                                      DagVisualizationSchema)
-from bettmensch_ai.server.pipeline import (NodeInputs, NodeOutput, Pipeline,
-                                           PipelineInputParameter,
-                                           ScriptTemplate)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
+    IoArgoprojWorkflowV1alpha1Workflow,
+)
+from bettmensch_ai.server.dag import DagConnection, DagNode, DagVisualizationSchema
+from bettmensch_ai.server.pipeline import (
+    NodeInputs,
+    NodeOutput,
+    Pipeline,
+    PipelineInputParameter,
+    ScriptTemplate,
+)
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
 from pydantic import BaseModel
 

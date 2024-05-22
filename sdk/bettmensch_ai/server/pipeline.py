@@ -7,10 +7,10 @@ import argo_workflows
 import networkx as nx
 import yaml
 from argo_workflows.api import workflow_template_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import \
-    IoArgoprojWorkflowV1alpha1WorkflowTemplate
-from bettmensch_ai.server.dag import (DagConnection, DagNode,
-                                      DagVisualizationSchema)
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+    IoArgoprojWorkflowV1alpha1WorkflowTemplate,
+)
+from bettmensch_ai.server.dag import DagConnection, DagNode, DagVisualizationSchema
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
 from pydantic import BaseModel
 

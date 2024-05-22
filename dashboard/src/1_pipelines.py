@@ -10,8 +10,13 @@ from bettmensch_ai import DagLayoutSetting, DagVisualizationSchema
 from bettmensch_ai import RegisteredPipeline as Pipeline
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowEdge, StreamlitFlowNode
-from utils import (PIPELINE_NODE_EMOJI_MAP, add_logo, configuration,
-                   get_colors, get_workflow_templates)
+from utils import (
+    PIPELINE_NODE_EMOJI_MAP,
+    add_logo,
+    configuration,
+    get_colors,
+    get_workflow_templates,
+)
 
 
 def get_pipeline_meta_data(registered_pipelines) -> List[Dict]:

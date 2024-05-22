@@ -3,12 +3,19 @@ import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.arguments import (ComponentInput, ComponentOutput,
-                                     PipelineInput)
+from bettmensch_ai.arguments import ComponentInput, ComponentOutput, PipelineInput
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.shared import global_config
-from hera.workflows import (DAG, InlineScriptConstructor, Parameter, Script,
-                            Task, WorkflowTemplate, models, script)
+from hera.workflows import (
+    DAG,
+    InlineScriptConstructor,
+    Parameter,
+    Script,
+    Task,
+    WorkflowTemplate,
+    models,
+    script,
+)
 from hera.workflows._unparse import roundtrip
 
 
