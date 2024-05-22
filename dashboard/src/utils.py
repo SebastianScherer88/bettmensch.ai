@@ -4,7 +4,10 @@ import argo_workflows
 import cv2
 import numpy as np
 import streamlit as st
-from argo_workflows.api import workflow_service_api, workflow_template_service_api
+from argo_workflows.api import (
+    workflow_service_api,
+    workflow_template_service_api,
+)
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
     IoArgoprojWorkflowV1alpha1Workflow,
 )
@@ -79,7 +82,9 @@ def hex_to_channel(hex: str, channel: Literal["RGB", "BGR"]):
         )
 
 
-def get_colors(theme: Literal["dark", "light", "custom"] = "dark") -> CustomTheme:
+def get_colors(
+    theme: Literal["dark", "light", "custom"] = "dark"
+) -> CustomTheme:
     if theme == "dark":
         colors = DarkTheme()
     elif theme == "light":
@@ -88,7 +93,9 @@ def get_colors(theme: Literal["dark", "light", "custom"] = "dark") -> CustomThem
         colors = CustomTheme(
             primaryColor=st.get_option("theme.primaryColor"),
             backgroundColor=st.get_option("theme.backgroundColor"),
-            secondaryBackgroundColor=st.get_option("theme.secondaryBackgroundColor"),
+            secondaryBackgroundColor=st.get_option(
+                "theme.secondaryBackgroundColor"
+            ),
             textColor=st.get_option("theme.textColor"),
         )
 
@@ -149,7 +156,9 @@ def get_workflow_templates(
     configuration,
 ) -> List[IoArgoprojWorkflowV1alpha1WorkflowTemplate]:
     api_client = argo_workflows.ApiClient(configuration)
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(api_client)
+    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+        api_client
+    )
 
     return api_instance.list_workflow_templates(namespace="argo")["items"]
 

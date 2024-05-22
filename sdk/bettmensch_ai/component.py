@@ -3,7 +3,11 @@ import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.arguments import ComponentInput, ComponentOutput, PipelineInput
+from bettmensch_ai.arguments import (
+    ComponentInput,
+    ComponentOutput,
+    PipelineInput,
+)
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.shared import global_config
 from hera.workflows import (
@@ -50,7 +54,9 @@ class PipelineContext(object):
 
     def add_component(self, component):
         if self.active:
-            component_counter = self.get_component_name_counter(component.base_name)
+            component_counter = self.get_component_name_counter(
+                component.base_name
+            )
             component.name = component.generate_name(component_counter)
             self.components.append(component)
         else:
@@ -110,7 +116,9 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
         preprocess = "\n# --- preprocessing\nimport json\n"
         # input parameter import
-        for param in sorted(actual_input_parameters or [], key=lambda x: x.name):
+        for param in sorted(
+            actual_input_parameters or [], key=lambda x: x.name
+        ):
             # Hera does not know what the content of the `InputFrom` is, coming from another task. In some cases
             # non-JSON encoded strings are returned, which fail the loads, but they can be used as plain strings
             # which is why this captures that in an except. This is only used for `InputFrom` cases as the extra
@@ -121,9 +129,13 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
         # output parameter initialization
         if outputs.parameters:
-            preprocess += "\nfrom bettmensch_ai.arguments import ComponentOutput\n"
+            preprocess += (
+                "\nfrom bettmensch_ai.arguments import ComponentOutput\n"
+            )
         for param in sorted(outputs.parameters or [], key=lambda x: x.name):
-            preprocess += f"""{param.name} = ComponentOutput("{param.name}")\n"""
+            preprocess += (
+                f"""{param.name} = ComponentOutput("{param.name}")\n"""
+            )
 
         preprocess = (
             textwrap.dedent(preprocess)
@@ -160,7 +172,9 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         if instance.add_cwd_to_sys_path or self.add_cwd_to_sys_path:
             script = "import os\nimport sys\nsys.path.append(os.getcwd())\n"
 
-        script_extra = self._get_script_preprocessing(instance) if args else None
+        script_extra = (
+            self._get_script_preprocessing(instance) if args else None
+        )
         if script_extra:
             script += copy.deepcopy(script_extra)
             script += "\n"
@@ -181,7 +195,9 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         return textwrap.dedent(script)
 
 
-global_config.set_class_defaults(Script, constructor=ComponentInlineScriptRunner())
+global_config.set_class_defaults(
+    Script, constructor=ComponentInlineScriptRunner()
+)
 
 
 class Component(object):
@@ -236,7 +252,9 @@ class Component(object):
         return f"{self.base_name}-{n}"
 
     def generate_inputs_from_func(
-        self, func: Callable, inputs: Dict[str, Union[PipelineInput, ComponentOutput]]
+        self,
+        func: Callable,
+        inputs: Dict[str, Union[PipelineInput, ComponentOutput]],
     ) -> Dict[str, ComponentInput]:
         """Generates component inputs from the underlying function as well as the Component's constructor method's calls kwargs. Also
         - checks for correct ComponentInput type annotations in the decorated original function
@@ -258,7 +276,9 @@ class Component(object):
             Dict[str,ComponentInput]: The component's inputs.
         """
 
-        validate_func_args(func, argument_types=[ComponentInput, ComponentOutput])
+        validate_func_args(
+            func, argument_types=[ComponentInput, ComponentOutput]
+        )
         func_inputs = get_func_args(func, "annotation", [ComponentInput])
         non_default_args = get_func_args(func, "default", [inspect._empty])
         required_func_inputs = dict(
@@ -307,7 +327,9 @@ class Component(object):
 
         return result
 
-    def generate_outputs_from_func(self, func: Callable) -> Dict[str, ComponentOutput]:
+    def generate_outputs_from_func(
+        self, func: Callable
+    ) -> Dict[str, ComponentOutput]:
         """Generates the Component's outputs based on the underlying function's arguments annotated with the OutputParameter type.
 
         Args:
@@ -344,7 +366,8 @@ class Component(object):
             {
                 "outputs": [
                     Parameter(
-                        name=output.name, value_from=models.ValueFrom(path=output.path)
+                        name=output.name,
+                        value_from=models.ValueFrom(path=output.path),
                     )
                     for output in self.outputs.values()
                 ]
@@ -369,7 +392,9 @@ class Component(object):
         """
 
         task = self.task_factory(
-            arguments=[input.to_hera_parameter() for input in self.inputs.values()],
+            arguments=[
+                input.to_hera_parameter() for input in self.inputs.values()
+            ],
             name=self.name,
             depends=self.depends,
         )
@@ -413,7 +438,9 @@ def test_hera_component():
 
     @component
     def add(
-        a: ComponentInput = 1, b: ComponentInput = 2, sum: ComponentOutput = None
+        a: ComponentInput = 1,
+        b: ComponentInput = 2,
+        sum: ComponentOutput = None,
     ) -> None:
 
         sum.assign(a + b)
@@ -448,7 +475,11 @@ def test_hera_component():
         name="test_component",
         entrypoint="test_dag",
         namespace="argo",
-        arguments=[Parameter(name="a"), Parameter(name="b"), Parameter(name="c")],
+        arguments=[
+            Parameter(name="a"),
+            Parameter(name="b"),
+            Parameter(name="c"),
+        ],
     ) as wft:
 
         with DAG(name="test_dag"):

@@ -1,7 +1,9 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="Pipelines", page_icon=":twisted_rightwards_arrows:", layout="wide"
+    page_title="Pipelines",
+    page_icon=":twisted_rightwards_arrows:",
+    layout="wide",
 )
 from typing import Dict, List, Tuple
 
@@ -50,7 +52,13 @@ def display_pipeline_summary_table(pipeline_meta_data) -> pd.DataFrame:
 
     pipeline_summary_df = (
         pd.DataFrame(pipeline_meta_data)[["name", "uid", "creation_timestamp"]]
-        .rename(columns={"name": "Name", "uid": "ID", "creation_timestamp": "Created"})
+        .rename(
+            columns={
+                "name": "Name",
+                "uid": "ID",
+                "creation_timestamp": "Created",
+            }
+        )
         .sort_values(by="Created", ignore_index=True)
     )
 
@@ -103,7 +111,9 @@ def get_formatted_pipeline_data(registered_pipelines, pipeline_names) -> Dict:
             formatted_pipeline_data["metadata"][resource_name] = pipeline_dict[
                 "metadata"
             ]
-            formatted_pipeline_data["inputs"][resource_name] = pipeline_dict["inputs"]
+            formatted_pipeline_data["inputs"][resource_name] = pipeline_dict[
+                "inputs"
+            ]
             formatted_pipeline_data["dag"][resource_name] = pipeline_dict["dag"]
             formatted_pipeline_data["templates"][resource_name] = pipeline_dict[
                 "templates"
@@ -163,7 +173,9 @@ def display_pipeline_dag(
             for connection in dag_visualization_schema.connections
         ],
         **DagLayoutSetting(
-            style={"backgroundColor": get_colors("custom").secondaryBackgroundColor}
+            style={
+                "backgroundColor": get_colors("custom").secondaryBackgroundColor
+            }
         ).model_dump(),
     )
 
@@ -192,7 +204,9 @@ def display_pipeline_dag_selection(
         )
 
         if element_is_task_node:
-            st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`")
+            st.markdown(
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`"
+            )
             task_inputs_tab, task_outputs_tab, task_script_tab = st.tabs(
                 ["Task Inputs", "Task Outputs", "Task Script"]
             )
@@ -202,7 +216,8 @@ def display_pipeline_dag_selection(
             with st.container(height=tab_container_height, border=False):
                 with task_inputs_tab:
                     task_inputs = (
-                        task["inputs"]["parameters"] + task["inputs"]["artifacts"]
+                        task["inputs"]["parameters"]
+                        + task["inputs"]["artifacts"]
                     )
                     task_inputs_df = pd.DataFrame(task_inputs)
                     task_inputs_formatted_df = pd.concat(
@@ -227,9 +242,12 @@ def display_pipeline_dag_selection(
             with st.container(height=tab_container_height, border=False):
                 with task_outputs_tab:
                     task_outputs = (
-                        task["outputs"]["parameters"] + task["outputs"]["artifacts"]
+                        task["outputs"]["parameters"]
+                        + task["outputs"]["artifacts"]
                     )
-                    task_outputs_formatted_df = pd.DataFrame(task_outputs).rename(
+                    task_outputs_formatted_df = pd.DataFrame(
+                        task_outputs
+                    ).rename(
                         columns={
                             "name": "Name",
                             "value": "Default",
@@ -242,7 +260,9 @@ def display_pipeline_dag_selection(
             with st.container(height=tab_container_height, border=False):
                 with task_script_tab:
                     st.json(
-                        pipeline.get_template(task["template"]).model_dump()["script"]
+                        pipeline.get_template(task["template"]).model_dump()[
+                            "script"
+                        ]
                     )
         else:
             st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: None")
@@ -273,7 +293,10 @@ def display_selected_pipeline(
 
     with st.container(height=chart_container_height):
         display_pipeline_ios = st.toggle(f"Display pipeline & task I/O")
-        dag_visualization_schema, dag_visualization_element = display_pipeline_dag(
+        (
+            dag_visualization_schema,
+            dag_visualization_element,
+        ) = display_pipeline_dag(
             formatted_pipeline_data, selected_pipeline, display_pipeline_ios
         )
 
@@ -300,7 +323,9 @@ def display_selected_pipeline(
                     pipeline_inputs = formatted_pipeline_data["inputs"][
                         selected_pipeline
                     ]
-                    pipeline_inputs_formatted_df = pd.DataFrame(pipeline_inputs).rename(
+                    pipeline_inputs_formatted_df = pd.DataFrame(
+                        pipeline_inputs
+                    ).rename(
                         columns={
                             "name": "Name",
                             "value": "Default",
@@ -320,7 +345,8 @@ def display_selected_pipeline(
                 with st.container(height=tab_container_height, border=False):
                     st.markdown("### Spec")
                     st.json(
-                        formatted_pipeline_data["dag"][selected_pipeline], expanded=True
+                        formatted_pipeline_data["dag"][selected_pipeline],
+                        expanded=True,
                     )
 
             with tab_templates:
@@ -362,13 +388,16 @@ def main():
 
     names = get_pipeline_names(meta_data)
 
-    formatted_pipeline_data = get_formatted_pipeline_data(workflow_templates, names)
+    formatted_pipeline_data = get_formatted_pipeline_data(
+        workflow_templates, names
+    )
 
     selected_pipeline = display_pipeline_dropdown(names)
 
-    dag_visualization_schema, dag_visualization_element = display_selected_pipeline(
-        formatted_pipeline_data, selected_pipeline
-    )
+    (
+        dag_visualization_schema,
+        dag_visualization_element,
+    ) = display_selected_pipeline(formatted_pipeline_data, selected_pipeline)
 
     with st.sidebar:
         add_logo(sidebar=True)

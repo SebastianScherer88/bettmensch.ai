@@ -3,7 +3,9 @@ from typing import Any, Callable, Dict, List
 
 
 def get_func_args(
-    func: Callable, attribute_name: str = "", attribute_value_range: List[Any] = []
+    func: Callable,
+    attribute_name: str = "",
+    attribute_value_range: List[Any] = [],
 ) -> Dict[str, inspect.Parameter]:
     """Utility method to retrieve function arguments with optional filtering on specified argument attribute.
 

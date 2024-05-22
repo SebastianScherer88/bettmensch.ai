@@ -9,7 +9,11 @@ from argo_workflows.api import workflow_service_api
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
     IoArgoprojWorkflowV1alpha1Workflow,
 )
-from bettmensch_ai.server.dag import DagConnection, DagNode, DagVisualizationSchema
+from bettmensch_ai.server.dag import (
+    DagConnection,
+    DagNode,
+    DagVisualizationSchema,
+)
 from bettmensch_ai.server.pipeline import (
     NodeInputs,
     NodeOutput,
@@ -103,7 +107,9 @@ class Flow(BaseModel):
 
     def get_template(self, name: str) -> ScriptTemplate:
 
-        return [template for template in self.templates if template.name == name][0]
+        return [
+            template for template in self.templates if template.name == name
+        ][0]
 
     def get_dag_task(self, name: str) -> FlowNode:
 
@@ -122,7 +128,9 @@ class Flow(BaseModel):
         """
 
         # build pipeline dag
-        workflow_template_spec = workflow_status["stored_workflow_template_spec"]
+        workflow_template_spec = workflow_status[
+            "stored_workflow_template_spec"
+        ]
         pipeline_dag = Pipeline.build_dag(workflow_template_spec)
 
         # add FlowNode specific values and available resolved input/output values for each FlowNode
@@ -161,16 +169,24 @@ class Flow(BaseModel):
             for argument_io in ("inputs", "outputs"):
                 for argument_type in ("parameters", "artifacts"):
                     try:
-                        workflow_node_arguments = workflow_node_dict[argument_io][
-                            argument_type
-                        ]
+                        workflow_node_arguments = workflow_node_dict[
+                            argument_io
+                        ][argument_type]
                         for i, argument in enumerate(workflow_node_arguments):
-                            if workflow_node_arguments[i]["name"] == argument["name"]:
+                            if (
+                                workflow_node_arguments[i]["name"]
+                                == argument["name"]
+                            ):
                                 flow_node_dict[argument_io][argument_type][i][
                                     "value"
                                 ] = argument["value"]
-                            elif workflow_node_arguments[i]["name"] == "main-logs":
-                                flow_node_dict["logs"] = workflow_node_arguments[i]
+                            elif (
+                                workflow_node_arguments[i]["name"]
+                                == "main-logs"
+                            ):
+                                flow_node_dict[
+                                    "logs"
+                                ] = workflow_node_arguments[i]
                             else:
                                 pass
                     except KeyError:
@@ -206,7 +222,9 @@ class Flow(BaseModel):
         workflow_dict = workflow_resource.to_dict()
         workflow_spec = workflow_dict["spec"].copy()
         workflow_status = workflow_dict["status"].copy()
-        workflow_template_spec = workflow_status["stored_workflow_template_spec"].copy()
+        workflow_template_spec = workflow_status[
+            "stored_workflow_template_spec"
+        ].copy()
 
         # metadata
         metadata = FlowMetadata(**workflow_dict["metadata"])
@@ -311,7 +329,9 @@ class Flow(BaseModel):
                                     pos=node_positions[task_io_node_name],
                                     data={
                                         "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {argument.name}",
-                                        "value": getattr(argument, "value", None),
+                                        "value": getattr(
+                                            argument, "value", None
+                                        ),
                                     },
                                     style={"backgroundColor": "lightgrey"},
                                 )
@@ -338,7 +358,8 @@ class Flow(BaseModel):
                             # connect the input type task io node with the upstream output type task io node - where appropriate
                             if (
                                 interface_type == "inputs"
-                                and getattr(argument, "source", None) is not None
+                                and getattr(argument, "source", None)
+                                is not None
                             ):
                                 task_io_source = argument.source
                                 upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"

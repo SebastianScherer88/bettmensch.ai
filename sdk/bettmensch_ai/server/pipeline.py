@@ -10,7 +10,11 @@ from argo_workflows.api import workflow_template_service_api
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
     IoArgoprojWorkflowV1alpha1WorkflowTemplate,
 )
-from bettmensch_ai.server.dag import DagConnection, DagNode, DagVisualizationSchema
+from bettmensch_ai.server.dag import (
+    DagConnection,
+    DagNode,
+    DagVisualizationSchema,
+)
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
 from pydantic import BaseModel
 
@@ -154,7 +158,9 @@ class Pipeline(BaseModel):
 
     def get_template(self, name: str) -> ScriptTemplate:
 
-        return [template for template in self.templates if template.name == name][0]
+        return [
+            template for template in self.templates if template.name == name
+        ][0]
 
     def get_dag_task(self, name: str) -> PipelineNode:
 
@@ -208,7 +214,9 @@ class Pipeline(BaseModel):
                 for template in workflow_template_spec["templates"]
             ]
         )
-        entrypoint_template = templates_dict.pop(workflow_template_spec["entrypoint"])
+        entrypoint_template = templates_dict.pop(
+            workflow_template_spec["entrypoint"]
+        )
         tasks = entrypoint_template["dag"]["tasks"]
 
         for task in tasks:
@@ -218,7 +226,9 @@ class Pipeline(BaseModel):
             pipeline_node = {
                 "name": task["name"],
                 "template": task["template"],
-                "depends": task["depends"].split(" && ") if task.get("depends") else [],
+                "depends": task["depends"].split(" && ")
+                if task.get("depends")
+                else [],
             }
             # the outputs can be obtained from the reference template's outputs
             pipeline_node["outputs"] = NodeOutputs(
@@ -238,7 +248,11 @@ class Pipeline(BaseModel):
             except KeyError:
                 node_input_artifacts = []
 
-            for (argument_type, NodeArgumentTypeInputClass, argument_node_inputs) in (
+            for (
+                argument_type,
+                NodeArgumentTypeInputClass,
+                argument_node_inputs,
+            ) in (
                 ("parameters", NodeParameterInput, node_input_parameters),
                 ("artifacts", NodeArtifactInput, node_input_artifacts),
             ):
@@ -271,7 +285,8 @@ class Pipeline(BaseModel):
 
     @classmethod
     def from_argo_workflow_cr(
-        cls, workflow_template_resource: IoArgoprojWorkflowV1alpha1WorkflowTemplate
+        cls,
+        workflow_template_resource: IoArgoprojWorkflowV1alpha1WorkflowTemplate,
     ) -> Pipeline:
         """Utility to generate a Pipeline instance from a IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
 
@@ -313,7 +328,9 @@ class Pipeline(BaseModel):
         # dag
         dag = cls.build_dag(workflow_template_spec)
 
-        return cls(metadata=metadata, templates=templates, inputs=inputs, dag=dag)
+        return cls(
+            metadata=metadata, templates=templates, inputs=inputs, dag=dag
+        )
 
     @classmethod
     def transform_dag_visualization_node_position(
@@ -380,11 +397,14 @@ class Pipeline(BaseModel):
                             # connect the input type task io node with the upstream output type task io node - where appropriate
                             if (
                                 interface_type == "inputs"
-                                and getattr(argument, "source", None) is not None
+                                and getattr(argument, "source", None)
+                                is not None
                             ):
                                 task_io_source = argument.source
                                 upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
-                                G.add_edge(upstream_node_name, task_io_node_name)
+                                G.add_edge(
+                                    upstream_node_name, task_io_node_name
+                                )
 
         if include_task_io:
             for input in inputs:
@@ -470,7 +490,9 @@ class Pipeline(BaseModel):
                                     pos=node_positions[task_io_node_name],
                                     data={
                                         "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {argument.name}",
-                                        "value": getattr(argument, "value", None),
+                                        "value": getattr(
+                                            argument, "value", None
+                                        ),
                                     },
                                     style={"backgroundColor": "lightgrey"},
                                 )
@@ -497,7 +519,8 @@ class Pipeline(BaseModel):
                             # connect the input type task io node with the upstream output type task io node - where appropriate
                             if (
                                 interface_type == "inputs"
-                                and getattr(argument, "source", None) is not None
+                                and getattr(argument, "source", None)
+                                is not None
                             ):
                                 task_io_source = argument.source
                                 upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
@@ -538,9 +561,13 @@ def main_test():
     configuration.verify_ssl = False
 
     api_client = argo_workflows.ApiClient(configuration)
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(api_client)
+    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+        api_client
+    )
 
-    workflow_templates = api_instance.list_workflow_templates(namespace="argo")["items"]
+    workflow_templates = api_instance.list_workflow_templates(namespace="argo")[
+        "items"
+    ]
     print(
         f"Registered pipelines: {[workflow_template['metadata']['name'] for workflow_template in workflow_templates]}"
     )

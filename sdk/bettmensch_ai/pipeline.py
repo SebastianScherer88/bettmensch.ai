@@ -9,7 +9,11 @@ from bettmensch_ai.arguments import (
     PipelineInput,
 )
 from bettmensch_ai.client import client
-from bettmensch_ai.component import PipelineContext, _pipeline_context, component
+from bettmensch_ai.component import (
+    PipelineContext,
+    _pipeline_context,
+    component,
+)
 from bettmensch_ai.server import RegisteredFlow, RegisteredPipeline
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
@@ -132,7 +136,9 @@ class Pipeline(object):
 
         return self.registered_pipeline.metadata.pipeline.namespace
 
-    def generate_inputs_from_func(self, func: Callable) -> Dict[str, PipelineInput]:
+    def generate_inputs_from_func(
+        self, func: Callable
+    ) -> Dict[str, PipelineInput]:
         """Generates pipeline inputs from the underlying function. Also
         - checks for correct PipelineInput type annotations in the decorated original function
         - ensures all original function inputs without default values are being specified
@@ -195,7 +201,9 @@ class Pipeline(object):
             generate_name=f"pipeline-{self.name}-",
             entrypoint="bettmensch_ai_dag",
             namespace=self._namespace,
-            arguments=[input.to_hera_parameter() for input in self.inputs.values()],
+            arguments=[
+                input.to_hera_parameter() for input in self.inputs.values()
+            ],
         ) as wft:
 
             with DAG(name="bettmensch_ai_dag"):
@@ -235,9 +243,13 @@ class Pipeline(object):
         """
 
         if self.registered:
-            raise ValueError(f"Pipeline has already been registered with id {self.id}")
+            raise ValueError(
+                f"Pipeline has already been registered with id {self.id}"
+            )
 
-        registered_workflow_template = self.user_built_workflow_template.create()
+        registered_workflow_template = (
+            self.user_built_workflow_template.create()
+        )
         registered_pipeline = RegisteredPipeline.from_argo_workflow_cr(
             registered_workflow_template
         )
@@ -272,7 +284,9 @@ class Pipeline(object):
         )
 
         registered_workflow = workflow.create()
-        registered_flow = RegisteredFlow.from_argo_workflow_cr(registered_workflow)
+        registered_flow = RegisteredFlow.from_argo_workflow_cr(
+            registered_workflow
+        )
 
         return registered_flow
 
@@ -332,7 +346,9 @@ def get(
             otherwise converts the matching WorkflowTemplate to a RegisteredPipeline before returning.
     """
 
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(client)
+    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+        client
+    )
     wt: WorkflowTemplate = api_instance.get_workflow_template(
         name=registered_name, namespace=registered_namespace, **kwargs
     )
@@ -347,7 +363,9 @@ def get(
 
 
 def list(
-    registered_namespace: str = "argo", as_workflow_template: bool = False, **kwargs
+    registered_namespace: str = "argo",
+    as_workflow_template: bool = False,
+    **kwargs,
 ) -> List[Union[WorkflowTemplate, RegisteredPipeline]]:
     """Pipeline query utility. Wrapper around hera's WorkflowTemplate `list` query function that optionally converts
     to RegisteredPipeline elements.
@@ -358,13 +376,17 @@ def list(
             otherwise converts the matching WorkflowTemplate to a RegisteredPipeline before returning.
     """
 
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(client)
+    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+        client
+    )
     wt_list: List[WorkflowTemplate] = api_instance.list_workflow_templates(
         namespace=registered_namespace, **kwargs
     )
 
     if not as_workflow_template:
-        rp_list = [RegisteredPipeline.from_argo_workflow_cr(wt) for wt in wt_list]
+        rp_list = [
+            RegisteredPipeline.from_argo_workflow_cr(wt) for wt in wt_list
+        ]
         p_list = [Pipeline.from_registered_pipeline(rp) for rp in rp_list]
 
         return p_list
@@ -395,7 +417,10 @@ def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
     def pipeline_factory(func: Callable) -> Pipeline:
 
         return Pipeline(
-            name=name, namespace=namespace, clear_context=clear_context, func=func
+            name=name,
+            namespace=namespace,
+            clear_context=clear_context,
+            func=func,
         )
 
     return pipeline_factory
@@ -403,7 +428,9 @@ def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
 
 def test_pipeline():
     @component
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None) -> None:
+    def add(
+        a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None
+    ) -> None:
 
         sum.assign(a + b)
 

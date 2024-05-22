@@ -1,6 +1,8 @@
 import streamlit as st
 
-st.set_page_config(page_title="Flows", page_icon=":arrow_forward:", layout="wide")
+st.set_page_config(
+    page_title="Flows", page_icon=":arrow_forward:", layout="wide"
+)
 from typing import Dict, List, Tuple
 
 import pandas as pd
@@ -9,7 +11,12 @@ from bettmensch_ai import RegisteredFlow as Flow
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowEdge, StreamlitFlowNode
 from utils import add_logo  # , FLOW_NODE_EMOJI_MAP
-from utils import PIPELINE_NODE_EMOJI_MAP, configuration, get_colors, get_workflows
+from utils import (
+    PIPELINE_NODE_EMOJI_MAP,
+    configuration,
+    get_colors,
+    get_workflows,
+)
 
 
 def get_flow_meta_data(submitted_flows) -> List[Dict]:
@@ -22,7 +29,9 @@ def get_flow_meta_data(submitted_flows) -> List[Dict]:
         List[Dict]: A list of dictionaries containing the metadata of each ArgoWorkflowTemplate resource.
     """
 
-    return [submitted_flow.metadata.to_dict() for submitted_flow in submitted_flows]
+    return [
+        submitted_flow.metadata.to_dict() for submitted_flow in submitted_flows
+    ]
 
 
 def display_flow_summary_table(formatted_flow_data: Dict) -> pd.DataFrame:
@@ -105,15 +114,19 @@ def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
     ):
         try:
             flow_dict = Flow.from_argo_workflow_cr(submitted_flow).model_dump()
-            formatted_flow_data["object"][resource_name] = Flow.from_argo_workflow_cr(
-                submitted_flow
-            )
-            formatted_flow_data["metadata"][resource_name] = flow_dict["metadata"]
+            formatted_flow_data["object"][
+                resource_name
+            ] = Flow.from_argo_workflow_cr(submitted_flow)
+            formatted_flow_data["metadata"][resource_name] = flow_dict[
+                "metadata"
+            ]
             formatted_flow_data["state"][resource_name] = flow_dict["state"]
             # formatted_flow_data['artifact_configuration'][resource_name] = flow_dict['artifact_configuration']
             formatted_flow_data["inputs"][resource_name] = flow_dict["inputs"]
             formatted_flow_data["dag"][resource_name] = flow_dict["dag"]
-            formatted_flow_data["templates"][resource_name] = flow_dict["templates"]
+            formatted_flow_data["templates"][resource_name] = flow_dict[
+                "templates"
+            ]
         except Exception as e:
             print(e)
             st.write(
@@ -167,7 +180,9 @@ def display_flow_dag(
             for connection in dag_visualization_schema.connections
         ],
         **DagLayoutSetting(
-            style={"backgroundColor": get_colors("custom").secondaryBackgroundColor}
+            style={
+                "backgroundColor": get_colors("custom").secondaryBackgroundColor
+            }
         ).model_dump(),
     )
 
@@ -196,20 +211,25 @@ def display_flow_dag_selection(
         )
 
         if element_is_task_node:
-            st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`")
+            st.markdown(
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`"
+            )
             (
                 task_inputs_tab,
                 task_outputs_tab,
                 task_script_tab,
                 task_state_tab,
-            ) = st.tabs(["Task Inputs", "Task Outputs", "Task Script", "Task State"])
+            ) = st.tabs(
+                ["Task Inputs", "Task Outputs", "Task Script", "Task State"]
+            )
             flow = formatted_flow_data["object"][selected_flow]
             task = flow.get_dag_task(element_id).model_dump()
 
             with st.container(height=tab_container_height, border=False):
                 with task_inputs_tab:
                     task_inputs = (
-                        task["inputs"]["parameters"] + task["inputs"]["artifacts"]
+                        task["inputs"]["parameters"]
+                        + task["inputs"]["artifacts"]
                     )
                     task_inputs_df = pd.DataFrame(task_inputs)
                     task_inputs_formatted_df = pd.concat(
@@ -234,9 +254,12 @@ def display_flow_dag_selection(
             with st.container(height=tab_container_height, border=False):
                 with task_outputs_tab:
                     task_outputs = (
-                        task["outputs"]["parameters"] + task["outputs"]["artifacts"]
+                        task["outputs"]["parameters"]
+                        + task["outputs"]["artifacts"]
                     )
-                    task_outputs_formatted_df = pd.DataFrame(task_outputs).rename(
+                    task_outputs_formatted_df = pd.DataFrame(
+                        task_outputs
+                    ).rename(
                         columns={
                             "name": "Name",
                             "value": "Value",
@@ -248,7 +271,11 @@ def display_flow_dag_selection(
 
             with st.container(height=tab_container_height, border=False):
                 with task_script_tab:
-                    st.json(flow.get_template(task["template"]).model_dump()["script"])
+                    st.json(
+                        flow.get_template(task["template"]).model_dump()[
+                            "script"
+                        ]
+                    )
 
             with st.container(height=tab_container_height, border=False):
                 with task_state_tab:
@@ -257,7 +284,13 @@ def display_flow_dag_selection(
                             (k, v)
                             for k, v in task.items()
                             if k
-                            in ("id", "pod_name", "host_node_name", "phase", "logs")
+                            in (
+                                "id",
+                                "pod_name",
+                                "host_node_name",
+                                "phase",
+                                "logs",
+                            )
                         ]
                     )
                     task_state_formatted_df = (
@@ -340,19 +373,23 @@ def display_selected_flow(
                 with st.container(height=tab_container_height, border=False):
                     st.markdown("### Spec")
                     st.json(
-                        formatted_flow_data["metadata"][selected_flow], expanded=True
+                        formatted_flow_data["metadata"][selected_flow],
+                        expanded=True,
                     )
 
             with tab_dag:
                 with st.container(height=tab_container_height, border=False):
                     st.markdown("### Spec")
-                    st.json(formatted_flow_data["dag"][selected_flow], expanded=True)
+                    st.json(
+                        formatted_flow_data["dag"][selected_flow], expanded=True
+                    )
 
             with tab_templates:
                 with st.container(height=tab_container_height, border=False):
                     st.markdown("### Spec")
                     st.json(
-                        formatted_flow_data["templates"][selected_flow], expanded=True
+                        formatted_flow_data["templates"][selected_flow],
+                        expanded=True,
                     )
 
     # display task level data

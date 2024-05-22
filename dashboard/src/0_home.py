@@ -1,6 +1,8 @@
 import streamlit as st
 
-st.set_page_config(page_title="Bettmensch AI", page_icon=":hotel:", layout="wide")
+st.set_page_config(
+    page_title="Bettmensch AI", page_icon=":hotel:", layout="wide"
+)
 from st_pages import Page, show_pages
 from utils import add_logo
 
