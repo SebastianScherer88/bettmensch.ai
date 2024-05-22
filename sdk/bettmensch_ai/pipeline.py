@@ -72,7 +72,8 @@ class Pipeline(object):
 
     def build_from_user(self, name: str, namespace: str, func: Callable):
         """Builds the pipeline definition and stores resulting
-        hera.workflows.WorkflowTemplate instance in the workflow_template attribute
+        hera.workflows.WorkflowTemplate instance in the workflow_template
+        attribute
 
         Args:
             name (str): Name of the pipeline

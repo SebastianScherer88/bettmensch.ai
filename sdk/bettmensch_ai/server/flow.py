@@ -117,11 +117,13 @@ class Flow(BaseModel):
 
     @classmethod
     def build_dag(cls, workflow_status: Dict) -> List[FlowNode]:
-        """Utility to build the Flow class' dag attribute. Identical to the Pipeline class' dag attribute, but with additional
-        values resolved at runtime.
+        """Utility to build the Flow class' dag attribute. Identical to the
+        Pipeline class' dag attribute, but with additional values resolved at
+        runtime.
 
         Args:
-            workflow_status (_type_): The status field of a dict-ified IoArgoprojWorkflowV1alpha1Workflow class instance
+            workflow_status (_type_): The status field of a dict-ified
+                IoArgoprojWorkflowV1alpha1Workflow class instance
 
         Returns:
             List[FlowNode]: The constructed dag attribute of a Flow instance.
@@ -133,7 +135,8 @@ class Flow(BaseModel):
         ]
         pipeline_dag = Pipeline.build_dag(workflow_template_spec)
 
-        # add FlowNode specific values and available resolved input/output values for each FlowNode
+        # add FlowNode specific values and available resolved input/output
+        # values for each FlowNode
         flow_dag = []
         workflow_nodes = list(workflow_status["nodes"].values())
 
@@ -206,14 +209,16 @@ class Flow(BaseModel):
     def from_argo_workflow_cr(
         cls, workflow_resource: IoArgoprojWorkflowV1alpha1Workflow
     ) -> Flow:
-        """Utility to generate a Flow instance from a IoArgoprojWorkflowV1alpha1Workflow instance.
+        """Utility to generate a Flow instance from a
+        IoArgoprojWorkflowV1alpha1Workflow instance.
 
         To be used to easily convert the API response data structure
-        to the bettmensch.ai pipeline data structure optimized for visualizing the DAG.
+        to the bettmensch.ai pipeline data structure optimized for visualizing
+        the DAG.
 
         Args:
-            workflow_resource (IoArgoprojWorkflowV1alpha1Workflow): The return of ArgoWorkflow's
-                api/v1/workflow/{namespace}/{name} endpoint.
+            workflow_resource (IoArgoprojWorkflowV1alpha1Workflow): The return
+                of ArgoWorkflow's api/v1/workflow/{namespace}/{name} endpoint.
 
         Returns:
             Flow: A Flow class instance.
@@ -267,7 +272,8 @@ class Flow(BaseModel):
     def create_dag_visualization_schema(
         self, include_task_io: bool = True
     ) -> DagVisualizationSchema:
-        """Utility method to generate the assets the barfi/baklavajs rendering engine uses to display the Pipeline's dag property on the frontend."""
+        """Utility method to generate the assets the barfi/baklavajs rendering
+        engine uses to display the Pipeline's dag property on the frontend."""
 
         node_positions = Pipeline.create_dag_visualization_node_positions(
             self.inputs, self.dag, include_task_io
@@ -289,7 +295,8 @@ class Flow(BaseModel):
                 )
             )
 
-            # we only create task_node <-> task_node connections if we dont display the tasks' IO specs
+            # we only create task_node <-> task_node connections if we dont
+            # display the tasks' IO specs
             if not include_task_io:
                 if task_node.depends is not None:
                     for upstream_node_name in task_node.depends:
@@ -355,7 +362,9 @@ class Flow(BaseModel):
                                 )
                             )
 
-                            # connect the input type task io node with the upstream output type task io node - where appropriate
+                            # connect the input type task io node with the
+                            # upstream output type task io node - where
+                            # appropriate
                             if (
                                 interface_type == "inputs"
                                 and getattr(argument, "source", None)
