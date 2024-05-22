@@ -18,7 +18,8 @@ class DagNode(BaseModel):
     pos: Tuple[float, float]
     data: Dict = {"label": None}
     style: Dict = {
-        "backgroundColor": "lightblue",  # roughly the same color as the light blue logo
+        "backgroundColor": "lightblue",  # roughly the same color as the light
+        # blue logo
         "fontWeight": 550,
         "color": "white",
     }

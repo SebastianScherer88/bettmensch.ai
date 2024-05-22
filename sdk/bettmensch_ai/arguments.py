@@ -48,19 +48,20 @@ class ParameterMetaMixin(object):
 
     def set_owner(self, owner: Union["Component", "Pipeline"]):
         # if not isinstance(owner, BaseContainerMixin):
-        #     raise TypeError(f"The specified parameter owner {owner} has to be either a Pipeline or Component type.")
+        #     raise TypeError(f"The specified parameter owner {owner} has to be "
+        #                     "either a Pipeline or Component type.")
 
         self.owner = owner  # "workflow", "tasks.component-c1-0" etc.
 
     def set_source(self, source: Union["PipelineInput", "ComponentOutput"]):
         if not isinstance(source, (PipelineInput, ComponentOutput)):
             raise TypeError(
-                f"The specified parameter source {source} has to be either a PipelineInput or ComponentOutput type."
+                f"The specified parameter source {source} has to be either a "
+                "PipelineInput or ComponentOutput type."
             )
 
-        self.source = (
-            "{{" + source.id + "}}"
-        )  # "workflow.parameters.input_1", "tasks.component-c1-0.outputs.output_1" etc.
+        self.source = "{{" + source.id + "}}"  # "workflow.parameters.input_1",
+        # "tasks.component-c1-0.outputs.output_1" etc.
 
 
 class ContainerInput(ParameterMetaMixin, Input):
@@ -70,7 +71,8 @@ class ContainerInput(ParameterMetaMixin, Input):
 class PipelineInput(ContainerInput):
     @property
     def id(self) -> str:
-        """Utility method to generate a hera/ArgoWorkflow parameter reference to be used when constructing the hera DAG.
+        """Utility method to generate a hera/ArgoWorkflow parameter reference
+        to be used when constructing the hera DAG.
 
         Returns:
             str: The hera parameter reference expression.
@@ -78,7 +80,8 @@ class PipelineInput(ContainerInput):
         return f"{self.owner.parameter_owner_name}.parameters.{self.name}"
 
     def to_hera_parameter(self) -> Parameter:
-        # PipelineInput annotated function arguments' default values are retained by the Pipeline class. We only include a default value
+        # PipelineInput annotated function arguments' default values are
+        # retained by the Pipeline class. We only include a default value
         # if its non-trivial
         if self.value is not None:
             return Parameter(name=self.name, value=self.value)
@@ -89,7 +92,8 @@ class PipelineInput(ContainerInput):
 class ComponentInput(PipelineInput):
     @property
     def id(self) -> str:
-        """Utility method to generate a hera/ArgoWorkflow parameter reference to be used when constructing the hera DAG.
+        """Utility method to generate a hera/ArgoWorkflow parameter reference
+        to be used when constructing the hera DAG.
 
         Returns:
             str: The hera parameter reference expression.
@@ -98,15 +102,18 @@ class ComponentInput(PipelineInput):
         return f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
 
     def to_hera_parameter(self) -> Parameter:
-        # ComponentInput annotated function arguments' are always referencing another parameter (PipelineInput or ComponentOutput),
-        # so we reference the source parameter '{{...}}' expression that was stored in the ComponentInput's source attribute
+        # ComponentInput annotated function arguments' are always referencing
+        # another parameter (PipelineInput or ComponentOutput), so we reference
+        # the source parameter '{{...}}' expression that was stored in the
+        # ComponentInput's source attribute
         return Parameter(name=self.name, value=self.source)
 
 
 class ComponentOutput(ParameterMetaMixin, Output):
     @property
     def id(self) -> str:
-        """Utility method to generate a hera/ArgoWorkflow parameter reference to be used when constructing the hera DAG.
+        """Utility method to generate a hera/ArgoWorkflow parameter reference
+        to be used when constructing the hera DAG.
 
         Returns:
             str: The hera parameter reference expression.
@@ -115,7 +122,8 @@ class ComponentOutput(ParameterMetaMixin, Output):
         return f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
 
     def to_hera_parameter(self) -> Parameter:
-        # ComponentOutput annotated function arguments wont have a value defined, and will export 'null' as a default value
-        # in the Script template definition, allowing us to invoke it from a DAG without specifying the inputs that are
-        # of type ComponentOutput
+        # ComponentOutput annotated function arguments wont have a value
+        # defined, and will export 'null' as a default value in the Script
+        # template definition, allowing us to invoke it from a DAG without
+        # specifying the inputs that are of type ComponentOutput
         return Parameter(name=self.name, value=self.value)
