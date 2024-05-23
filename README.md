@@ -96,6 +96,6 @@ Coming soon.
 This platform makes liberal use of various great open source projects:
 - [ArgoWorkflows](https://argoproj.github.io/workflows/): Kubernetes native workload orchestration. Also powers the popular [Kubeflow Pipelines](https://github.com/kubeflow/pipelines), which inspired the `Pipelines` & `Flows` of this project.
 - [hera](https://github.com/argoproj-labs/hera): Official Argo Python SKD for defining Workflow(Template)s
-- [streamlit](https://streamlit.io/): A framework for designing interactive dashboards in python
-  - [streamlit-flow-component](https://github.com/dkapur17/streamlit-flow) A [react-flow](https://reactflow.dev/) integration for streamlit
-  - [st-pages](https://st-pages.streamlit.app/) A nice streamlit plugin for multi-page dashboards
+- [streamlit](https://streamlit.io/): A python library for designing interactive dashboards
+  - [streamlit-flow-component](https://github.com/dkapur17/streamlit-flow): A [react-flow](https://reactflow.dev/) integration for streamlit
+  - [st-pages](https://st-pages.streamlit.app/): A nice streamlit plugin for multi-page dashboards
