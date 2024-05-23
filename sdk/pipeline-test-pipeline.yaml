@@ -55,11 +55,11 @@ spec:
       parameters:
       - name: sum
         valueFrom:
-          path: ./temp/outputs\sum
+          path: ./temp/outputs/sum
     script:
       command:
       - python
-      image: python:3.8
+      image: bettmensch88/bettmensch.ai:3.11
       source: |-
         import os
         import sys

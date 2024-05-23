@@ -8,7 +8,11 @@ from bettmensch_ai.arguments import (
     ComponentOutput,
     PipelineInput,
 )
-from bettmensch_ai.utils import get_func_args, validate_func_args
+from bettmensch_ai.utils import (
+    COMPONENT_BASE_IMAGE,
+    get_func_args,
+    validate_func_args,
+)
 from hera.shared import global_config
 from hera.workflows import (
     DAG,
@@ -397,7 +401,8 @@ class Component(object):
                         value_from=models.ValueFrom(path=output.path),
                     )
                     for output in self.outputs.values()
-                ]
+                ],
+                "image": COMPONENT_BASE_IMAGE,
             }
         )
 

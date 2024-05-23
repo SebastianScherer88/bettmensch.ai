@@ -1,6 +1,8 @@
 import inspect
 from typing import Any, Callable, Dict, List
 
+COMPONENT_BASE_IMAGE = "bettmensch88/bettmensch.ai:3.11"
+
 
 def get_func_args(
     func: Callable,
