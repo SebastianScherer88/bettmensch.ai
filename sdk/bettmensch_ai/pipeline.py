@@ -459,40 +459,55 @@ def test_pipeline():
 
         sum.assign(a + b)
 
+    @component
+    def multiply(
+        a: ComponentInput, b: ComponentInput, product: ComponentOutput = None
+    ) -> None:
+
+        product.assign(a * b)
+
     @pipeline("test-pipeline", "argo", True)
-    def a_plus_b_plus_c_times_2(
+    def a_plus_bc_plus_bsquared(
         a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
     ):
 
-        first_sum = add(
+        b_c = multiply(
+            hera_template_kwargs={
+                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
+            },
+            a=b,
+            b=c,
+        )
+
+        b_squared = multiply(
+            hera_template_kwargs={
+                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
+            },
+            a=b,
+            b=b,
+        )
+
+        a_plus_bc = add(
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=a,
-            b=b,
+            b=b_c.outputs["product"],
         )
 
-        second_sum = add(
+        final_result = add(
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
-            a=first_sum.outputs["sum"],
-            b=c,
+            a=a_plus_bc.outputs["sum"],
+            b=b_squared.outputs["product"],
         )
 
-        last_sum = add(
-            hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
-            },
-            a=second_sum.outputs["sum"],
-            b=second_sum.outputs["sum"],
-        )
+    print(f"Pipeline type: {type(a_plus_bc_plus_bsquared)}")
 
-    print(f"Pipeline type: {type(a_plus_b_plus_c_times_2)}")
-
-    a_plus_b_plus_c_times_2.export()
-    a_plus_b_plus_c_times_2.register()
-    a_plus_b_plus_c_times_2.run(a=11, b=22, c=33)
+    a_plus_bc_plus_bsquared.export()
+    a_plus_bc_plus_bsquared.register()
+    a_plus_bc_plus_bsquared.run(a=3, b=2, c=1)
 
 
 if __name__ == "__main__":
