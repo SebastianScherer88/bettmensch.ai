@@ -420,6 +420,11 @@ class Component(object):
         if "image" not in script_decorator_kwargs:
             script_decorator_kwargs["image"] = COMPONENT_BASE_IMAGE
 
+        if "image_pull_policy" not in script_decorator_kwargs:
+            script_decorator_kwargs[
+                "image_pull_policy"
+            ] = ImagePullPolicy.always
+
         script_wrapper = script(**script_decorator_kwargs)
 
         task_factory = script_wrapper(func=self.func)
