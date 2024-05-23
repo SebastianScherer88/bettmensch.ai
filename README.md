@@ -1,6 +1,6 @@
 # :hotel: Welcome to Bettmensch.AI
 
-![bettmensch.ai logo](./dashboard/asset/logo_transparent.png)
+![bettmensch.ai logo](image/logo_transparent.png)
 
 :factory: Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
 
@@ -8,11 +8,15 @@
 
 ## :computer: Dashboard
 
+![bettmensch.ai](image/dashboard_0_home.JPG)
+
 :eyes: A dashboard for *monitoring* all workloads running on the platform.
 
 :open_hands: To actively *manage* `Pipeline`s, `Flow`s, please see the respective documentation of `bettmensch.ai` SDK.
 
 ## :twisted_rightwards_arrows: `Pipelines & Flows`
+
+![bettmensch.ai](image/dashboard_1_pipelines.JPG)
 
 `bettmensch.ai` comes with a python SDK for defining and executing distributed (ML) workloads by leveraging the [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the official [`hera`](https://github.com/argoproj-labs/hera) library.
 
@@ -73,10 +77,16 @@ a_plus_bc_plus_2b.register()
 a_plus_bc_plus_2b.run(a=3, b=2, c=1)
 ```
 
+![bettmensch.ai](image/dashboard_2_flows.JPG)
+
 ## :books: `Models`
+
+![bettmensch.ai models](image/dashboard_3_models.JPG)
 
 Coming soon.
 
 ## :rocket: `Servers`
+
+![bettmensch.ai servers](image/dashboard_4_servers.JPG)
 
 Coming soon.

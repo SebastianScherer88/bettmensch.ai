@@ -297,8 +297,8 @@ def display_pipeline_dag_selection(
 def display_selected_pipeline(
     formatted_pipeline_data,
     selected_pipeline,
-    chart_container_height: int = 700,
-    col_container_height: int = 750,
+    chart_container_height: int = 550,
+    col_container_height: int = 650,
     tab_container_height: int = 600,
 ):
     """Utility to display DAG flow chart and all relevant specs in tabbed

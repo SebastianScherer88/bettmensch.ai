@@ -9,13 +9,6 @@ st.set_page_config(
 
 with st.sidebar:
     add_logo(sidebar=True)
-    selected = option_menu(
-        "",
-        ["Servers"],
-        icons=["arrow-right-square"],
-        menu_icon="rocket",
-        default_index=0,
-    )
 
 st.markdown(
     """
