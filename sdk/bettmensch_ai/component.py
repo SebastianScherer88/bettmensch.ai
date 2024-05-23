@@ -403,8 +403,7 @@ class Component(object):
                     )
                     for output in self.outputs.values()
                 ],
-                "image": COMPONENT_BASE_IMAGE,
-                "image_pull_policy": ImagePullPolicy.always(),
+                "image_pull_policy": ImagePullPolicy.always,
             }
         )
 
@@ -503,10 +502,22 @@ def test_hera_component():
     _pipeline_context.clear()
 
     # add components to pipeline context
-    a_plus_b = add(a=pipeline_input_a, b=pipeline_input_b)
+    a_plus_b = add(
+        hera_template_kwargs={
+            "image": "bettmensch88/bettmensch.ai:3.11-2769afb"
+        },
+        a=pipeline_input_a,
+        b=pipeline_input_b,
+    )
     print(f"Created component: {a_plus_b.name}")
 
-    a_plus_b_plus_c = add(a=a_plus_b.outputs["sum"], b=pipeline_input_c)
+    a_plus_b_plus_c = add(
+        hera_template_kwargs={
+            "image": "bettmensch88/bettmensch.ai:3.11-2769afb",
+        },
+        a=a_plus_b.outputs["sum"],
+        b=pipeline_input_c,
+    )
     print(f"Created component: {a_plus_b_plus_c.name}")
 
     # close pipeline context

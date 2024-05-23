@@ -464,11 +464,29 @@ def test_pipeline():
         a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
     ):
 
-        first_sum = add(a=a, b=b)
+        first_sum = add(
+            hera_template_kwargs={
+                "image": "bettmensch88/bettmensch.ai:3.11-2769afb"
+            },
+            a=a,
+            b=b,
+        )
 
-        second_sum = add(a=first_sum.outputs["sum"], b=c)
+        second_sum = add(
+            hera_template_kwargs={
+                "image": "bettmensch88/bettmensch.ai:3.11-2769afb"
+            },
+            a=first_sum.outputs["sum"],
+            b=c,
+        )
 
-        last_sum = add(a=second_sum.outputs["sum"], b=second_sum.outputs["sum"])
+        last_sum = add(
+            hera_template_kwargs={
+                "image": "bettmensch88/bettmensch.ai:3.11-2769afb"
+            },
+            a=second_sum.outputs["sum"],
+            b=second_sum.outputs["sum"],
+        )
 
     print(f"Pipeline type: {type(a_plus_b_plus_c_times_2)}")
 

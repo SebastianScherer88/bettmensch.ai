@@ -40,7 +40,7 @@ class Output(object):
             os.makedirs(OUTPUT_BASE_PATH)
 
         with open(self.path, "w") as output_file:
-            output_file.write(self.value)
+            output_file.write(str(self.value))
 
 
 class ParameterMetaMixin(object):
