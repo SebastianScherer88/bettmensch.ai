@@ -32,12 +32,9 @@ class Output(object):
     @property
     def path(self):
 
-        return os.path.join(OUTPUT_BASE_PATH, self.name)
+        return os.path.join(self.name)
 
     def export(self):
-
-        if not os.path.exists(OUTPUT_BASE_PATH):
-            os.makedirs(OUTPUT_BASE_PATH)
 
         with open(self.path, "w") as output_file:
             output_file.write(str(self.value))
