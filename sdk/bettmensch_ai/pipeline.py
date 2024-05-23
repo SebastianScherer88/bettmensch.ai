@@ -473,36 +473,24 @@ def test_pipeline():
 
         b_c = multiply(
             "bc",
-            hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
-            },
             a=b,
             b=c,
         )
 
         two_b = multiply(
             "b2",
-            hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
-            },
             a=b,
             b=ComponentInput(name="two", value=2),
         )
 
         a_plus_bc = add(
             "a-plus-bc",
-            hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
-            },
             a=a,
             b=b_c.outputs["product"],
         )
 
         result_a_plus_bc_plus_2b = add(
             "result-a-plus-bc-plus-2b",
-            hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
-            },
             a=a_plus_bc.outputs["sum"],
             b=two_b.outputs["product"],
         )
