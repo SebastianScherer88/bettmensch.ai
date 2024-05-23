@@ -504,7 +504,7 @@ def test_hera_component():
     # add components to pipeline context
     a_plus_b = add(
         hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-2769afb"
+            "image": "bettmensch88/bettmensch.ai:3.11-3d253c7"
         },
         a=pipeline_input_a,
         b=pipeline_input_b,
@@ -513,7 +513,7 @@ def test_hera_component():
 
     a_plus_b_plus_c = add(
         hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-2769afb",
+            "image": "bettmensch88/bettmensch.ai:3.11-3d253c7",
         },
         a=a_plus_b.outputs["sum"],
         b=pipeline_input_c,
