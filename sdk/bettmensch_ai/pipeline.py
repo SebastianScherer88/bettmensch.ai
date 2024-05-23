@@ -36,7 +36,7 @@ class Pipeline(object):
     func: Callable = None
     inputs: Dict[str, PipelineInput] = None
     user_built_workflow_template: WorkflowTemplate = None
-    registered_pipeline: RegisteredPipeline = None
+    registered_workflow_template: WorkflowTemplate = None
 
     def __init__(
         self,
@@ -44,7 +44,7 @@ class Pipeline(object):
         namespace: str = None,
         func: Callable = None,
         clear_context: bool = True,
-        registered_pipeline: RegisteredPipeline = None,
+        registered_pipeline: WorkflowTemplate = None,
     ):
         """_summary_
 
@@ -87,17 +87,20 @@ class Pipeline(object):
         self.func = func
         self.inputs = self.generate_inputs_from_func(func)
         self.user_built_workflow_template = self.build_workflow_template()
+        self._built = True
 
-    def build_from_registry(self, registered_pipeline: RegisteredPipeline):
+    def build_from_registry(
+        self, registered_workflow_template: WorkflowTemplate
+    ):
         """Stores the argument to the register register_pipeline attribute and
         updates _registered
 
         Args:
-            registered_pipeline (RegisteredPipeline): The RegisteredPipeline
+            registered_pipeline (WorkflowTemplate): The WorkflowTemplate
                 instance.
         """
 
-        self.registered_pipeline = registered_pipeline
+        self.registered_workflow_template = registered_workflow_template
         self._registered = True
 
     @property
@@ -127,21 +130,21 @@ class Pipeline(object):
         if not self.registered:
             return None
 
-        return self.registered_pipeline.metadata.pipeline.uid
+        return self.registered_workflow_template.metadata.uid
 
     @property
     def registered_name(self):
         if not self.registered:
             return None
 
-        return self.registered_pipeline.metadata.pipeline.name
+        return self.registered_workflow_template.metadata.name
 
     @property
     def registered_namespace(self):
         if not self.registered:
-            return self._nameS
+            return self._name
 
-        return self.registered_pipeline.metadata.pipeline.namespace
+        return self.registered_workflow_template.metadata.namespace
 
     def generate_inputs_from_func(
         self, func: Callable
@@ -220,8 +223,6 @@ class Pipeline(object):
                 for component in self.context.components:
                     component.to_hera_task()
 
-        self._built = True
-
         return wft
 
     def __enter__(self):
@@ -248,8 +249,7 @@ class Pipeline(object):
         if self.built:
             self.user_built_workflow_template.to_file(dir)
         if self.registered:
-            with open(os.path.join(dir, "registered_pipeline.json"), "w"):
-                self.registered_pipeline.model_dump_json(dir)
+            self.registered_workflow_template.to_file(dir)
 
     def register(self):
         """Register the Pipeline instance on the bettmensch.ai server.
@@ -267,12 +267,10 @@ class Pipeline(object):
         registered_workflow_template = (
             self.user_built_workflow_template.create()
         )
-        registered_pipeline = RegisteredPipeline.from_argo_workflow_cr(
-            registered_workflow_template
-        )
-        self.build_from_registry(registered_pipeline)
 
-    def run(self, **pipeline_input_kwargs) -> RegisteredFlow:
+        self.build_from_registry(registered_workflow_template)
+
+    def run(self, **pipeline_input_kwargs) -> Workflow:
         """Run a Flow using the registered Pipeline instance and user specified
         inputs.
 
@@ -281,9 +279,7 @@ class Pipeline(object):
                 yet.
 
         Returns:
-            RegisteredFlow: The custom data structure obtained from a
-                hera.workflows.Workflow instance that was returned by the
-                Workflow.create class method call.
+            Workflow: The return of the Workflow.create class method call.
         """
         if not self.registered:
             raise ValueError(
@@ -300,26 +296,23 @@ class Pipeline(object):
         workflow = Workflow(
             generate_name=f"{self.registered_name}-flow-",
             workflow_template_ref=pipeline_ref,
-            namespace=self.namespace,
+            namespace=self.registered_namespace,
             arguments=pipeline_inputs,
         )
 
         registered_workflow = workflow.create()
-        registered_flow = RegisteredFlow.from_argo_workflow_cr(
-            registered_workflow
-        )
 
-        return registered_flow
+        return registered_workflow
 
     @classmethod
     def from_registered_pipeline(
-        cls, registered_pipeline: RegisteredPipeline
+        cls, registered_pipeline: WorkflowTemplate
     ) -> "Pipeline":
         """Class method to initialize a Pipeline instance from a
-        RegisteredPipeline instance.
+        WorkflowTemplate instance.
 
         Args:
-            registered_pipeline (RegisteredPipeline): The RegisteredPipeline
+            registered_pipeline (WorkflowTemplate): The WorkflowTemplate
                 pipeline instance retrieved from the bettmensch.ai server,
                 .e.g using pipeline.get()
 
@@ -329,102 +322,104 @@ class Pipeline(object):
 
         return cls(registered_pipeline=registered_pipeline)
 
-    @classmethod
-    def from_registry(
-        cls, registered_name: str, registered_namespace: str = "argo"
-    ) -> "Pipeline":
-        """Class method to initialize a Pipeline instance from a
-        registered_name and registered_namespace spec directly from the server.
+    # @classmethod
+    # def from_registry(
+    #     cls, registered_name: str, registered_namespace: str = "argo"
+    # ) -> "Pipeline":
+    #     """Class method to initialize a Pipeline instance from a
+    #     registered_name and registered_namespace spec directly from the server.
 
-        Args:
-            registered_name (str): The name of the registered Pipeline to use.
-            registered_namespace (str, optional): The namespace of the
-                registered Pipeline to use.. Defaults to 'argo'.
+    #     Args:
+    #         registered_name (str): The name of the registered Pipeline to use.
+    #         registered_namespace (str, optional): The namespace of the
+    #             registered Pipeline to use.. Defaults to 'argo'.
 
-        Returns:
-            Pipeline: The (registered) Pipeline instance.
-        """
+    #     Returns:
+    #         Pipeline: The (registered) Pipeline instance.
+    #     """
 
-        return get(
-            registered_name=registered_name,
-            registered_namespace=registered_namespace,
-            as_workflow_template=False,
-        )
-
-
-def get(
-    registered_name: str,
-    registered_namespace: str = "argo",
-    as_workflow_template: bool = False,
-    **kwargs,
-) -> Union[WorkflowTemplate, RegisteredPipeline]:
-    """Pipeline query utility. Wrapper around hera's WorkflowTemplate `get`
-    query function that optionally converts to RegisteredPipeline.
-
-    Args:
-        registered_name (str): The `registered_name` of the Pipeline
-            (equivalent to the `name` of its underlying WorkflowTemplate).
-        registered_namespace (str): The `registered_namespace` of the Pipeline
-            (equivalent to the `namespace` of its underlying WorkflowTemplate).
-    Returns:
-        Union[None,WorkflowTemplate,RegisteredPipeline]: Returns None if no
-            pipeline with the specified uid could be found on the configured
-            server. Returns the matching WorkflowTemplate if possible and
-            as_workflow_template=False, otherwise converts the matching
-            WorkflowTemplate to a RegisteredPipeline before returning.
-    """
-
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
-        client
-    )
-    wt: WorkflowTemplate = api_instance.get_workflow_template(
-        name=registered_name, namespace=registered_namespace, **kwargs
-    )
-
-    if not as_workflow_template:
-        rp = RegisteredPipeline.from_argo_workflow_cr(wt)
-        p = Pipeline.from_registered_pipeline(rp)
-
-        return p
-
-    return wt
+    #     return get(
+    #         registered_name=registered_name,
+    #         registered_namespace=registered_namespace,
+    #         as_workflow_template=False,
+    #     )
 
 
-def list(
-    registered_namespace: str = "argo",
-    as_workflow_template: bool = False,
-    **kwargs,
-) -> List[Union[WorkflowTemplate, RegisteredPipeline]]:
-    """Pipeline query utility. Wrapper around hera's WorkflowTemplate `list`
-    query function that optionally converts to RegisteredPipeline elements.
+# def get(
+#     registered_name: str,
+#     registered_namespace: str = "argo",
+#     as_workflow_template: bool = False,
+#     **kwargs,
+# ) -> Union[WorkflowTemplate, RegisteredPipeline]:
+#     """Pipeline query utility. Wrapper around hera's WorkflowTemplate `get`
+#     query function that optionally converts to RegisteredPipeline.
 
-    Returns:
-        Union[None,WorkflowTemplate,RegisteredPipeline]: Returns None if no
-            pipeline with the specified uid could be found on the configured
-            server. Returns the matching WorkflowTemplate if possible and
-            as_workflow_template=False, otherwise converts the matching
-            WorkflowTemplate to a RegisteredPipeline before returning.
-    """
+#     Args:
+#         registered_name (str): The `registered_name` of the Pipeline
+#             (equivalent to the `name` of its underlying WorkflowTemplate).
+#         registered_namespace (str): The `registered_namespace` of the Pipeline
+#             (equivalent to the `namespace` of its underlying WorkflowTemplate).
+#     Returns:
+#         Union[None,WorkflowTemplate,RegisteredPipeline]: Returns None if no
+#             pipeline with the specified uid could be found on the configured
+#             server. Returns the matching WorkflowTemplate if possible and
+#             as_workflow_template=False, otherwise converts the matching
+#             WorkflowTemplate to a RegisteredPipeline before returning.
+#     """
 
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
-        client
-    )
-    wt_list: List[WorkflowTemplate] = api_instance.list_workflow_templates(
-        namespace=registered_namespace, **kwargs
-    )
+#     api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+#         client
+#     )
+#     wt: WorkflowTemplate = api_instance.get_workflow_template(
+#         name=registered_name, namespace=registered_namespace, **kwargs
+#     )
 
-    if not as_workflow_template:
-        rp_list = [
-            RegisteredPipeline.from_argo_workflow_cr(wt) for wt in wt_list
-        ]
-        p_list = [Pipeline.from_registered_pipeline(rp) for rp in rp_list]
+#     if not as_workflow_template:
+#         rp = RegisteredPipeline.from_argo_workflow_cr(wt)
+#         p = Pipeline.from_registered_pipeline(rp)
 
-        return p_list
+#         return p
 
-    return wt_list
+#     return wt
 
 
-def pipeline(name: str, namespace: str, clear_context: bool) -> Callable:
+# def list(
+#     registered_namespace: str = "argo",
+#     as_workflow_template: bool = False,
+#     **kwargs,
+# ) -> List[Union[WorkflowTemplate, RegisteredPipeline]]:
+#     """Pipeline query utility. Wrapper around hera's WorkflowTemplate `list`
+#     query function that optionally converts to RegisteredPipeline elements.
+
+#     Returns:
+#         Union[None,WorkflowTemplate,RegisteredPipeline]: Returns None if no
+#             pipeline with the specified uid could be found on the configured
+#             server. Returns the matching WorkflowTemplate if possible and
+#             as_workflow_template=False, otherwise converts the matching
+#             WorkflowTemplate to a RegisteredPipeline before returning.
+#     """
+
+#     api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
+#         client
+#     )
+#     wt_list: List[WorkflowTemplate] = api_instance.list_workflow_templates(
+#         namespace=registered_namespace, **kwargs
+#     )
+
+#     if not as_workflow_template:
+#         rp_list = [
+#             RegisteredPipeline.from_argo_workflow_cr(wt) for wt in wt_list
+#         ]
+#         p_list = [Pipeline.from_registered_pipeline(rp) for rp in rp_list]
+
+#         return p_list
+
+#     return wt_list
+
+
+def pipeline(
+    name: str, namespace: str, clear_context: bool
+) -> Callable[[], Pipeline]:
     """Takes a calleable and returns a Pipeline instance with populated
     workflow_template attribute holding an hera.workflows.WorkflowTemplate
     instance that implements the pipeline defined in the decorated callable.
@@ -478,8 +473,8 @@ def test_pipeline():
     print(f"Pipeline type: {type(a_plus_b_plus_c_times_2)}")
 
     a_plus_b_plus_c_times_2.export()
-    # a_plus_b_plus_c_times_2.register()
-    # a_plus_b_plus_c_times_2.run(a=11,b=22,c=33)
+    a_plus_b_plus_c_times_2.register()
+    a_plus_b_plus_c_times_2.run(a=11, b=22, c=33)
 
 
 if __name__ == "__main__":
