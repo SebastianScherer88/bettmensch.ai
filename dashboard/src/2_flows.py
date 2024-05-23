@@ -134,7 +134,7 @@ def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
                 "templates"
             ]
         except Exception as e:
-            print(e)
+            print(e.__traceback__)
             st.write(
                 f"Oops! Could not collect data for Flow {resource_name}: {e}"
                 "Please make sure the Argo Workflow was created with the "
@@ -436,7 +436,9 @@ def main():
     workflows = get_workflows(configuration)
 
     meta_data = get_flow_meta_data(workflows)
+
     names = get_flow_names(meta_data)
+
     formatted_flow_data = get_formatted_flow_data(workflows, names)
 
     display_flow_summary_table(formatted_flow_data)

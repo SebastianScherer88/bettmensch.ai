@@ -75,17 +75,17 @@ class FlowNodeOutputs(BaseModel):
 class FlowNode(BaseModel):
     id: str
     name: str
-    type: Literal["Pod"]
+    type: Literal["Pod", "Skipped"]
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
-    phase: Literal["Succeeded", "Failed", "Pending", "Error"]
+    phase: Literal["Succeeded", "Failed", "Pending", "Error", "Omitted"]
     template: str
     inputs: Optional[NodeInputs] = None
     outputs: Optional[FlowNodeOutputs] = None
-    logs: Optional[FlowNodeArtifactOutput] = None
+    logs: Optional[Dict] = None
     depends: Optional[Union[str, List[str]]] = None
     dependants: Optional[Union[str, List[str]]] = None
-    host_node_name: str
+    host_node_name: Optional[str] = None
 
 
 # --- FlowArtifactConfiguration
@@ -148,9 +148,6 @@ class Flow(BaseModel):
                 if workflow_node["display_name"] == pipeline_node_dict["name"]
             ][0]
 
-            # import pdb
-            # pdb.set_trace()
-
             flow_node_dict = {
                 "id": workflow_node_dict["id"],
                 "name": workflow_node_dict["display_name"],
@@ -166,7 +163,7 @@ class Flow(BaseModel):
                 "logs": None,
                 "depends": pipeline_node_dict["depends"],
                 "dependants": workflow_node_dict.get("children"),
-                "host_node_name": workflow_node_dict["host_node_name"],
+                "host_node_name": workflow_node_dict.get("host_node_name"),
             }
             # inject resolved input values where possible
             for argument_io in ("inputs", "outputs"):
@@ -175,31 +172,29 @@ class Flow(BaseModel):
                         workflow_node_arguments = workflow_node_dict[
                             argument_io
                         ][argument_type]
+                        flow_node_arguments = flow_node_dict[argument_io][
+                            argument_type
+                        ]
+
                         for i, argument in enumerate(workflow_node_arguments):
-                            if (
-                                workflow_node_arguments[i]["name"]
-                                == argument["name"]
-                            ):
-                                flow_node_dict[argument_io][argument_type][i][
-                                    "value"
-                                ] = argument["value"]
-                            elif (
-                                workflow_node_arguments[i]["name"]
-                                == "main-logs"
-                            ):
-                                flow_node_dict[
-                                    "logs"
-                                ] = workflow_node_arguments[i]
+                            if i < len(flow_node_arguments):
+                                if (
+                                    flow_node_arguments[i]["name"]
+                                    == argument["name"]
+                                ):
+                                    flow_node_arguments[i]["value"] = argument[
+                                        "value"
+                                    ]
+                            elif argument["name"] == "main-logs":
+                                flow_node_dict["logs"] = argument
                             else:
                                 pass
                     except KeyError:
                         pass
             try:
                 flow_node = FlowNode(**flow_node_dict)
-            except:
-                import pdb
-
-                pdb.set_trace()
+            except Exception as e:
+                raise (e)
 
             flow_dag.append(flow_node)
 
