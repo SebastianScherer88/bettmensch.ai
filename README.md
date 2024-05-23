@@ -16,6 +16,63 @@
 
 `bettmensch.ai` comes with a python SDK for defining and executing distributed (ML) workloads by leveraging the [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the official [`hera`](https://github.com/argoproj-labs/hera) library.
 
+```
+from bettmensch_ai.arguments import (
+    ComponentInput,
+    ComponentOutput,
+    PipelineInput,
+)
+from bettmensch_ai.component import component
+from bettmensch_ai.pipeline import pipeline
+
+@component
+    def add(
+        a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None
+    ) -> None:
+
+        sum.assign(a + b)
+
+    @component
+    def multiply(
+        a: ComponentInput, b: ComponentInput, product: ComponentOutput = None
+    ) -> None:
+
+        product.assign(a * b)
+
+    @pipeline("test-pipeline", "argo", True)
+    def a_plus_bc_plus_2b(
+        a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
+    ):
+
+        b_c = multiply(
+            "bc",
+            a=b,
+            b=c,
+        )
+
+        two_b = multiply(
+            "b2",
+            a=b,
+            b=ComponentInput(name="two", value=2),
+        )
+
+        a_plus_bc = add(
+            "a-plus-bc",
+            a=a,
+            b=b_c.outputs["product"],
+        )
+
+        result_a_plus_bc_plus_2b = add(
+            "result-a-plus-bc-plus-2b",
+            a=a_plus_bc.outputs["sum"],
+            b=two_b.outputs["product"],
+        )
+
+    a_plus_bc_plus_2b.export()
+    a_plus_bc_plus_2b.register()
+    a_plus_bc_plus_2b.run(a=3, b=2, c=1)
+```
+
 ## :books: `Models`
 
 Coming soon.
