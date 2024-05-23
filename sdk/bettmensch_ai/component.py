@@ -266,8 +266,8 @@ class Component(object):
         depends = [
             input.source.owner.name
             for input in self.inputs.values()
-            if (input.source is not None)
-            and (input.source.owner.type != "workflow")
+            if getattr(input.source.owner, "type", None)
+            not in ("workflow", None)
         ]
         depends_deduped = list(set(depends))
 
@@ -332,8 +332,16 @@ class Component(object):
 
             # assemble component input
             if isinstance(input, PipelineInput):
+                # for pipeline inputs, we retain the (possible) default value
+                component_input = ComponentInput(name=name, value=input.value)
+            elif isinstance(input, ComponentInput):
+                # a component input can be used to hardcode an argument of the
+                # underlying function for this Component only, so we want to
+                # retain the (default) value
                 component_input = ComponentInput(name=name, value=input.value)
             elif isinstance(input, ComponentOutput):
+                # a component output won't have a default value to retain. the
+                # input's value will be the hera reference expression
                 component_input = ComponentInput(name=name)
             else:
                 raise TypeError(

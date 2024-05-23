@@ -467,7 +467,7 @@ def test_pipeline():
         product.assign(a * b)
 
     @pipeline("test-pipeline", "argo", True)
-    def a_plus_bc_plus_bsquared(
+    def a_plus_bc_plus_2b(
         a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
     ):
 
@@ -479,12 +479,12 @@ def test_pipeline():
             b=c,
         )
 
-        b_squared = multiply(
+        two_b = multiply(
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=b,
-            b=b,
+            b=ComponentInput(name="two", value=2),
         )
 
         a_plus_bc = add(
@@ -500,14 +500,14 @@ def test_pipeline():
                 "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=a_plus_bc.outputs["sum"],
-            b=b_squared.outputs["product"],
+            b=two_b.outputs["product"],
         )
 
-    print(f"Pipeline type: {type(a_plus_bc_plus_bsquared)}")
+    print(f"Pipeline type: {type(a_plus_bc_plus_2b)}")
 
-    a_plus_bc_plus_bsquared.export()
-    a_plus_bc_plus_bsquared.register()
-    a_plus_bc_plus_bsquared.run(a=3, b=2, c=1)
+    a_plus_bc_plus_2b.export()
+    a_plus_bc_plus_2b.register()
+    a_plus_bc_plus_2b.run(a=3, b=2, c=1)
 
 
 if __name__ == "__main__":
