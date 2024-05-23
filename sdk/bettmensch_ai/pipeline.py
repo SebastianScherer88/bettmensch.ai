@@ -466,7 +466,7 @@ def test_pipeline():
 
         first_sum = add(
             hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-50b2887"
+                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=a,
             b=b,
@@ -474,7 +474,7 @@ def test_pipeline():
 
         second_sum = add(
             hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-50b2887"
+                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=first_sum.outputs["sum"],
             b=c,
@@ -482,7 +482,7 @@ def test_pipeline():
 
         last_sum = add(
             hera_template_kwargs={
-                "image": "bettmensch88/bettmensch.ai:3.11-50b2887"
+                "image": "bettmensch88/bettmensch.ai:3.11-1ee9ee5"
             },
             a=second_sum.outputs["sum"],
             b=second_sum.outputs["sum"],
