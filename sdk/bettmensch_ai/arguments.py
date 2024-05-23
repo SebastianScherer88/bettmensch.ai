@@ -123,12 +123,15 @@ class ComponentInput(PipelineInput):
         # ComponentInput annotated function arguments' are not always
         # referencing another parameter (PipelineInput or ComponentOutput), so
         # we reference the source parameter's `id` '{{...}}' expression only if
-        # a ComponentInput.source had been provided. Otherwise, we export the
-        # `value`` attribu which may be None. This allows us to hardcode an
+        # the provided source has a non-trivial owner. In that case, the value
+        # will be the hera expression referencing the source argument.
+        # If the provided source has no owner, we are dealing with a hardcoded
+        # template function argument spec for this component, and retain the
+        # value (which could be None). This allows us to hardcode an
         # input to a Component in a Pipeline that is different to the
         # Component's template function's default value for that argument,
         # without having to create a PipelineInput.
-        if self.source is not None:
+        if self.source.owner is not None:
             return Parameter(name=self.name, value=self.source.id)
         else:
             return Parameter(name=self.name, value=self.value)
