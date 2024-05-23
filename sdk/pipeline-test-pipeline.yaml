@@ -19,31 +19,73 @@ spec:
       - arguments:
           parameters:
           - name: a
-            value: '{{workflow.parameters.a}}'
-          - name: b
             value: '{{workflow.parameters.b}}'
-        depends: ''
-        name: add-0
-        template: add
-      - arguments:
-          parameters:
-          - name: a
-            value: '{{tasks.add-0.outputs.parameters.sum}}'
           - name: b
             value: '{{workflow.parameters.c}}'
-        depends: add-0
-        name: add-1
+        depends: ''
+        name: bc-0
+        template: multiply
+      - arguments:
+          parameters:
+          - name: a
+            value: '{{workflow.parameters.b}}'
+          - name: b
+            value: '2'
+        depends: ''
+        name: b2-0
+        template: multiply
+      - arguments:
+          parameters:
+          - name: a
+            value: '{{workflow.parameters.a}}'
+          - name: b
+            value: '{{tasks.bc-0.outputs.parameters.product}}'
+        depends: bc-0
+        name: a-plus-bc-0
         template: add
       - arguments:
           parameters:
           - name: a
-            value: '{{tasks.add-1.outputs.parameters.sum}}'
+            value: '{{tasks.a-plus-bc-0.outputs.parameters.sum}}'
           - name: b
-            value: '{{tasks.add-1.outputs.parameters.sum}}'
-        depends: add-1
-        name: add-2
+            value: '{{tasks.b2-0.outputs.parameters.product}}'
+        depends: a-plus-bc-0 && b2-0
+        name: result-a-plus-bc-plus-2b-0
         template: add
     name: bettmensch-ai-dag
+  - inputs:
+      parameters:
+      - name: a
+      - name: b
+      - default: 'null'
+        name: product
+    name: multiply
+    outputs:
+      parameters:
+      - name: product
+        valueFrom:
+          path: product
+    script:
+      command:
+      - python
+      image: bettmensch88/bettmensch.ai:3.11-latest
+      imagePullPolicy: Always
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+
+        # --- preprocessing
+        import json
+        try: a = json.loads(r'''{{inputs.parameters.a}}''')
+        except: a = r'''{{inputs.parameters.a}}'''
+        try: b = json.loads(r'''{{inputs.parameters.b}}''')
+        except: b = r'''{{inputs.parameters.b}}'''
+
+        from bettmensch_ai.arguments import ComponentOutput
+        product = ComponentOutput("product")
+
+        product.assign(a * b)
   - inputs:
       parameters:
       - name: a
@@ -55,11 +97,12 @@ spec:
       parameters:
       - name: sum
         valueFrom:
-          path: ./temp/outputs/sum
+          path: sum
     script:
       command:
       - python
-      image: bettmensch88/bettmensch.ai:3.11
+      image: bettmensch88/bettmensch.ai:3.11-latest
+      imagePullPolicy: Always
       source: |-
         import os
         import sys
