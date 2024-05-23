@@ -413,10 +413,12 @@ class Component(object):
                         value_from=models.ValueFrom(path=output.path),
                     )
                     for output in self.outputs.values()
-                ],
-                "image_pull_policy": ImagePullPolicy.always,
+                ]
             }
         )
+
+        if "image" not in script_decorator_kwargs:
+            script_decorator_kwargs["image"] = COMPONENT_BASE_IMAGE
 
         script_wrapper = script(**script_decorator_kwargs)
 
@@ -518,9 +520,6 @@ def test_hera_component():
     # add components to pipeline context
     a_plus_b = add(
         "a_plus_b",
-        hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
-        },
         a=pipeline_input_a,
         b=pipeline_input_b,
     )
@@ -528,9 +527,6 @@ def test_hera_component():
 
     a_plus_b_plus_c = add(
         "a_plus_b_plus_c",
-        hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36",
-        },
         a=a_plus_b.outputs["sum"],
         b=pipeline_input_c,
     )
