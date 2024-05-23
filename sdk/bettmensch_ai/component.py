@@ -519,7 +519,7 @@ def test_hera_component():
     a_plus_b = add(
         "a_plus_b",
         hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
+            "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36"
         },
         a=pipeline_input_a,
         b=pipeline_input_b,
@@ -529,7 +529,7 @@ def test_hera_component():
     a_plus_b_plus_c = add(
         "a_plus_b_plus_c",
         hera_template_kwargs={
-            "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3",
+            "image": "bettmensch88/bettmensch.ai:3.11-d5dcd36",
         },
         a=a_plus_b.outputs["sum"],
         b=pipeline_input_c,
