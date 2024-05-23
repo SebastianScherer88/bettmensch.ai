@@ -1,7 +1,7 @@
 import inspect
 from typing import Any, Callable, Dict, List
 
-COMPONENT_BASE_IMAGE = "bettmensch88/bettmensch.ai:3.11"
+COMPONENT_BASE_IMAGE = "bettmensch88/bettmensch.ai:3.11-2769afb"
 
 
 def get_func_args(
