@@ -1,5 +1,5 @@
 export DOCKERTAG=bettmensch88/bettmensch.ai:3.11
-export BETTMENSCH_AI_VERSION="1b7a3b3"
+export BETTMENSCH_AI_VERSION="d5dcd36"
 
 docker build -t ${DOCKERTAG}-${BETTMENSCH_AI_VERSION} --build-arg="BETTMENSCH_AI_VERSION=${BETTMENSCH_AI_VERSION}" . 
 

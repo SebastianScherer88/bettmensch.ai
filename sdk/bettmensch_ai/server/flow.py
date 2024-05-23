@@ -38,8 +38,8 @@ class FlowMetadata(BaseModel):
 # --- FlowStatus
 class FlowState(BaseModel):
     phase: Literal["Succeeded", "Failed", "Pending", "Error"]
-    started_at: Optional[datetime] = None
-    finshed_at: Optional[datetime] = None
+    started_at: Optional[Union[datetime, None]] = None
+    finshed_at: Optional[Union[datetime, None]] = None
     progress: str
     conditions: List[Dict[str, str]]
     resources_duration: Optional[Dict]
