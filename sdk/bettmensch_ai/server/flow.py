@@ -37,7 +37,7 @@ class FlowMetadata(BaseModel):
 
 # --- FlowStatus
 class FlowState(BaseModel):
-    phase: Literal["Succeeded", "Failed", "Pending"]
+    phase: Literal["Succeeded", "Failed", "Pending", "Error"]
     started_at: Optional[datetime] = None
     finshed_at: Optional[datetime] = None
     progress: str
@@ -78,7 +78,7 @@ class FlowNode(BaseModel):
     type: Literal["Pod"]
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
-    phase: Literal["Succeeded"]
+    phase: Literal["Succeeded", "Failed", "Pending", "Error"]
     template: str
     inputs: Optional[NodeInputs] = None
     outputs: Optional[FlowNodeOutputs] = None
