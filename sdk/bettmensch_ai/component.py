@@ -25,6 +25,7 @@ from hera.workflows import (
     script,
 )
 from hera.workflows._unparse import roundtrip
+from hera.workflows.models import ImagePullPolicy
 
 
 class PipelineContext(object):
@@ -403,6 +404,7 @@ class Component(object):
                     for output in self.outputs.values()
                 ],
                 "image": COMPONENT_BASE_IMAGE,
+                "image_pull_policy": ImagePullPolicy.always(),
             }
         )
 
