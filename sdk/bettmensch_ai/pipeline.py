@@ -472,6 +472,7 @@ def test_pipeline():
     ):
 
         b_c = multiply(
+            "b_c",
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
             },
@@ -480,6 +481,7 @@ def test_pipeline():
         )
 
         two_b = multiply(
+            "2_b",
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
             },
@@ -488,6 +490,7 @@ def test_pipeline():
         )
 
         a_plus_bc = add(
+            "a_plus_bc",
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
             },
@@ -495,7 +498,8 @@ def test_pipeline():
             b=b_c.outputs["product"],
         )
 
-        final_result = add(
+        a_plus_bc_plus_2b = add(
+            "a_plus_bc_plus_2b",
             hera_template_kwargs={
                 "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
             },

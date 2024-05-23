@@ -230,21 +230,24 @@ class Component(object):
     def __init__(
         self,
         func: Callable,
+        name: str = "",
         hera_template_kwargs: Dict = {},
         **component_inputs_kwargs: Union[PipelineInput, ComponentOutput],
     ):
 
         self.hera_template_kwargs = hera_template_kwargs
-        self.build(func, component_inputs_kwargs)
+        self.build(func, component_inputs_kwargs, name=name)
 
     def build(
         self,
         func: Callable,
         component_inputs: Dict[str, Union[PipelineInput, ComponentOutput]],
+        name: str = "",
     ):
 
         self.func = func
-        self.base_name = func.__name__
+
+        self.base_name = func.__name__ if not name else name
         _pipeline_context.add_component(self)
         self.inputs = self.generate_inputs_from_func(func, component_inputs)
         self.outputs = self.generate_outputs_from_func(func)
@@ -468,11 +471,14 @@ def component(func: Callable) -> Callable:
     """
 
     def component_factory(
-        hera_template_kwargs: Dict = {}, **component_inputs_kwargs
+        name: str = "",
+        hera_template_kwargs: Dict = {},
+        **component_inputs_kwargs,
     ) -> Component:
 
         return Component(
             func=func,
+            name=name,
             hera_template_kwargs=hera_template_kwargs,
             **component_inputs_kwargs,
         )
@@ -511,6 +517,7 @@ def test_hera_component():
 
     # add components to pipeline context
     a_plus_b = add(
+        "a_plus_b",
         hera_template_kwargs={
             "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3"
         },
@@ -520,6 +527,7 @@ def test_hera_component():
     print(f"Created component: {a_plus_b.name}")
 
     a_plus_b_plus_c = add(
+        "a_plus_b_plus_c",
         hera_template_kwargs={
             "image": "bettmensch88/bettmensch.ai:3.11-1b7a3b3",
         },
