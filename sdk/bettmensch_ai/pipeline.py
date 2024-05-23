@@ -1,4 +1,5 @@
 import inspect
+import os
 from typing import Callable, Dict, List, Union
 
 from argo_workflows.api import workflow_template_service_api
@@ -200,7 +201,6 @@ class Pipeline(object):
         return result
 
     def build_workflow_template(self) -> WorkflowTemplate:
-
         # add components to the global pipeline context
         with self:
             self.func(**self.inputs)
@@ -209,14 +209,14 @@ class Pipeline(object):
         # WorkflowTemplate & DAG context
         with WorkflowTemplate(
             generate_name=f"pipeline-{self.name}-",
-            entrypoint="bettmensch_ai_dag",
+            entrypoint="bettmensch-ai-dag",
             namespace=self._namespace,
             arguments=[
                 input.to_hera_parameter() for input in self.inputs.values()
             ],
         ) as wft:
 
-            with DAG(name="bettmensch_ai_dag"):
+            with DAG(name="bettmensch-ai-dag"):
                 for component in self.context.components:
                     component.to_hera_task()
 
@@ -245,7 +245,11 @@ class Pipeline(object):
             dir (str): The directory to write to.
         """
 
-        self.workflow_template.to_file(dir)
+        if self.built:
+            self.user_built_workflow_template.to_file(dir)
+        if self.registered:
+            with open(os.path.join(dir, "registered_pipeline.json"), "w"):
+                self.registered_pipeline.model_dump_json(dir)
 
     def register(self):
         """Register the Pipeline instance on the bettmensch.ai server.
@@ -460,17 +464,22 @@ def test_pipeline():
 
         sum.assign(a + b)
 
-    @pipeline("test_pipeline", "argo", True)
-    def a_plus_b_plus_c(
+    @pipeline("test-pipeline", "argo", True)
+    def a_plus_b_plus_c_times_2(
         a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
     ):
 
-        a_plus_b = add(a=a, b=b)
-        a_plus_b_plus_c = add(a=a_plus_b.outputs["sum"], b=c)
+        first_sum = add(a=a, b=b)
 
-    print(f"Pipeline type: {type(a_plus_b_plus_c)}")
+        second_sum = add(a=first_sum.outputs["sum"], b=c)
 
-    a_plus_b_plus_c.export()
+        last_sum = add(a=second_sum.outputs["sum"], b=second_sum.outputs["sum"])
+
+    print(f"Pipeline type: {type(a_plus_b_plus_c_times_2)}")
+
+    a_plus_b_plus_c_times_2.export()
+    # a_plus_b_plus_c_times_2.register()
+    # a_plus_b_plus_c_times_2.run(a=11,b=22,c=33)
 
 
 if __name__ == "__main__":

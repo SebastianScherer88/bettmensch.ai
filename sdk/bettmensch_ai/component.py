@@ -220,7 +220,6 @@ class Component(object):
     base_name: str = None
     inputs: Dict[str, ComponentInput] = None
     outputs: Dict[str, ComponentOutput] = None
-    _depends: List[str] = []
     task_factory: Callable = None
 
     def __init__(
@@ -251,11 +250,23 @@ class Component(object):
         return f"{self.type}.{self.name}"
 
     @property
-    def depends(self):
-        if self._depends:
-            return " && ".join(self._depends)
-        else:
-            return ""
+    def depends(self) -> str:
+        """Generates hera compatible dependency string from the inputs of the
+        Component instance.
+
+        Returns:
+            str: A hera compatible task dependency string for the `depends`
+                field of a workflow template task
+        """
+        depends = [
+            input.source.owner.name
+            for input in self.inputs.values()
+            if (input.source is not None)
+            and (input.source.owner.type != "workflow")
+        ]
+        depends_deduped = list(set(depends))
+
+        return " && ".join(depends_deduped)
 
     def generate_name(self, n: int):
         """Utility method to invoke by the global PipelineContext to generate a
@@ -327,12 +338,6 @@ class Component(object):
 
             component_input.set_source(input)
             component_input.set_owner(self)
-
-            # update component's dependencies with input's owner component
-            if isinstance(input, ComponentOutput) and (
-                input.owner.name not in self._depends
-            ):
-                self._depends.append(input.owner.name)
 
             # remove declared input from required inputs (if relevant)
             if name in required_func_inputs:
@@ -415,7 +420,6 @@ class Component(object):
             Task: A task that implements this Component instance in the hera
                 library.
         """
-
         task = self.task_factory(
             arguments=[
                 input.to_hera_parameter() for input in self.inputs.values()

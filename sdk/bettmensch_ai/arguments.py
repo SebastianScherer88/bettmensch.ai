@@ -43,7 +43,7 @@ class Output(object):
 class ParameterMetaMixin(object):
 
     owner: Union["Component", "Pipeline"] = None
-    source: str = None
+    source: Union["PipelineInput", "ComponentOutput"] = None
     id: str = None
 
     def set_owner(self, owner: Union["Component", "Pipeline"]):
@@ -60,7 +60,9 @@ class ParameterMetaMixin(object):
                 "PipelineInput or ComponentOutput type."
             )
 
-        self.source = "{{" + source.id + "}}"  # "workflow.parameters.input_1",
+        self.source = (
+            source  # "{{" + source.id + "}}"  # "workflow.parameters.input_1",
+        )
         # "tasks.component-c1-0.outputs.output_1" etc.
 
 
@@ -77,7 +79,14 @@ class PipelineInput(ContainerInput):
         Returns:
             str: The hera parameter reference expression.
         """
-        return f"{self.owner.parameter_owner_name}.parameters.{self.name}"
+
+        hera_expression = (
+            "{{"
+            + f"{self.owner.parameter_owner_name}.parameters.{self.name}"
+            + "}}"
+        )
+
+        return hera_expression
 
     def to_hera_parameter(self) -> Parameter:
         # PipelineInput annotated function arguments' default values are
@@ -95,18 +104,34 @@ class ComponentInput(PipelineInput):
         """Utility method to generate a hera/ArgoWorkflow parameter reference
         to be used when constructing the hera DAG.
 
+        We add this for completeness' sake, even though ComponentInputs will
+        typically not be referenced as parameter source by any container.
+
         Returns:
             str: The hera parameter reference expression.
         """
 
-        return f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
+        hera_expression = (
+            "{{"
+            + f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
+            + "}}"
+        )
+
+        return hera_expression
 
     def to_hera_parameter(self) -> Parameter:
-        # ComponentInput annotated function arguments' are always referencing
-        # another parameter (PipelineInput or ComponentOutput), so we reference
-        # the source parameter '{{...}}' expression that was stored in the
-        # ComponentInput's source attribute
-        return Parameter(name=self.name, value=self.source)
+        # ComponentInput annotated function arguments' are not always
+        # referencing another parameter (PipelineInput or ComponentOutput), so
+        # we reference the source parameter's `id` '{{...}}' expression only if
+        # a ComponentInput.source had been provided. Otherwise, we export the
+        # `value`` attribu which may be None. This allows us to hardcode an
+        # input to a Component in a Pipeline that is different to the
+        # Component's template function's default value for that argument,
+        # without having to create a PipelineInput.
+        if self.source is not None:
+            return Parameter(name=self.name, value=self.source.id)
+        else:
+            return Parameter(name=self.name, value=self.value)
 
 
 class ComponentOutput(ParameterMetaMixin, Output):
@@ -119,7 +144,13 @@ class ComponentOutput(ParameterMetaMixin, Output):
             str: The hera parameter reference expression.
         """
 
-        return f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
+        hera_expression = (
+            "{{"
+            + f"{self.owner.parameter_owner_name}.{self.type}.parameters.{self.name}"
+            + "}}"
+        )
+
+        return hera_expression
 
     def to_hera_parameter(self) -> Parameter:
         # ComponentOutput annotated function arguments wont have a value
