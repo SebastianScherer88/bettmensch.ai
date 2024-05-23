@@ -4,7 +4,7 @@ from typing import Any, Union
 from hera.workflows import Parameter
 
 # --- type annotations
-OUTPUT_BASE_PATH = "./temp/outputs"
+OUTPUT_BASE_PATH = os.path.join(".", "temp", "outputs")
 
 
 class Input(object):
