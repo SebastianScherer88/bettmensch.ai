@@ -26,9 +26,7 @@ PIPELINE_NODE_EMOJI_MAP = {
 }
 
 # --- Colouring
-LOGO_IMAGE = cv2.imread(
-    "C:/Users/bettmensch/Pictures/bettmensch.ai/logo_transparent.png"
-)
+LOGO_IMAGE = cv2.imread("asset/logo_transparent.png")
 
 
 class CustomTheme(BaseModel):
