@@ -1,0 +1,77 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  generateName: s3-artifact-io-
+  namespace: argo
+spec:
+  arguments:
+    parameters:
+    - name: a
+    - name: b
+  entrypoint: s3-artifact-io
+  templates:
+  - dag:
+      tasks:
+      - arguments:
+          parameters:
+          - name: a
+            value: '{{workflow.parameters.a}}'
+          - name: b
+            value: '{{workflow.parameters.b}}'
+        name: multiply-a-and-b
+        template: multiply
+      - arguments:
+          artifacts:
+          - from: '{{tasks.multiply-a-and-b.outputs.artifacts.product}}'
+            name: artifact_i
+        depends: multiply-a-and-b
+        name: artifact-io
+        template: artifact-io
+    name: s3-artifact-io
+  - inputs:
+      parameters:
+      - name: a
+      - name: b
+    name: multiply
+    outputs:
+      artifacts:
+      - name: product
+        path: ./product.txt
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        import json
+        try: a = json.loads(r'''{{inputs.parameters.a}}''')
+        except: a = r'''{{inputs.parameters.a}}'''
+        try: b = json.loads(r'''{{inputs.parameters.b}}''')
+        except: b = r'''{{inputs.parameters.b}}'''
+
+        with open('./product.txt', 'w') as output:
+            output.write(str(a * b))
+  - inputs:
+      artifacts:
+      - name: artifact_i
+        path: /tmp/artifact_i
+    name: artifact-io
+    outputs:
+      artifacts:
+      - name: artifact_o
+        path: /tmp/artifact_o
+    script:
+      command:
+      - python
+      image: python:3.8
+      source: |-
+        import os
+        import sys
+        sys.path.append(os.getcwd())
+        with open('./tmp/artifact_i', 'r') as a_file:
+            art_in = a_file.read()
+        print(art_in)
+        with open('/tmp/artifact_o', 'w') as output:
+            output.write(str(art_in))
