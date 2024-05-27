@@ -1,13 +1,15 @@
 import copy
 import inspect
 import textwrap
-from typing import Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from bettmensch_ai.arguments import (
-    ComponentInput,
-    ComponentOutput,
-    PipelineInput,
+    InputArtifact,
+    InputParameter,
+    OutputArtifact,
+    OutputParameter,
 )
+from bettmensch_ai.constants import COMPONENT_TYPE, PIPELINE_TYPE
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
     get_func_args,
@@ -100,14 +102,8 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
     def _get_script_preprocessing(self, instance: Script) -> str:
         """Constructs and returns a script that loads the parameters of the
-        specified arguments. Adapted to avoid listing ComponentOutput annotated
-        source arguments in inputs, and instead add a file write section to the
-        correct local path.
-
-        Since Argo passes parameters through `{{input.parameters.name}}` it can
-        be very cumbersome for users to manage that. This creates a script that
-        automatically imports json and loads/adds code to interpret each
-        independent argument into the script.
+        specified arguments. Adapted from the `_get_param_script_portion`
+        method of the `InlineScriptRunner` class.
 
         Returns:
         -------
@@ -118,11 +114,23 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         inputs = instance._build_inputs()
         outputs = instance._build_outputs()
 
+        input_parameters = (
+            inputs.parameters if inputs.parameters is not None else []
+        )
+        input_artifacts = (
+            inputs.artifacts if inputs.artifacts is not None else []
+        )
+
         output_names = [out_param.name for out_param in outputs.parameters]
         actual_input_parameters = [
             input_param
-            for input_param in inputs.parameters
+            for input_param in input_parameters
             if input_param.name not in output_names
+        ]
+        actual_input_artifacts = [
+            input_art
+            for input_art in input_artifacts
+            if input_art.name not in output_names
         ]
         # remove the ComponentOutput annotated inputs
 
@@ -131,26 +139,32 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         for param in sorted(
             actual_input_parameters or [], key=lambda x: x.name
         ):
-            # Hera does not know what the content of the `InputFrom` is, coming
-            # from another task. In some cases non-JSON encoded strings are
-            # returned, which fail the loads, but they can be used as plain
-            # strings which is why this captures that in an except. This is
-            # only used for `InputFrom` cases as the extra payload of the
-            # script is not necessary when regular input is set on the task via
-            # `func_params`
-            if param.value_from is None:
-                preprocess += f"""try: {param.name} = json.loads(r'''{{{{inputs.parameters.{param.name}}}}}''')\n"""
-                preprocess += f"""except: {param.name} = r'''{{{{inputs.parameters.{param.name}}}}}'''\n"""
+            preprocess += f"""try: {param.name} = json.loads(r'''{{{{inputs.parameters.{param.name}}}}}''')\n"""
+            preprocess += f"""except: {param.name} = r'''{{{{inputs.parameters.{param.name}}}}}'''\n"""
+
+        # input artifact initialization to provide user access to input artifact
+        # file location
+        for art in sorted(actual_input_artifacts or [], key=lambda x: x.name):
+            preprocess += f"""{param.name} = InputArtifact("{param.name}")\n"""
 
         # output parameter initialization
         if outputs.parameters:
             preprocess += (
-                "\nfrom bettmensch_ai.arguments import ComponentOutput\n"
+                "\nfrom bettmensch_ai.arguments import OutputParameter\n"
             )
         for param in sorted(outputs.parameters or [], key=lambda x: x.name):
             preprocess += (
-                f"""{param.name} = ComponentOutput("{param.name}")\n"""
+                f"""{param.name} = OutputParameter("{param.name}")\n"""
             )
+
+        # output artifact initialization to provide user access to output
+        # artifact file location
+        if outputs.artifacts:
+            preprocess += (
+                "\nfrom bettmensch_ai.arguments import OutputArtifact\n"
+            )
+        for art in sorted(outputs.artifacts or [], key=lambda x: x.name):
+            preprocess += f"""{art.name} = OutputArtifact("{art.name}")\n"""
 
         preprocess = (
             textwrap.dedent(preprocess)
@@ -223,8 +237,9 @@ class Component(object):
     original_func: Callable = None
     func: Callable = None
     base_name: str = None
-    inputs: Dict[str, ComponentInput] = None
-    outputs: Dict[str, ComponentOutput] = None
+    template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
+    template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
+    task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     task_factory: Callable = None
 
     def __init__(
@@ -232,7 +247,9 @@ class Component(object):
         func: Callable,
         name: str = "",
         hera_template_kwargs: Dict = {},
-        **component_inputs_kwargs: Union[PipelineInput, ComponentOutput],
+        **component_inputs_kwargs: Union[
+            InputParameter, OutputParameter, OutputArtifact
+        ],
     ):
 
         self.hera_template_kwargs = hera_template_kwargs
@@ -241,7 +258,9 @@ class Component(object):
     def build(
         self,
         func: Callable,
-        component_inputs: Dict[str, Union[PipelineInput, ComponentOutput]],
+        task_inputs: Dict[
+            str, Union[InputParameter, OutputParameter, OutputArtifact]
+        ],
         name: str = "",
     ):
 
@@ -249,12 +268,24 @@ class Component(object):
 
         self.base_name = func.__name__ if not name else name
         _pipeline_context.add_component(self)
-        self.inputs = self.generate_inputs_from_func(func, component_inputs)
-        self.outputs = self.generate_outputs_from_func(func)
+        validate_func_args(
+            func,
+            argument_types=[
+                InputParameter,
+                OutputParameter,
+                InputArtifact,
+                OutputArtifact,
+            ],
+        )
+        self.template_inputs = self.build_template_ios(func, (InputArtifact,))
+        self.template_outputs = self.build_template_ios(
+            func, (OutputParameter, OutputArtifact)
+        )
+        self.task_inputs = self.build_task_inputs(func, task_inputs)
         self.task_factory = self.build_hera_task_factory()
 
     @property
-    def parameter_owner_name(self) -> str:
+    def io_owner_name(self) -> str:
         return f"{self.type}.{self.name}"
 
     @property
@@ -267,14 +298,19 @@ class Component(object):
                 field of a workflow template task
         """
         depends = [
-            input.source.owner.name
-            for input in self.inputs.values()
-            if getattr(input.source.owner, "type", None)
-            not in ("workflow", None)
+            task_input.source.owner.name
+            for task_input in self.task_inputs.values()
+            if getattr(task_input.source.owner, "type", None)
+            not in (PIPELINE_TYPE, None)
         ]
         depends_deduped = list(set(depends))
 
         return " && ".join(depends_deduped)
+
+    @property
+    def outputs(self) -> Dict[str, Union[OutputParameter, OutputArtifact]]:
+        print(self.template_outputs)
+        return self.template_outputs
 
     def generate_name(self, n: int):
         """Utility method to invoke by the global PipelineContext to generate a
@@ -282,17 +318,59 @@ class Component(object):
 
         return f"{self.base_name}-{n}"
 
-    def generate_inputs_from_func(
+    def build_template_ios(
         self,
         func: Callable,
-        inputs: Dict[str, Union[PipelineInput, ComponentOutput]],
-    ) -> Dict[str, ComponentInput]:
-        """Generates component inputs from the underlying function as well as
-        the Component's constructor method's calls kwargs. Also
-        - checks for correct ComponentInput type annotations in the decorated
-            original function
-        - ensures all original function inputs without default values are being
-            specified
+        annotation_types: List[
+            Union[InputArtifact, OutputParameter, OutputArtifact]
+        ],
+    ) -> Dict[str, Union[InputArtifact, OutputParameter, OutputArtifact]]:
+        """Builds the Component's template's inputs/outputs based on the
+        underlying function's arguments annotated with the
+        - InputParameter for the template inputs or
+        - OutputsParameter or the
+        - OutputArtifact
+        for the template outputs. To be used in the `build_task_factory` method.
+
+        Note that InputParameter type arguments dont need to be passed
+        explicitly to hera's  @script decorator since they are inferred from the
+        decorated function's argument spec automatically.
+
+        Args:
+            func (Callable): The function the we want to wrap in a Component.
+            annotation_types: List[Union[InputArtifact,OutputParameter,OutputArtifact]]: The annotation types to extract.
+        Returns:
+            Dict[str,Union[InputParameter,InputArtifact,OutputParameter,OutputArtifact]]: The component's
+                template's inputs/outputs.
+        """
+
+        func_ios = get_func_args(func, "annotation", annotation_types)
+
+        template_ios = {}
+
+        for io_name, io_param in func_ios.items():
+            print(
+                f"IO name: {io_name}. IO param {io_param}. IO param type: {type(io_param.annotation)}"
+            )
+            # import pdb
+            # pdb.set_trace()
+            template_io = io_param.annotation(name=io_name)
+            template_io.set_owner(self)
+
+            template_ios[io_name] = template_io
+
+        return template_ios
+
+    def build_task_inputs(
+        self,
+        func: Callable,
+        task_inputs: Dict[
+            str, Union[InputParameter, OutputParameter, OutputArtifact]
+        ],
+    ) -> Dict[str, Union[InputParameter, InputArtifact]]:
+        """Builds the Component's task's inputs from the spec passed during the
+        DAG construction phase. Also ensures all InputParameter without default
+        values are being specified
 
         Args:
             func (Callable): The function the we want to wrap in a Component.
@@ -314,10 +392,9 @@ class Component(object):
             Dict[str,ComponentInput]: The component's inputs.
         """
 
-        validate_func_args(
-            func, argument_types=[ComponentInput, ComponentOutput]
+        func_inputs = get_func_args(
+            func, "annotation", [InputParameter, InputArtifact]
         )
-        func_inputs = get_func_args(func, "annotation", [ComponentInput])
         non_default_args = get_func_args(func, "default", [inspect._empty])
         required_func_inputs = dict(
             [(k, v) for k, v in func_inputs.items() if k in non_default_args]
@@ -325,7 +402,7 @@ class Component(object):
 
         result = {}
 
-        for name, input in inputs.items():
+        for name, input in task_inputs.items():
 
             if name not in func_inputs:
                 raise ValueError(
@@ -334,22 +411,25 @@ class Component(object):
                 )
 
             # assemble component input
-            if isinstance(input, PipelineInput):
-                # for pipeline inputs, we retain the (possible) default value
-                component_input = ComponentInput(name=name, value=input.value)
-            elif isinstance(input, ComponentInput):
-                # a component input can be used to hardcode an argument of the
-                # underlying function for this Component only, so we want to
-                # retain the (default) value
-                component_input = ComponentInput(name=name, value=input.value)
-            elif isinstance(input, ComponentOutput):
+            input_owner = getattr(input, "owner", None)
+            input_owner_type = getattr(input_owner, "type", None)
+
+            if isinstance(input, InputParameter):
+                # for pipeline inputs, we retain the (possible) default value.
+                # for a hardcoded component input pinning the argument of the
+                # underlying function for this component only, we set the pinned
+                # value
+                component_input = InputParameter(name=name, value=input.value)
+            elif isinstance(input, OutputParameter):
                 # a component output won't have a default value to retain. the
                 # input's value will be the hera reference expression
-                component_input = ComponentInput(name=name)
+                component_input = InputParameter(name=name)
+            elif isinstance(input, OutputArtifact):
+                component_input = InputArtifact(name=name)
             else:
                 raise TypeError(
-                    f"Input {input} must be of type PipelineInput or "
-                    "ComponentOutput."
+                    f"Input {input} must be of one of  "
+                    "(InputParamter, OutputParameter, OutputArtifact)"
                 )
 
             component_input.set_source(input)
@@ -369,31 +449,6 @@ class Component(object):
 
         return result
 
-    def generate_outputs_from_func(
-        self, func: Callable
-    ) -> Dict[str, ComponentOutput]:
-        """Generates the Component's outputs based on the underlying function's
-        arguments annotated with the OutputParameter type.
-
-        Args:
-            func (Callable): The function the we want to wrap in a Component.
-
-        Returns:
-            Dict[str,ComponentOutput]: The component's outputs.
-        """
-
-        func_outputs = get_func_args(func, "annotation", [ComponentOutput])
-
-        result = {}
-
-        for output_name in func_outputs:
-            component_output = ComponentOutput(name=output_name)
-            component_output.set_owner(self)
-
-            result[output_name] = component_output
-
-        return result
-
     def build_hera_task_factory(self) -> Callable:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
@@ -407,13 +462,14 @@ class Component(object):
         script_decorator_kwargs = self.hera_template_kwargs.copy()
         script_decorator_kwargs.update(
             {
+                "inputs": [
+                    template_input.to_hera(template=True)
+                    for template_input in self.template_inputs.values()
+                ],
                 "outputs": [
-                    Parameter(
-                        name=output.name,
-                        value_from=models.ValueFrom(path=output.path),
-                    )
-                    for output in self.outputs.values()
-                ]
+                    template_output.to_hera()
+                    for template_output in self.template_outputs.values()
+                ],
             }
         )
 
@@ -431,7 +487,7 @@ class Component(object):
 
         return task_factory
 
-    def to_hera_task(self) -> Task:
+    def to_hera(self) -> Task:
         """Generates a hera.workflow.Task instance. Needs to be called from
             within an active hera context, specifically:
             - an outer layer hera.WorkflowTemplate context
@@ -446,7 +502,7 @@ class Component(object):
         """
         task = self.task_factory(
             arguments=[
-                input.to_hera_parameter() for input in self.inputs.values()
+                task_input.to_hera() for task_input in self.task_inputs.values()
             ],
             name=self.name,
             depends=self.depends,
@@ -499,9 +555,9 @@ def test_hera_component():
 
     @component
     def add(
-        a: ComponentInput = 1,
-        b: ComponentInput = 2,
-        sum: ComponentOutput = None,
+        a: InputParameter = 1,
+        b: InputParameter = 2,
+        sum: OutputParameter = None,
     ) -> None:
 
         sum.assign(a + b)
@@ -509,14 +565,15 @@ def test_hera_component():
     print(f"Created component factory: {add}")
 
     class MockPipeline:
-        parameter_owner_name: str = "workflow"
+        type: str = PIPELINE_TYPE
+        io_owner_name: str = PIPELINE_TYPE
 
     # mock active pipeline with 3 inputs
-    pipeline_input_a = PipelineInput(name="a", value=1)
+    pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(MockPipeline())
-    pipeline_input_b = PipelineInput(name="b", value=2)
+    pipeline_input_b = InputParameter(name="b", value=2)
     pipeline_input_b.set_owner(MockPipeline())
-    pipeline_input_c = PipelineInput(name="c", value=3)
+    pipeline_input_c = InputParameter(name="c", value=3)
     pipeline_input_c.set_owner(MockPipeline())
 
     _pipeline_context.activate()
@@ -552,8 +609,8 @@ def test_hera_component():
     ) as wft:
 
         with DAG(name="test_dag"):
-            a_plus_b_task = a_plus_b.to_hera_task()
-            a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera_task()
+            a_plus_b_task = a_plus_b.to_hera()
+            a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera()
 
     wft.to_file(".")
 

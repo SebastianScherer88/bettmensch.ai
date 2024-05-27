@@ -3,18 +3,14 @@ import os
 from typing import Callable, Dict, List, Union
 
 from argo_workflows.api import workflow_template_service_api
-from bettmensch_ai.arguments import (
-    ComponentInput,
-    ComponentOutput,
-    Parameter,
-    PipelineInput,
-)
+from bettmensch_ai.arguments import InputParameter, OutputParameter, Parameter
 from bettmensch_ai.client import client
 from bettmensch_ai.component import (
     PipelineContext,
     _pipeline_context,
     component,
 )
+from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.server import RegisteredFlow, RegisteredPipeline
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
@@ -27,14 +23,14 @@ class Pipeline(object):
     """Manages the PipelineContext meta data storage utility."""
 
     _config = global_config
-    type: str = "workflow"
+    type: str = PIPELINE_TYPE
     name: str = None
     _namespace: str = None
     _built: bool = False
     _registered: bool = False
     clear_context: bool = None
     func: Callable = None
-    inputs: Dict[str, PipelineInput] = None
+    inputs: Dict[str, InputParameter] = None
     user_built_workflow_template: WorkflowTemplate = None
     registered_workflow_template: WorkflowTemplate = None
 
@@ -104,7 +100,7 @@ class Pipeline(object):
         self._registered = True
 
     @property
-    def parameter_owner_name(self) -> str:
+    def io_owner_name(self) -> str:
         return f"{self.type}"
 
     @property
@@ -148,7 +144,7 @@ class Pipeline(object):
 
     def generate_inputs_from_func(
         self, func: Callable
-    ) -> Dict[str, PipelineInput]:
+    ) -> Dict[str, InputParameter]:
         """Generates pipeline inputs from the underlying function. Also
         - checks for correct PipelineInput type annotations in the decorated
             original function
@@ -164,12 +160,12 @@ class Pipeline(object):
                 default value.
 
         Returns:
-            Dict[str,PipelineInput]: The pipeline's inputs.
+            Dict[str,InputParameter]: The pipeline's inputs.
         """
 
-        validate_func_args(func, argument_types=[PipelineInput])
+        validate_func_args(func, argument_types=[InputParameter])
         func_args = get_func_args(func)
-        func_inputs = get_func_args(func, "annotation", [PipelineInput])
+        func_inputs = get_func_args(func, "annotation", [InputParameter])
         non_default_args = get_func_args(func, "default", [inspect._empty])
         required_func_inputs = dict(
             [(k, v) for k, v in func_inputs.items() if k in non_default_args]
@@ -185,7 +181,7 @@ class Pipeline(object):
                 if func_args[name].default != inspect._empty
                 else None
             )
-            pipeline_input = PipelineInput(name=name, value=default)
+            pipeline_input = InputParameter(name=name, value=default)
 
             pipeline_input.set_owner(self)
 
@@ -214,14 +210,12 @@ class Pipeline(object):
             generate_name=f"pipeline-{self.name}-",
             entrypoint="bettmensch-ai-dag",
             namespace=self._namespace,
-            arguments=[
-                input.to_hera_parameter() for input in self.inputs.values()
-            ],
+            arguments=[input.to_hera() for input in self.inputs.values()],
         ) as wft:
 
             with DAG(name="bettmensch-ai-dag"):
                 for component in self.context.components:
-                    component.to_hera_task()
+                    component.to_hera()
 
         return wft
 
@@ -426,14 +420,14 @@ def pipeline(
 
     Usage:
     @component
-    def add(a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None) -> None:
+    def add(a: InputParameter, b: InputParameter, sum: OutputParameter = None) -> None:
 
         sum.assign(a + b)
 
     @pipeline('test_pipeline','argo',True)
-    def a_plus_b_plus_c(a: PipelineInput=1,
-                        b: PipelineInput=2,
-                        c: PipelineInput=3):
+    def a_plus_b_plus_c(a: InputParameter=1,
+                        b: InputParameter=2,
+                        c: InputParameter=3):
 
         a_plus_b = add(a = a, b = b)
         a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = c)
@@ -454,21 +448,21 @@ def pipeline(
 def test_pipeline():
     @component
     def add(
-        a: ComponentInput, b: ComponentInput, sum: ComponentOutput = None
+        a: InputParameter, b: InputParameter, sum: OutputParameter = None
     ) -> None:
 
         sum.assign(a + b)
 
     @component
     def multiply(
-        a: ComponentInput, b: ComponentInput, product: ComponentOutput = None
+        a: InputParameter, b: InputParameter, product: OutputParameter = None
     ) -> None:
 
         product.assign(a * b)
 
     @pipeline("test-pipeline", "argo", True)
     def a_plus_bc_plus_2b(
-        a: PipelineInput = 1, b: PipelineInput = 2, c: PipelineInput = 3
+        a: InputParameter = 1, b: InputParameter = 2, c: InputParameter = 3
     ):
 
         b_c = multiply(
@@ -480,7 +474,7 @@ def test_pipeline():
         two_b = multiply(
             "b2",
             a=b,
-            b=ComponentInput(name="two", value=2),
+            b=InputParameter(name="two", value=2),
         )
 
         a_plus_bc = add(
