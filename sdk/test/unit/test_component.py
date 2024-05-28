@@ -11,7 +11,7 @@ from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
 def test_artifact_component(test_output_dir):
-    """Declaration of Component's using InputArtifact and OutputArtifact"""
+    """Declaration of Component using InputArtifact and OutputArtifact"""
 
     @component
     def convert_to_artifact(
@@ -86,7 +86,7 @@ def test_artifact_component(test_output_dir):
 
 
 def test_parameter_component(test_output_dir):
-    """Declaration of Component's using InputParameter and OutputParameter"""
+    """Declaration of Component using InputParameter and OutputParameter"""
 
     @component
     def add(
