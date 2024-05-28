@@ -19,6 +19,8 @@ PIPELINE_NODE_EMOJI_MAP = {
         "pipeline": "⏬",  # :arrow_double_down:
     },
     "outputs": {"task": "↪️"},  # :arrow_right_hook:
+    "parameters": "📃",  # :page_with_curl
+    "artifacts": "📂",  # :open_file_folder:
 }
 
 # --- ArgoWorkflow server config

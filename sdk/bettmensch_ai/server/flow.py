@@ -347,7 +347,7 @@ class Flow(BaseModel):
                                     id=task_io_node_name,
                                     pos=node_positions[task_io_node_name],
                                     data={
-                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {argument.name}",
+                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",
                                         "value": getattr(
                                             argument, "value", None
                                         ),
@@ -402,7 +402,7 @@ class Flow(BaseModel):
                         id=node_name,
                         pos=node_positions[node_name],
                         data={
-                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {input.name}",
+                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",
                             "value": input.value,
                         },
                         style={"backgroundColor": "lightblue"},
