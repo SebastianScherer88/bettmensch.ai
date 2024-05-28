@@ -8,10 +8,7 @@ from bettmensch_ai import (
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
-def test_hera_component():
-
-    print("Testing component decoration")
-
+def test_hera_component(test_output_dir):
     @component
     def add(
         a: InputParameter = 1,
@@ -20,8 +17,6 @@ def test_hera_component():
     ) -> None:
 
         sum.assign(a + b)
-
-    print(f"Created component factory: {add}")
 
     class MockPipeline:
         type: str = PIPELINE_TYPE
@@ -44,14 +39,12 @@ def test_hera_component():
         a=pipeline_input_a,
         b=pipeline_input_b,
     )
-    print(f"Created component: {a_plus_b.name}")
 
     a_plus_b_plus_c = add(
         "a_plus_b_plus_c",
         a=a_plus_b.outputs["sum"],
         b=pipeline_input_c,
     )
-    print(f"Created component: {a_plus_b_plus_c.name}")
 
     # close pipeline context
     _pipeline_context.deactivate()
@@ -68,7 +61,7 @@ def test_hera_component():
     ) as wft:
 
         with DAG(name="test_dag"):
-            a_plus_b_task = a_plus_b.to_hera()
-            a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera()
+            a_plus_b.to_hera()
+            a_plus_b_plus_c.to_hera()
 
-    wft.to_file("./outputs")
+    wft.to_file(test_output_dir)
