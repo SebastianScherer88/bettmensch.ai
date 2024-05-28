@@ -45,20 +45,20 @@ def test_artifact_pipeline(test_output_dir):
     ) -> None:
         # add components to pipeline context
         convert = convert_to_artifact(
-            "convert_to_artifact",
+            "convert-to-artifact",
             a_param=a,
             b_param=b,
         )
 
         show = show_artifact(
-            "show_artifact",
+            "show-artifact",
             a=convert.outputs["a_art"],
             b=convert.outputs["b_art"],
         )
 
     parameter_to_artifact.export(test_output_dir)
     parameter_to_artifact.register()
-    # parameter_to_artifact.run(a="Test value A", b="Test value b")
+    parameter_to_artifact.run(a="Test value A", b="Test value b")
 
 
 def test_parameter_pipeline(test_output_dir):
@@ -77,20 +77,20 @@ def test_parameter_pipeline(test_output_dir):
     def a_plus_b_plus_2(a: InputParameter = 1, b: InputParameter = 2) -> None:
         # add components to pipeline context
         a_plus_b = add(
-            "a_plus_b",
+            "a-plus-b",
             a=a,
             b=b,
         )
 
         a_plus_b_plus_2 = add(
-            "a_plus_b_plus_2",
+            "a-plus-b-plus-2",
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),
         )
 
     a_plus_b_plus_2.export(test_output_dir)
     a_plus_b_plus_2.register()
-    # a_plus_b_plus_2.run(a=3, b=2)
+    a_plus_b_plus_2.run(a=3, b=2)
 
 
 # from bettmensch_ai import InputParameter, OutputParameter, component, pipeline

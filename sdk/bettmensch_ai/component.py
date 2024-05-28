@@ -134,8 +134,12 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
         # input artifact initialization to provide user access to input artifact
         # file location
-        for input_artifact in sorted(input_artifacts, key=lambda x: x.name):
-            preprocess += f"""{input_artifact.name} = InputArtifact("{input_artifact.name}")\n"""
+        if input_artifacts:
+            preprocess += (
+                "\nfrom bettmensch_ai.arguments import InputArtifact\n"
+            )
+            for input_artifact in sorted(input_artifacts, key=lambda x: x.name):
+                preprocess += f"""{input_artifact.name} = InputArtifact("{input_artifact.name}")\n"""
 
         # output parameter initialization
         if output_parameters:

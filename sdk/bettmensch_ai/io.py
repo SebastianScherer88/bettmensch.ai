@@ -166,7 +166,7 @@ class InputArtifact(OriginMixin, Input):
         else:
             source_owner = getattr(self.source, "owner", None)
             if source_owner is not None:
-                return Artifact(name=self.name, _from=self.source.id)
+                return Artifact(name=self.name, from_=self.source.id)
             else:
                 raise ValueError(
                     f"InputArtifact must have be associated "
