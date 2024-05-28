@@ -286,11 +286,11 @@ def display_pipeline_dag_selection(
                     else:
                         task_inputs_artifacts_formatted_df = pd.DataFrame()
 
-                    st.write("Parameters")
+                    st.write(":page_with_curl: Parameters")
                     st.dataframe(
                         task_inputs_parameters_formatted_df, hide_index=True
                     )
-                    st.write("Artifacts")
+                    st.write(":open_file_folder: Artifacts")
                     st.dataframe(
                         task_inputs_artifacts_formatted_df, hide_index=True
                     )
@@ -333,11 +333,11 @@ def display_pipeline_dag_selection(
                     else:
                         task_outputs_artifacts_formatted_df = pd.DataFrame()
 
-                    st.write("Parameters")
+                    st.write(":page_with_curl: Parameters")
                     st.dataframe(
                         task_outputs_parameters_formatted_df, hide_index=True
                     )
-                    st.write("Artifacts")
+                    st.write(":open_file_folder: Artifacts")
                     st.dataframe(
                         task_outputs_artifacts_formatted_df, hide_index=True
                     )
@@ -421,6 +421,7 @@ def display_selected_pipeline(
                             "value": "Default",
                         }
                     )
+                    st.write(":page_with_curl: Parameters")
                     st.dataframe(pipeline_inputs_formatted_df, hide_index=True)
 
             with tab_metadata:
