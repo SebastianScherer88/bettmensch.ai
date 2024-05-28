@@ -102,64 +102,59 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             The string representation of the script to load.
         """
 
+        # populate input related vars
         inputs = instance._build_inputs()
-        outputs = instance._build_outputs()
-
-        input_parameters = (
-            inputs.parameters if inputs.parameters is not None else []
-        )
-        input_artifacts = (
-            inputs.artifacts if inputs.artifacts is not None else []
-        )
-
-        if outputs.parameters is not None:
-            output_names = [out_param.name for out_param in outputs.parameters]
+        if inputs is None:
+            input_parameters = input_artifacts = []
         else:
-            output_names = []
+            input_parameters = inputs.parameters if inputs.parameters else []
+            input_artifacts = inputs.artifacts if inputs.artifacts else []
 
-        actual_input_parameters = [
-            input_param
-            for input_param in input_parameters
-            if input_param.name not in output_names
-        ]
-        actual_input_artifacts = [
-            input_art
-            for input_art in input_artifacts
-            if input_art.name not in output_names
-        ]
+        # populate output related vars
+        outputs = instance._build_outputs()
+        if outputs is None:
+            output_parameters = output_artifacts = output_names = []
+        else:
+            output_parameters = outputs.parameters if outputs.parameters else []
+            output_artifacts = outputs.artifacts if outputs.artifacts else []
+            output_names = [
+                output_arg.name
+                for output_arg in output_parameters + output_artifacts
+            ]
+
         # remove the ComponentOutput annotated inputs
 
         preprocess = "\n# --- preprocessing\nimport json\n"
         # input parameter import
-        for param in sorted(
-            actual_input_parameters or [], key=lambda x: x.name
-        ):
-            preprocess += f"""try: {param.name} = json.loads(r'''{{{{inputs.parameters.{param.name}}}}}''')\n"""
-            preprocess += f"""except: {param.name} = r'''{{{{inputs.parameters.{param.name}}}}}'''\n"""
+        for input_parameter in sorted(input_parameters, key=lambda x: x.name):
+            if input_parameter.name in output_names:
+                continue
+            preprocess += f"""try: {input_parameter.name} = json.loads(r'''{{{{inputs.parameters.{input_parameter.name}}}}}''')\n"""
+            preprocess += f"""except: {input_parameter.name} = r'''{{{{inputs.parameters.{input_parameter.name}}}}}'''\n"""
 
         # input artifact initialization to provide user access to input artifact
         # file location
-        for art in sorted(actual_input_artifacts or [], key=lambda x: x.name):
-            preprocess += f"""{param.name} = InputArtifact("{param.name}")\n"""
+        for input_artifact in sorted(input_artifacts, key=lambda x: x.name):
+            preprocess += f"""{input_artifact.name} = InputArtifact("{input_artifact.name}")\n"""
 
         # output parameter initialization
-        if outputs.parameters:
+        if output_parameters:
             preprocess += (
                 "\nfrom bettmensch_ai.arguments import OutputParameter\n"
             )
-        for param in sorted(outputs.parameters or [], key=lambda x: x.name):
-            preprocess += (
-                f"""{param.name} = OutputParameter("{param.name}")\n"""
-            )
+            for output_param in sorted(output_parameters, key=lambda x: x.name):
+                preprocess += f"""{output_param.name} = OutputParameter("{output_param.name}")\n"""
 
         # output artifact initialization to provide user access to output
         # artifact file location
-        if outputs.artifacts:
+        if output_artifacts:
             preprocess += (
                 "\nfrom bettmensch_ai.arguments import OutputArtifact\n"
             )
-        for art in sorted(outputs.artifacts or [], key=lambda x: x.name):
-            preprocess += f"""{art.name} = OutputArtifact("{art.name}")\n"""
+            for output_artifact in sorted(
+                output_artifacts, key=lambda x: x.name
+            ):
+                preprocess += f"""{output_artifact.name} = OutputArtifact("{output_artifact.name}")\n"""
 
         preprocess = (
             textwrap.dedent(preprocess)
