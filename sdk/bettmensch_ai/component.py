@@ -112,7 +112,11 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             inputs.artifacts if inputs.artifacts is not None else []
         )
 
-        output_names = [out_param.name for out_param in outputs.parameters]
+        if outputs.parameters is not None:
+            output_names = [out_param.name for out_param in outputs.parameters]
+        else:
+            output_names = []
+
         actual_input_parameters = [
             input_param
             for input_param in input_parameters
