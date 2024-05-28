@@ -125,7 +125,7 @@ def get_formatted_pipeline_data(registered_pipelines, pipeline_names) -> Dict:
                 "templates"
             ]
         except Exception as e:
-            print(e)
+            raise (e)
             st.write(
                 f"Oops! Could not collect data for Pipeline {resource_name}: "
                 f"{e} Please make sure the workflow template was created with "
@@ -230,47 +230,117 @@ def display_pipeline_dag_selection(
 
             with st.container(height=tab_container_height, border=False):
                 with task_inputs_tab:
-                    task_inputs = (
-                        task["inputs"]["parameters"]
-                        + task["inputs"]["artifacts"]
+
+                    # build task input parameters table
+                    if task["inputs"]["parameters"]:
+                        task_inputs_parameters_df = pd.DataFrame(
+                            task["inputs"]["parameters"]
+                        )
+                        task_inputs_parameters_formatted_df = pd.concat(
+                            [
+                                task_inputs_parameters_df.drop(
+                                    ["source", "value_from"], axis=1
+                                ),
+                                task_inputs_parameters_df["source"].apply(
+                                    pd.Series
+                                ),
+                            ],
+                            axis=1,
+                        ).rename(
+                            columns={
+                                "name": "Name",
+                                "value": "Default",
+                                "node": "Upstream Task",
+                                "output_name": "Upstream Output",
+                                "output_type": "Upstream Type",
+                            },
+                            inplace=False,
+                        )
+                    else:
+                        task_inputs_parameters_formatted_df = pd.DataFrame()
+
+                    # build task input artifact table
+                    if task["inputs"]["artifacts"]:
+                        task_inputs_artifacts_df = pd.DataFrame(
+                            task["inputs"]["artifacts"]
+                        )
+                        task_inputs_artifacts_formatted_df = pd.concat(
+                            [
+                                task_inputs_artifacts_df.drop(
+                                    ["source"], axis=1
+                                ),
+                                task_inputs_artifacts_df["source"].apply(
+                                    pd.Series
+                                ),
+                            ],
+                            axis=1,
+                        ).rename(
+                            columns={
+                                "name": "Name",
+                                "node": "Upstream Task",
+                                "output_name": "Upstream Output",
+                                "output_type": "Upstream Type",
+                            },
+                            inplace=False,
+                        )
+                    else:
+                        task_inputs_artifacts_formatted_df = pd.DataFrame()
+
+                    st.write("Parameters")
+                    st.dataframe(
+                        task_inputs_parameters_formatted_df, hide_index=True
                     )
-                    task_inputs_df = pd.DataFrame(task_inputs)
-                    task_inputs_formatted_df = pd.concat(
-                        [
-                            task_inputs_df.drop(["source"], axis=1),
-                            task_inputs_df["source"].apply(pd.Series),
-                        ],
-                        axis=1,
-                    ).rename(
-                        columns={
-                            "name": "Name",
-                            "value": "Default",
-                            "value_from": "From",
-                            "node": "Upstream Task",
-                            "output_name": "Upstream Output",
-                            "output_type": "Upstream Type",
-                        },
-                        inplace=False,
+                    st.write("Artifacts")
+                    st.dataframe(
+                        task_inputs_artifacts_formatted_df, hide_index=True
                     )
-                    st.dataframe(task_inputs_formatted_df, hide_index=True)
 
             with st.container(height=tab_container_height, border=False):
                 with task_outputs_tab:
-                    task_outputs = (
-                        task["outputs"]["parameters"]
-                        + task["outputs"]["artifacts"]
+                    # build task output parameters table
+                    if task["outputs"]["parameters"]:
+                        task_outputs_parameters_df = pd.DataFrame(
+                            task["outputs"]["parameters"]
+                        )
+                        task_outputs_parameters_formatted_df = (
+                            task_outputs_parameters_df.drop(
+                                "value_from", axis=1
+                            ).rename(
+                                columns={
+                                    "name": "Name",
+                                },
+                                inplace=False,
+                            )
+                        )
+                    else:
+                        task_outputs_parameters_formatted_df = pd.DataFrame()
+
+                    # build task output artifact table
+                    if task["outputs"]["artifacts"]:
+                        task_outputs_artifacts_df = pd.DataFrame(
+                            task["outputs"]["artifacts"]
+                        )
+                        task_outputs_artifacts_formatted_df = (
+                            task_outputs_artifacts_df.drop(
+                                "path", axis=1
+                            ).rename(
+                                columns={
+                                    "name": "Name",
+                                },
+                                inplace=False,
+                            )
+                        )
+                    else:
+                        task_outputs_artifacts_formatted_df = pd.DataFrame()
+
+                    st.write("Parameters")
+                    st.dataframe(
+                        task_outputs_parameters_formatted_df, hide_index=True
                     )
-                    task_outputs_formatted_df = pd.DataFrame(
-                        task_outputs
-                    ).rename(
-                        columns={
-                            "name": "Name",
-                            "value": "Default",
-                            "value_from": "From",
-                        },
-                        inplace=False,
+                    st.write("Artifacts")
+                    st.dataframe(
+                        task_outputs_artifacts_formatted_df, hide_index=True
                     )
-                    st.dataframe(task_outputs_formatted_df, hide_index=True)
 
             with st.container(height=tab_container_height, border=False):
                 with task_script_tab:

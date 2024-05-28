@@ -102,17 +102,16 @@ class NodeInputSource(BaseModel):
 
 class NodeInput(BaseModel):
     name: str
-    value: Optional[str] = None
-    value_from: Optional[Union[str, Dict]] = None
     source: Optional[NodeInputSource] = None
 
 
 class NodeParameterInput(NodeInput):
-    pass
+    value: Optional[str] = None
+    value_from: Optional[Union[str, Dict]] = None
 
 
 class NodeArtifactInput(NodeInput):
-    path: Optional[str] = None
+    pass
 
 
 class NodeInputs(BaseModel):
@@ -131,7 +130,6 @@ class NodeParameterOutput(NodeOutput):
 
 class NodeArtifactOutput(NodeOutput):
     path: str
-    value_from: Optional[Union[str, Dict]] = None
 
 
 class NodeOutputs(BaseModel):
@@ -253,35 +251,46 @@ class Pipeline(BaseModel):
             except KeyError:
                 node_input_artifacts = []
 
-            for (
-                argument_type,
-                NodeArgumentTypeInputClass,
-                argument_node_inputs,
-            ) in (
-                ("parameters", NodeParameterInput, node_input_parameters),
-                ("artifacts", NodeArtifactInput, node_input_artifacts),
-            ):
-                for node_argument in argument_node_inputs:
-                    if "{{" not in node_argument["value"]:
-                        pipeline_node_inputs[argument_type].append(
-                            NodeParameterInput(**node_argument)
+            # build parameter inputs
+            for node_argument in node_input_parameters:
+                if "{{" not in node_argument["value"]:
+                    pipeline_node_inputs["parameters"].append(
+                        NodeParameterInput(**node_argument)
+                    )
+                elif node_argument.get("value") is not None:
+                    (
+                        upstream_node,
+                        output_type,
+                        output_name,
+                    ) = cls.resolve_value_expression(node_argument["value"])
+                    pipeline_node_inputs["parameters"].append(
+                        NodeParameterInput(
+                            name=node_argument["name"],
+                            source=NodeInputSource(
+                                node=upstream_node,
+                                output_name=output_name,
+                                output_type=output_type,
+                            ),
                         )
-                    elif node_argument.get("value") is not None:
-                        (
-                            upstream_node,
-                            output_type,
-                            output_name,
-                        ) = cls.resolve_value_expression(node_argument["value"])
-                        pipeline_node_inputs[argument_type].append(
-                            NodeArgumentTypeInputClass(
-                                name=node_argument["name"],
-                                source=NodeInputSource(
-                                    node=upstream_node,
-                                    output_name=output_name,
-                                    output_type=output_type,
-                                ),
-                            )
-                        )
+                    )
+
+            # build artifact inputs
+            for node_argument in node_input_artifacts:
+                (
+                    upstream_node,
+                    output_type,
+                    output_name,
+                ) = cls.resolve_value_expression(node_argument["_from"])
+                pipeline_node_inputs["artifacts"].append(
+                    NodeArtifactInput(
+                        name=node_argument["name"],
+                        source=NodeInputSource(
+                            node=upstream_node,
+                            output_name=output_name,
+                            output_type=output_type,
+                        ),
+                    )
+                )
 
             pipeline_node["inputs"] = pipeline_node_inputs
             dag.append(PipelineNode.model_validate(pipeline_node))
@@ -599,10 +608,6 @@ def main_test():
 
     # create dag frontend visuzliation schema and show results
     render_schema, render_blocks = pipeline.create_dag_visualization_assets()
-
-    import pdb
-
-    pdb.set_trace()
 
     print(f"Pipeline visualization schema: {render_schema}")
 

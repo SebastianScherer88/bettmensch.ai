@@ -15,7 +15,7 @@ from bettmensch_ai.server.dag import (
     DagVisualizationSchema,
 )
 from bettmensch_ai.server.pipeline import (
-    NodeInputs,
+    NodeInput,
     NodeOutput,
     Pipeline,
     PipelineInputParameter,
@@ -52,18 +52,30 @@ class FlowInputParameter(PipelineInputParameter):
 
 
 # --- FlowNode
-# outputs
-class FlowNodeOutput(NodeOutput):
+# inputs
+class FlowNodeParameterInput(NodeInput):
     value: Optional[str] = None
-
-
-class FlowNodeParameterOutput(FlowNodeOutput):
     value_from: Optional[Union[str, Dict]] = None
 
 
-class FlowNodeArtifactOutput(FlowNodeOutput):
+class FlowNodeArtifactInput(NodeInput):
+    s3_prefix: str
+
+
+class FlowNodeInputs(BaseModel):
+    parameters: Optional[List[FlowNodeParameterInput]] = None
+    artifacts: Optional[List[FlowNodeArtifactInput]] = None
+
+
+# outputs
+class FlowNodeParameterOutput(NodeOutput):
+    value: Optional[str] = None
+    value_from: Optional[Union[str, Dict]] = None
+
+
+class FlowNodeArtifactOutput(NodeOutput):
     path: str
-    value_from: Optional[Union[str, Dict]] = None
+    s3_prefix: str
 
 
 class FlowNodeOutputs(BaseModel):
@@ -80,7 +92,7 @@ class FlowNode(BaseModel):
     template: str
     phase: Literal["Succeeded", "Failed", "Pending", "Error", "Omitted"]
     template: str
-    inputs: Optional[NodeInputs] = None
+    inputs: Optional[FlowNodeInputs] = None
     outputs: Optional[FlowNodeOutputs] = None
     logs: Optional[Dict] = None
     depends: Optional[Union[str, List[str]]] = None
@@ -182,9 +194,14 @@ class Flow(BaseModel):
                                     flow_node_arguments[i]["name"]
                                     == argument["name"]
                                 ):
-                                    flow_node_arguments[i]["value"] = argument[
-                                        "value"
-                                    ]
+                                    if argument_type == "parameters":
+                                        flow_node_arguments[i][
+                                            "value"
+                                        ] = argument["value"]
+                                    elif argument_type == "artifacts":
+                                        flow_node_arguments[i][
+                                            "s3_prefix"
+                                        ] = argument["s3"]["key"]
                             elif argument["name"] == "main-logs":
                                 flow_node_dict["logs"] = argument
                             else:
