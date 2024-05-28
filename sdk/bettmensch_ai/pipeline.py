@@ -1,17 +1,9 @@
 import inspect
-import os
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict
 
-from argo_workflows.api import workflow_template_service_api
-from bettmensch_ai.arguments import InputParameter, OutputParameter, Parameter
-from bettmensch_ai.client import client
-from bettmensch_ai.component import (
-    PipelineContext,
-    _pipeline_context,
-    component,
-)
+from bettmensch_ai.component import PipelineContext, _pipeline_context
 from bettmensch_ai.constants import PIPELINE_TYPE
-from bettmensch_ai.server import RegisteredFlow, RegisteredPipeline
+from bettmensch_ai.io import InputParameter, Parameter
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
@@ -443,58 +435,3 @@ def pipeline(
         )
 
     return pipeline_factory
-
-
-def test_pipeline():
-    @component
-    def add(
-        a: InputParameter, b: InputParameter, sum: OutputParameter = None
-    ) -> None:
-
-        sum.assign(a + b)
-
-    @component
-    def multiply(
-        a: InputParameter, b: InputParameter, product: OutputParameter = None
-    ) -> None:
-
-        product.assign(a * b)
-
-    @pipeline("test-pipeline", "argo", True)
-    def a_plus_bc_plus_2b(
-        a: InputParameter = 1, b: InputParameter = 2, c: InputParameter = 3
-    ):
-
-        b_c = multiply(
-            "bc",
-            a=b,
-            b=c,
-        )
-
-        two_b = multiply(
-            "b2",
-            a=b,
-            b=InputParameter(name="two", value=2),
-        )
-
-        a_plus_bc = add(
-            "a-plus-bc",
-            a=a,
-            b=b_c.outputs["product"],
-        )
-
-        result_a_plus_bc_plus_2b = add(
-            "result-a-plus-bc-plus-2b",
-            a=a_plus_bc.outputs["sum"],
-            b=two_b.outputs["product"],
-        )
-
-    print(f"Pipeline type: {type(a_plus_bc_plus_2b)}")
-
-    a_plus_bc_plus_2b.export()
-    a_plus_bc_plus_2b.register()
-    a_plus_bc_plus_2b.run(a=3, b=2, c=1)
-
-
-if __name__ == "__main__":
-    test_pipeline()

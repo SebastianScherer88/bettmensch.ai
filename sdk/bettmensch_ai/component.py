@@ -1,31 +1,22 @@
 import copy
 import inspect
 import textwrap
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.arguments import (
+from bettmensch_ai.constants import PIPELINE_TYPE
+from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.constants import COMPONENT_TYPE, PIPELINE_TYPE
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
     get_func_args,
     validate_func_args,
 )
 from hera.shared import global_config
-from hera.workflows import (
-    DAG,
-    InlineScriptConstructor,
-    Parameter,
-    Script,
-    Task,
-    WorkflowTemplate,
-    models,
-    script,
-)
+from hera.workflows import InlineScriptConstructor, Script, Task, script
 from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ImagePullPolicy
 
@@ -411,9 +402,6 @@ class Component(object):
                 )
 
             # assemble component input
-            input_owner = getattr(input, "owner", None)
-            input_owner_type = getattr(input_owner, "type", None)
-
             if isinstance(input, InputParameter):
                 # for pipeline inputs, we retain the (possible) default value.
                 # for a hardcoded component input pinning the argument of the
@@ -547,73 +535,3 @@ def component(func: Callable) -> Callable:
         )
 
     return component_factory
-
-
-def test_hera_component():
-
-    print("Testing component decoration")
-
-    @component
-    def add(
-        a: InputParameter = 1,
-        b: InputParameter = 2,
-        sum: OutputParameter = None,
-    ) -> None:
-
-        sum.assign(a + b)
-
-    print(f"Created component factory: {add}")
-
-    class MockPipeline:
-        type: str = PIPELINE_TYPE
-        io_owner_name: str = PIPELINE_TYPE
-
-    # mock active pipeline with 3 inputs
-    pipeline_input_a = InputParameter(name="a", value=1)
-    pipeline_input_a.set_owner(MockPipeline())
-    pipeline_input_b = InputParameter(name="b", value=2)
-    pipeline_input_b.set_owner(MockPipeline())
-    pipeline_input_c = InputParameter(name="c", value=3)
-    pipeline_input_c.set_owner(MockPipeline())
-
-    _pipeline_context.activate()
-    _pipeline_context.clear()
-
-    # add components to pipeline context
-    a_plus_b = add(
-        "a_plus_b",
-        a=pipeline_input_a,
-        b=pipeline_input_b,
-    )
-    print(f"Created component: {a_plus_b.name}")
-
-    a_plus_b_plus_c = add(
-        "a_plus_b_plus_c",
-        a=a_plus_b.outputs["sum"],
-        b=pipeline_input_c,
-    )
-    print(f"Created component: {a_plus_b_plus_c.name}")
-
-    # close pipeline context
-    _pipeline_context.deactivate()
-
-    with WorkflowTemplate(
-        name="test_component",
-        entrypoint="test_dag",
-        namespace="argo",
-        arguments=[
-            Parameter(name="a"),
-            Parameter(name="b"),
-            Parameter(name="c"),
-        ],
-    ) as wft:
-
-        with DAG(name="test_dag"):
-            a_plus_b_task = a_plus_b.to_hera()
-            a_plus_b_plus_c_task = a_plus_b_plus_c.to_hera()
-
-    wft.to_file(".")
-
-
-if __name__ == "__main__":
-    test_hera_component()

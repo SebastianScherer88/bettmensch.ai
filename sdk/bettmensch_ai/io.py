@@ -16,7 +16,7 @@ class IO(object):
 
     def __init__(self, name: str, value: Any = None):
         self.name = name
-        self.value = None
+        self.value = value
 
     def assign(self, value: Any):
         self.value = value
@@ -105,7 +105,7 @@ class InputParameter(OriginMixin, Input):
             return Parameter(name=self.name, value=self.value)
         elif owner_type == COMPONENT_TYPE:
             # Component owned InputParameters are not always
-            # referencing another parameter (PipelineInput or ComponentOutput), so
+            # referencing another InputParameter, so
             # we reference the source parameter's `id` '{{...}}' expression only if
             # the provided source has a non-trivial owner. In that case, the value
             # will be the hera expression referencing the source argument.
