@@ -12,7 +12,9 @@ from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import
 )
 from bettmensch_ai.server.dag import (
     DagConnection,
-    DagNode,
+    DagPipelineIONode,
+    DagTaskIONode,
+    DagTaskNode,
     DagVisualizationSchema,
 )
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
@@ -472,7 +474,7 @@ class Pipeline(BaseModel):
             task_node_name = task_node.name
 
             nodes.append(
-                DagNode(
+                DagTaskNode(
                     id=task_node_name,
                     pos=node_positions[task_node_name],
                     data={
@@ -514,7 +516,7 @@ class Pipeline(BaseModel):
                             # add the task io node
                             task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"
                             nodes.append(
-                                DagNode(
+                                DagTaskIONode(
                                     id=task_io_node_name,
                                     pos=node_positions[task_io_node_name],
                                     data={
@@ -523,7 +525,6 @@ class Pipeline(BaseModel):
                                             argument, "value", None
                                         ),
                                     },
-                                    style={"backgroundColor": "lightgrey"},
                                 )
                             )
 
@@ -568,14 +569,13 @@ class Pipeline(BaseModel):
             for input in self.inputs:
                 node_name = f"pipeline_outputs_parameters_{input.name}"
                 nodes.append(
-                    DagNode(
+                    DagPipelineIONode(
                         id=node_name,
                         pos=node_positions[node_name],
                         data={
                             "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",
                             "value": input.value,
                         },
-                        style={"backgroundColor": "lightblue"},
                         node_type="input",
                     )
                 )

@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Tuple
+from typing import Dict, List, Literal, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -10,6 +10,9 @@ class DagConnection(BaseModel):
     animated: bool = False
     edge_type: str
     focusable: bool = False
+    label: str = ""
+    label_show_bg: bool = True
+    label_style: Dict = {}
     style: Dict = {}
 
 
@@ -29,9 +32,33 @@ class DagNode(BaseModel):
     # height: int = 5
 
 
+class DagPipelineIONode(DagNode):
+    style: Dict = {
+        "backgroundColor": "darkgrey",
+        "fontWeight": 550,  # font thickness
+        "color": "white",  # font color
+    }
+
+
+class DagTaskNode(DagNode):
+    style: Dict = {
+        "backgroundColor": "darkblue",
+        "fontWeight": 550,  # font thickness
+        "color": "white",  # font color
+    }
+
+
+class DagTaskIONode(DagNode):
+    style: Dict = {
+        "backgroundColor": "blue",
+        "fontWeight": 550,  # font thickness
+        "color": "white",  # font color
+    }
+
+
 class DagVisualizationSchema(BaseModel):
     connections: List[DagConnection]
-    nodes: List[DagNode]
+    nodes: List[Union[DagPipelineIONode, DagTaskNode, DagTaskIONode]]
 
 
 class DagLayoutSetting(BaseModel):
