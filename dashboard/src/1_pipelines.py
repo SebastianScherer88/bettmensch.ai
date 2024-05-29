@@ -359,9 +359,11 @@ def display_pipeline_dag_selection(
                         ]
                     )
         else:
-            st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: None")
+            st.markdown(
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: None"
+            )
             st.write(
-                "Select a task by clicking on the corresponding "
+                "Select a component by clicking on the corresponding "
                 f"{PIPELINE_NODE_EMOJI_MAP['task']} node."
             )
 
