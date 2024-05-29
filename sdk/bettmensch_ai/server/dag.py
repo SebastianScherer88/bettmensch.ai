@@ -71,5 +71,5 @@ class DagVisualizationSettings(BaseModel):
     direction: Literal["down", "up", "right", "left"] = "down"
     style: Dict = {}
     layout_vertical_spacing: int = 150
-    # layout_horizontal_spacing: int = 100
+    layout_horizontal_spacing: int = 100
     height: int = 450
