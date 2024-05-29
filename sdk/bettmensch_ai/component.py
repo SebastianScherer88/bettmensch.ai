@@ -260,7 +260,8 @@ class Component(object):
 
         self.func = func
 
-        self.base_name = func.__name__ if not name else name
+        base_name = func.__name__ if not name else name
+        self.base_name = base_name.replace("_", "-")
         _pipeline_context.add_component(self)
         validate_func_args(
             func,
@@ -461,6 +462,7 @@ class Component(object):
                     template_output.to_hera()
                     for template_output in self.template_outputs.values()
                 ],
+                "name": self.base_name,
             }
         )
 
