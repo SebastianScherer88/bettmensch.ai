@@ -18,10 +18,8 @@ from bettmensch_ai.io import (
 )
 from bettmensch_ai.pipeline import Pipeline, PipelineContext, pipeline
 from bettmensch_ai.server import (
-    DagConnection,
-    DagLayoutSetting,
-    DagNode,
-    DagVisualizationSchema,
+    DagVisualizationItems,
+    DagVisualizationSettings,
     RegisteredFlow,
     RegisteredPipeline,
 )

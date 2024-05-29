@@ -9,11 +9,6 @@ from argo_workflows.api import workflow_service_api
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
     IoArgoprojWorkflowV1alpha1Workflow,
 )
-from bettmensch_ai.server.dag import (
-    DagConnection,
-    DagNode,
-    DagVisualizationSchema,
-)
 from bettmensch_ai.server.pipeline import (
     NodeInput,
     NodeOutput,

@@ -6,7 +6,7 @@ st.set_page_config(
 from typing import Dict, List, Tuple
 
 import pandas as pd
-from bettmensch_ai import DagLayoutSetting, DagVisualizationSchema
+from bettmensch_ai import DagVisualizationItems, DagVisualizationSettings
 from bettmensch_ai import RegisteredFlow as Flow
 from streamlit_flow import streamlit_flow
 from streamlit_flow.interfaces import StreamlitFlowEdge, StreamlitFlowNode
@@ -162,7 +162,7 @@ def display_flow_dropdown(flow_names) -> str:
 
 def display_flow_dag(
     formatted_flow_data, selected_flow, display_flow_ios
-) -> Tuple[DagVisualizationSchema, Dict]:
+) -> Tuple[DagVisualizationItems, Dict]:
     """_summary_
 
     Args:
@@ -173,13 +173,13 @@ def display_flow_dag(
             I/O detail level in the flow chart.
 
     Returns:
-        Tuple[DagVisualizationSchema,Dict]: The specification for the streamlit
+        Tuple[DagVisualizationItems,Dict]: The specification for the streamlit
             ReactFlow visualization plugin, and the return of that plugin.
     """
 
     selected_flow_instance = formatted_flow_data["object"][selected_flow]
 
-    dag_visualization_schema = (
+    dag_visualization_items = (
         selected_flow_instance.create_dag_visualization_schema(
             display_flow_ios,
         )
@@ -188,20 +188,20 @@ def display_flow_dag(
     dag_visualization_element = streamlit_flow(
         nodes=[
             StreamlitFlowNode(**node.model_dump())
-            for node in dag_visualization_schema.nodes
+            for node in dag_visualization_items.nodes
         ],
         edges=[
             StreamlitFlowEdge(**connection.model_dump())
-            for connection in dag_visualization_schema.connections
+            for connection in dag_visualization_items.connections
         ],
-        **DagLayoutSetting(
+        **DagVisualizationSettings(
             style={
                 "backgroundColor": get_colors("custom").secondaryBackgroundColor
             }
         ).model_dump(),
     )
 
-    return dag_visualization_schema, dag_visualization_element
+    return dag_visualization_items, dag_visualization_element
 
 
 def display_flow_dag_selection(
