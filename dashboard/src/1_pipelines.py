@@ -171,9 +171,17 @@ def display_pipeline_dag(
             ReactFlow visualization plugin, and the return of that plugin.
     """
 
-    dag_visualization_schema = formatted_pipeline_data["object"][
+    selected_pipeline_instance = formatted_pipeline_data["object"][
         selected_pipeline
-    ].create_dag_visualization_schema(display_pipeline_ios)
+    ]
+
+    dag_visualization_schema = (
+        selected_pipeline_instance.create_dag_visualization_schema(
+            selected_pipeline_instance.inputs,
+            selected_pipeline_instance.dag,
+            display_pipeline_ios,
+        )
+    )
 
     dag_visualization_element = streamlit_flow(
         nodes=[
