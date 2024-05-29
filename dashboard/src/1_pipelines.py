@@ -177,8 +177,6 @@ def display_pipeline_dag(
 
     dag_visualization_schema = (
         selected_pipeline_instance.create_dag_visualization_schema(
-            selected_pipeline_instance.inputs,
-            selected_pipeline_instance.dag,
             display_pipeline_ios,
         )
     )

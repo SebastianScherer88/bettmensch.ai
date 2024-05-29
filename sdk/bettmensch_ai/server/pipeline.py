@@ -356,10 +356,8 @@ class Pipeline(BaseModel):
 
         return transformed_x_y
 
-    @staticmethod
     def create_dag_visualization_node_positions(
-        inputs: List[PipelineInputParameter],
-        dag: List[PipelineNode],
+        self,
         include_task_io: bool = True,
     ) -> Dict[str, Tuple[int, int]]:
         """Utility to generate positional (x,y) coordinate tuples for each node
@@ -368,7 +366,8 @@ class Pipeline(BaseModel):
         visualization. Based on the DAG example at
         https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html.
         Args:
-            dag (List[PipelineNode]): The dag object.
+            include_task_io (bool): Whether to include the IO objects in the
+                visualization, or just display task nodes.
 
         Returns:
             Dict[str,Tuple[int,int]]: A node uid->positional (x,y) coordinate
@@ -380,7 +379,7 @@ class Pipeline(BaseModel):
         G = nx.DiGraph()
 
         # add directed edges (adds nodes automatically)
-        for task_node in dag:
+        for task_node in self.dag:
             G.add_node(task_node.name)
 
             if not include_task_io:
@@ -426,7 +425,7 @@ class Pipeline(BaseModel):
                                 )
 
         if include_task_io:
-            for input in inputs:
+            for input in self.inputs:
                 G.add_node(f"pipeline_outputs_parameters_{input.name}")
 
         # add layer attribute - required for multipartite layout
@@ -447,23 +446,28 @@ class Pipeline(BaseModel):
 
         return node_positions
 
-    @classmethod
     def create_dag_visualization_schema(
-        cls,
-        inputs: List[PipelineInputParameter],
-        dag: List[PipelineNode],
+        self,
         include_task_io: bool = True,
     ) -> DagVisualizationSchema:
         """Utility method to generate the assets the barfi/baklavajs rendering
-        engine uses to display the Pipeline's dag property on the frontend."""
+        engine uses to display the Pipeline's dag property on the frontend.
 
-        node_positions = cls.create_dag_visualization_node_positions(
-            inputs, dag, include_task_io
+        Args:
+            include_task_io (bool): Whether to include the IO objects in the
+                visualization, or just display task nodes.
+        Returns:
+            DagVisualizationSchema: The schema containing all design specs for
+                visualizing the DAG on the dashboard.
+        """
+
+        node_positions = self.create_dag_visualization_node_positions(
+            include_task_io
         )
         connections: List[Dict] = []
         nodes: List[Dict] = []
 
-        for task_node in dag:
+        for task_node in self.dag:
 
             task_node_name = task_node.name
 
@@ -561,7 +565,7 @@ class Pipeline(BaseModel):
                                 )
 
         if include_task_io:
-            for input in inputs:
+            for input in self.inputs:
                 node_name = f"pipeline_outputs_parameters_{input.name}"
                 nodes.append(
                     DagNode(

@@ -181,8 +181,6 @@ def display_flow_dag(
 
     dag_visualization_schema = (
         selected_flow_instance.create_dag_visualization_schema(
-            selected_flow_instance.inputs,
-            selected_flow_instance.dag,
             display_flow_ios,
         )
     )
