@@ -161,7 +161,10 @@ def display_flow_dropdown(flow_names) -> str:
 
 
 def display_flow_dag(
-    formatted_flow_data, selected_flow, display_flow_ios
+    formatted_flow_data,
+    selected_flow: str,
+    display_flow_ios: bool,
+    dag_image_height: int,
 ) -> Tuple[DagVisualizationItems, Dict]:
     """_summary_
 
@@ -171,6 +174,7 @@ def display_flow_dag(
         selected_flow (str): The name of the user selected flow.
         display_flow_ios (bool): The toggle value of the user selected flow dag
             I/O detail level in the flow chart.
+        dag_image_height (int): The height of the react flow plugin plot.
 
     Returns:
         Tuple[DagVisualizationItems,Dict]: The specification for the streamlit
@@ -197,7 +201,8 @@ def display_flow_dag(
         **DagVisualizationSettings(
             style={
                 "backgroundColor": get_colors("custom").secondaryBackgroundColor
-            }
+            },
+            height=dag_image_height,
         ).model_dump(),
     )
 
@@ -208,7 +213,7 @@ def display_flow_dag_selection(
     formatted_flow_data: Dict,
     selected_flow: str,
     dag_visualization_element,
-    tab_container_height: int = 600,
+    tab_container_height: int,
 ):
     """Generates a tabbed, in depth view of the user selected DAG task node element.
 
@@ -229,7 +234,7 @@ def display_flow_dag_selection(
 
         if element_is_task_node:
             st.markdown(
-                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`"
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: `{element_id}`"
             )
             (
                 task_inputs_tab,
@@ -237,14 +242,18 @@ def display_flow_dag_selection(
                 task_script_tab,
                 task_state_tab,
             ) = st.tabs(
-                ["Task Inputs", "Task Outputs", "Task Script", "Task State"]
+                [
+                    "Component Inputs",
+                    "Component Outputs",
+                    "Component Script",
+                    "Component State",
+                ]
             )
             flow = formatted_flow_data["object"][selected_flow]
             task = flow.get_dag_task(element_id).model_dump()
 
-            with st.container(height=tab_container_height, border=False):
-                with task_inputs_tab:
-
+            with task_inputs_tab:
+                with st.container(height=tab_container_height, border=False):
                     if task["inputs"]["parameters"]:
                         task_inputs_parameters_df = pd.DataFrame(
                             task["inputs"]["parameters"]
@@ -308,8 +317,9 @@ def display_flow_dag_selection(
                         task_inputs_artifacts_formatted_df, hide_index=True
                     )
 
-            with st.container(height=tab_container_height, border=False):
-                with task_outputs_tab:
+            with task_outputs_tab:
+                with st.container(height=tab_container_height, border=False):
+
                     if task["outputs"]["parameters"]:
                         task_outputs_parameters_df = pd.DataFrame(
                             task["outputs"]["parameters"]
@@ -355,16 +365,16 @@ def display_flow_dag_selection(
                         task_outputs_artifacts_formatted_df, hide_index=True
                     )
 
-            with st.container(height=tab_container_height, border=False):
-                with task_script_tab:
+            with task_script_tab:
+                with st.container(height=tab_container_height, border=False):
                     st.json(
                         flow.get_template(task["template"]).model_dump()[
                             "script"
                         ]
                     )
 
-            with st.container(height=tab_container_height, border=False):
-                with task_state_tab:
+            with task_state_tab:
+                with st.container(height=tab_container_height, border=False):
                     task_state = dict(
                         [
                             (k, v)
@@ -396,16 +406,18 @@ def display_flow_dag_selection(
                     st.dataframe(task_state_formatted_df, hide_index=False)
 
         else:
-            st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: None")
+            st.markdown(
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: None"
+            )
             st.write(
-                "Select a task by clicking on the corresponding "
+                "Select a `Component` by clicking on the corresponding "
                 f"{PIPELINE_NODE_EMOJI_MAP['task']} node."
             )
 
     except TypeError as e:
-        st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: None")
+        st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: None")
         st.write(
-            "Select a task by clicking on the corresponding "
+            "Select a `Component` by clicking on the corresponding "
             f"{PIPELINE_NODE_EMOJI_MAP['task']} node."
         )
 
@@ -413,9 +425,8 @@ def display_flow_dag_selection(
 def display_selected_flow(
     formatted_flow_data,
     selected_flow,
-    chart_container_height: int = 700,
-    col_container_height: int = 750,
-    tab_container_height: int = 600,
+    tab_container_height: int = 420,
+    dag_image_height: int = 1100,
 ):
     """Utility to display DAG flow chart and all relevant specs in tabbed
     layout for a user selected flow.
@@ -426,72 +437,72 @@ def display_selected_flow(
         selected_flow (str): The name of the user selected flow.
     """
 
-    with st.container(height=chart_container_height):
-        display_pipeline_ios = st.toggle(f"Display flow & task I/O")
+    dag_col, spec_col = st.columns([3, 2])
+
+    with dag_col:
+        display_pipeline_ios = st.toggle(f"Display flow & component I/O")
         dag_visualization_schema, dag_visualization_element = display_flow_dag(
-            formatted_flow_data, selected_flow, display_pipeline_ios
+            formatted_flow_data,
+            selected_flow,
+            display_pipeline_ios,
+            dag_image_height,
         )
 
-    flow_col, task_col = st.columns(2)
-
     # display flow level data
-    with flow_col:
-        with st.container(height=col_container_height):
-            st.markdown(f"### :arrow_forward: Flow: `{selected_flow}`")
+    with spec_col:
+        st.markdown(f"### :arrow_forward: Flow: `{selected_flow}`")
 
-            tab_inputs, tab_metadata, tab_dag, tab_templates = st.tabs(
-                [
-                    "Flow Inputs",
-                    "Flow Meta Data",
-                    "Flow DAG",
-                    "Flow Templates",
-                ]
-            )
+        tab_inputs, tab_metadata, tab_dag, tab_templates = st.tabs(
+            [
+                "Flow Inputs",
+                "Flow Meta Data",
+                "Flow DAG",
+                "Flow Templates",
+            ]
+        )
 
-            with tab_inputs:
-                with st.container(height=tab_container_height, border=False):
-                    flow_inputs = formatted_flow_data["inputs"][selected_flow]
-                    flow_inputs_formatted_df = pd.DataFrame(flow_inputs).rename(
-                        columns={
-                            "name": "Name",
-                            "value": "Default",
-                        }
-                    )
-                    st.write(":page_with_curl: Parameters")
-                    st.dataframe(flow_inputs_formatted_df, hide_index=True)
+        with tab_inputs:
+            with st.container(height=tab_container_height, border=False):
+                flow_inputs = formatted_flow_data["inputs"][selected_flow]
+                flow_inputs_formatted_df = pd.DataFrame(flow_inputs).rename(
+                    columns={
+                        "name": "Name",
+                        "value": "Value",
+                    }
+                )
+                st.write(":page_with_curl: Parameters")
+                st.dataframe(flow_inputs_formatted_df, hide_index=True)
 
-            with tab_metadata:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_flow_data["metadata"][selected_flow],
-                        expanded=True,
-                    )
+        with tab_metadata:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_flow_data["metadata"][selected_flow],
+                    expanded=True,
+                )
 
-            with tab_dag:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_flow_data["dag"][selected_flow], expanded=True
-                    )
+        with tab_dag:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_flow_data["dag"][selected_flow], expanded=True
+                )
 
-            with tab_templates:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_flow_data["templates"][selected_flow],
-                        expanded=True,
-                    )
+        with tab_templates:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_flow_data["templates"][selected_flow],
+                    expanded=True,
+                )
 
-    # display task level data
-    with task_col:
-        with st.container(height=col_container_height):
-            display_flow_dag_selection(
-                formatted_flow_data,
-                selected_flow,
-                dag_visualization_element,
-                tab_container_height,
-            )
+        # display task level data
+        display_flow_dag_selection(
+            formatted_flow_data,
+            selected_flow,
+            dag_visualization_element,
+            tab_container_height,
+        )
 
     return dag_visualization_schema, dag_visualization_element
 

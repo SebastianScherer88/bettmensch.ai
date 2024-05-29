@@ -72,4 +72,4 @@ class DagVisualizationSettings(BaseModel):
     style: Dict = {}
     layout_vertical_spacing: int = 150
     layout_horizontal_spacing: int = 100
-    height: int = 450
+    height: int = 1000

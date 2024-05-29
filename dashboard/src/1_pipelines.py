@@ -125,7 +125,6 @@ def get_formatted_pipeline_data(registered_pipelines, pipeline_names) -> Dict:
                 "templates"
             ]
         except Exception as e:
-            raise (e)
             st.write(
                 f"Oops! Could not collect data for Pipeline {resource_name}: "
                 f"{e} Please make sure the workflow template was created with "
@@ -155,7 +154,10 @@ def display_pipeline_dropdown(pipeline_names) -> str:
 
 
 def display_pipeline_dag(
-    formatted_pipeline_data, selected_pipeline, display_pipeline_ios
+    formatted_pipeline_data,
+    selected_pipeline: str,
+    display_pipeline_ios: bool,
+    dag_image_height: int,
 ) -> Tuple[DagVisualizationItems, Dict]:
     """_summary_
 
@@ -165,6 +167,7 @@ def display_pipeline_dag(
         selected_pipeline (str): The name of the user selected pipeline.
         display_pipeline_ios (bool): The toggle value of the user selected
             pipeline dag I/O detail level in the flow chart.
+        dag_image_height (int): The height of the react flow plugin plot.
 
     Returns:
         Tuple[DagVisualizationItems,Dict]: The specification for the streamlit
@@ -193,7 +196,8 @@ def display_pipeline_dag(
         **DagVisualizationSettings(
             style={
                 "backgroundColor": get_colors("custom").secondaryBackgroundColor
-            }
+            },
+            height=dag_image_height,
         ).model_dump(),
     )
 
@@ -204,7 +208,7 @@ def display_pipeline_dag_selection(
     formatted_pipeline_data: Dict,
     selected_pipeline: str,
     dag_visualization_element,
-    tab_container_height: int = 600,
+    tab_container_height: int,
 ):
     """Generates a tabbed, in depth view of the user selected DAG task node
     element.
@@ -226,17 +230,16 @@ def display_pipeline_dag_selection(
 
         if element_is_task_node:
             st.markdown(
-                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: `{element_id}`"
+                f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: `{element_id}`"
             )
             task_inputs_tab, task_outputs_tab, task_script_tab = st.tabs(
-                ["Task Inputs", "Task Outputs", "Task Script"]
+                ["Component Inputs", "Component Outputs", "Component Script"]
             )
             pipeline = formatted_pipeline_data["object"][selected_pipeline]
             task = pipeline.get_dag_task(element_id).model_dump()
 
-            with st.container(height=tab_container_height, border=False):
-                with task_inputs_tab:
-
+            with task_inputs_tab:
+                with st.container(height=tab_container_height, border=False):
                     # build task input parameters table
                     if task["inputs"]["parameters"]:
                         task_inputs_parameters_df = pd.DataFrame(
@@ -301,8 +304,8 @@ def display_pipeline_dag_selection(
                         task_inputs_artifacts_formatted_df, hide_index=True
                     )
 
-            with st.container(height=tab_container_height, border=False):
-                with task_outputs_tab:
+            with task_outputs_tab:
+                with st.container(height=tab_container_height, border=False):
                     # build task output parameters table
                     if task["outputs"]["parameters"]:
                         task_outputs_parameters_df = pd.DataFrame(
@@ -348,8 +351,8 @@ def display_pipeline_dag_selection(
                         task_outputs_artifacts_formatted_df, hide_index=True
                     )
 
-            with st.container(height=tab_container_height, border=False):
-                with task_script_tab:
+            with task_script_tab:
+                with st.container(height=tab_container_height, border=False):
                     st.json(
                         pipeline.get_template(task["template"]).model_dump()[
                             "script"
@@ -363,9 +366,9 @@ def display_pipeline_dag_selection(
             )
 
     except TypeError as e:
-        st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Task: None")
+        st.markdown(f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: None")
         st.write(
-            "Select a task by clicking on the corresponding "
+            "Select a `Component` by clicking on the corresponding "
             f"{PIPELINE_NODE_EMOJI_MAP['task']} node."
         )
 
@@ -373,9 +376,8 @@ def display_pipeline_dag_selection(
 def display_selected_pipeline(
     formatted_pipeline_data,
     selected_pipeline,
-    chart_container_height: int = 550,
-    col_container_height: int = 650,
-    tab_container_height: int = 600,
+    tab_container_height: int = 420,
+    dag_image_height: int = 1100,
 ):
     """Utility to display DAG flow chart and all relevant specs in tabbed
     layout for a user selected pipeline.
@@ -386,83 +388,83 @@ def display_selected_pipeline(
         selected_pipeline (str): The name of the user selected pipeline.
     """
 
-    with st.container(height=chart_container_height):
-        display_pipeline_ios = st.toggle(f"Display pipeline & task I/O")
+    dag_col, spec_col = st.columns([3, 2])
+
+    with dag_col:
+        display_pipeline_ios = st.toggle(f"Display pipeline & component I/O")
         (
             dag_visualization_schema,
             dag_visualization_element,
         ) = display_pipeline_dag(
-            formatted_pipeline_data, selected_pipeline, display_pipeline_ios
+            formatted_pipeline_data,
+            selected_pipeline,
+            display_pipeline_ios,
+            dag_image_height,
         )
 
-    pipeline_col, task_col = st.columns(2)
-
     # display pipeline level data
-    with pipeline_col:
-        with st.container(height=col_container_height):
-            st.markdown(
-                "### :twisted_rightwards_arrows: Pipeline: `"
-                f"{selected_pipeline}`"
-            )
+    with spec_col:
+        st.markdown(
+            "### :twisted_rightwards_arrows: Pipeline: `"
+            f"{selected_pipeline}`"
+        )
 
-            tab_inputs, tab_metadata, tab_dag, tab_templates = st.tabs(
-                [
-                    "Pipeline Inputs",
-                    "Pipeline Meta Data",
-                    "Pipeline DAG",
-                    "Pipeline Templates",
+        tab_inputs, tab_metadata, tab_dag, tab_templates = st.tabs(
+            [
+                "Pipeline Inputs",
+                "Pipeline Meta Data",
+                "Pipeline DAG",
+                "Pipeline Templates",
+            ]
+        )
+
+        with tab_inputs:
+            with st.container(height=tab_container_height, border=False):
+                pipeline_inputs = formatted_pipeline_data["inputs"][
+                    selected_pipeline
                 ]
-            )
+                pipeline_inputs_formatted_df = pd.DataFrame(
+                    pipeline_inputs
+                ).rename(
+                    columns={
+                        "name": "Name",
+                        "value": "Default",
+                    }
+                )
+                st.write(":page_with_curl: Parameters")
+                st.dataframe(pipeline_inputs_formatted_df, hide_index=True)
 
-            with tab_inputs:
-                with st.container(height=tab_container_height, border=False):
-                    pipeline_inputs = formatted_pipeline_data["inputs"][
-                        selected_pipeline
-                    ]
-                    pipeline_inputs_formatted_df = pd.DataFrame(
-                        pipeline_inputs
-                    ).rename(
-                        columns={
-                            "name": "Name",
-                            "value": "Default",
-                        }
-                    )
-                    st.write(":page_with_curl: Parameters")
-                    st.dataframe(pipeline_inputs_formatted_df, hide_index=True)
+        with tab_metadata:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_pipeline_data["metadata"][selected_pipeline],
+                    expanded=True,
+                )
 
-            with tab_metadata:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_pipeline_data["metadata"][selected_pipeline],
-                        expanded=True,
-                    )
+        with tab_dag:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_pipeline_data["dag"][selected_pipeline],
+                    expanded=True,
+                )
 
-            with tab_dag:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_pipeline_data["dag"][selected_pipeline],
-                        expanded=True,
-                    )
+        with tab_templates:
+            with st.container(height=tab_container_height, border=False):
+                st.markdown("### Spec")
+                st.json(
+                    formatted_pipeline_data["templates"][selected_pipeline],
+                    expanded=True,
+                )
 
-            with tab_templates:
-                with st.container(height=tab_container_height, border=False):
-                    st.markdown("### Spec")
-                    st.json(
-                        formatted_pipeline_data["templates"][selected_pipeline],
-                        expanded=True,
-                    )
-
-    # display task level data
-    with task_col:
-        with st.container(height=col_container_height):
-            display_pipeline_dag_selection(
-                formatted_pipeline_data,
-                selected_pipeline,
-                dag_visualization_element,
-                tab_container_height,
-            )
+        # display task level data
+        display_pipeline_dag_selection(
+            formatted_pipeline_data,
+            selected_pipeline,
+            dag_visualization_element,
+            tab_container_height,
+        )
 
     return dag_visualization_schema, dag_visualization_element
 
