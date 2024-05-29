@@ -107,7 +107,7 @@ class FlowArtifactConfiguration(BaseModel):
 
 
 # --- Flow
-class Flow(BaseModel):
+class Flow(Pipeline):
     """A flow node is an instantiated pipeline node on Kubernetes."""
 
     metadata: FlowMetadata
@@ -116,16 +116,6 @@ class Flow(BaseModel):
     templates: List[ScriptTemplate]
     inputs: List[FlowInputParameter] = []
     dag: List[FlowNode]
-
-    def get_template(self, name: str) -> ScriptTemplate:
-
-        return [
-            template for template in self.templates if template.name == name
-        ][0]
-
-    def get_dag_task(self, name: str) -> FlowNode:
-
-        return [task for task in self.dag if task.name == name][0]
 
     @classmethod
     def build_dag(cls, workflow_status: Dict) -> List[FlowNode]:
@@ -145,7 +135,7 @@ class Flow(BaseModel):
         workflow_template_spec = workflow_status[
             "stored_workflow_template_spec"
         ]
-        pipeline_dag = Pipeline.build_dag(workflow_template_spec)
+        pipeline_dag = super().build_dag(workflow_template_spec)
 
         # add FlowNode specific values and available resolved input/output
         # values for each FlowNode
@@ -280,137 +270,6 @@ class Flow(BaseModel):
             inputs=inputs,
             dag=dag,
         )
-
-    def create_dag_visualization_schema(
-        self, include_task_io: bool = True
-    ) -> DagVisualizationSchema:
-        """Utility method to generate the assets the barfi/baklavajs rendering
-        engine uses to display the Pipeline's dag property on the frontend."""
-
-        node_positions = Pipeline.create_dag_visualization_node_positions(
-            self.inputs, self.dag, include_task_io
-        )
-        connections: List[Dict] = []
-        nodes: List[Dict] = []
-
-        for task_node in self.dag:
-
-            task_node_name = task_node.name
-
-            nodes.append(
-                DagNode(
-                    id=task_node_name,
-                    pos=node_positions[task_node_name],
-                    data={
-                        "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"
-                    },
-                )
-            )
-
-            # we only create task_node <-> task_node connections if we dont
-            # display the tasks' IO specs
-            if not include_task_io:
-                if task_node.depends is not None:
-                    for upstream_node_name in task_node.depends:
-                        connections.append(
-                            DagConnection(
-                                id=f"{upstream_node_name}->{task_node_name}",
-                                source=upstream_node_name,
-                                target=task_node_name,
-                                animated=True,
-                                edge_type="smoothstep",
-                            )
-                        )
-            # if we include the tasks' IO specs, we need to draw
-            # - io nodes and
-            # connections between
-            # - inputs and outputs, and
-            # - inputs/outputs and associated task_nodes
-            else:
-                for interface_type in ["inputs", "outputs"]:
-                    interfaces = getattr(task_node, interface_type)
-
-                    if interfaces is None:
-                        continue
-
-                    for argument_type in ["parameters", "artifacts"]:
-                        arguments = getattr(interfaces, argument_type, None)
-
-                        if arguments is None:
-                            continue
-
-                        for argument in arguments:
-                            # add the task io node
-                            task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"
-                            nodes.append(
-                                DagNode(
-                                    id=task_io_node_name,
-                                    pos=node_positions[task_io_node_name],
-                                    data={
-                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",
-                                        "value": getattr(
-                                            argument, "value", None
-                                        ),
-                                    },
-                                    style={"backgroundColor": "lightgrey"},
-                                )
-                            )
-
-                            # connect that task io node with the task node
-                            if interface_type == "inputs":
-                                upstream_node_name = task_io_node_name
-                                node_name = task_node_name
-                            else:
-                                upstream_node_name = task_node_name
-                                node_name = task_io_node_name
-
-                            connections.append(
-                                DagConnection(
-                                    id=f"{upstream_node_name}->{node_name}",
-                                    source=upstream_node_name,
-                                    target=node_name,
-                                    animated=False,
-                                    edge_type="smoothstep",
-                                )
-                            )
-
-                            # connect the input type task io node with the
-                            # upstream output type task io node - where
-                            # appropriate
-                            if (
-                                interface_type == "inputs"
-                                and getattr(argument, "source", None)
-                                is not None
-                            ):
-                                task_io_source = argument.source
-                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
-                                connections.append(
-                                    DagConnection(
-                                        id=f"{upstream_node_name}->{task_io_node_name}",
-                                        source=upstream_node_name,
-                                        target=task_io_node_name,
-                                        animated=True,
-                                        edge_type="smoothstep",
-                                    )
-                                )
-
-        if include_task_io:
-            for input in self.inputs:
-                node_name = f"pipeline_outputs_parameters_{input.name}"
-                nodes.append(
-                    DagNode(
-                        id=node_name,
-                        pos=node_positions[node_name],
-                        data={
-                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",
-                            "value": input.value,
-                        },
-                        style={"backgroundColor": "lightblue"},
-                        node_type="input",
-                    )
-                )
-
-        return DagVisualizationSchema(connections=connections, nodes=nodes)
 
 
 def main_test():

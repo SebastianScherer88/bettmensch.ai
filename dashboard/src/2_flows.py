@@ -177,9 +177,15 @@ def display_flow_dag(
             ReactFlow visualization plugin, and the return of that plugin.
     """
 
-    dag_visualization_schema = formatted_flow_data["object"][
-        selected_flow
-    ].create_dag_visualization_schema(display_flow_ios)
+    selected_flow_instance = formatted_flow_data["object"][selected_flow]
+
+    dag_visualization_schema = (
+        selected_flow_instance.create_dag_visualization_schema(
+            selected_flow_instance.inputs,
+            selected_flow_instance.dag,
+            display_flow_ios,
+        )
+    )
 
     dag_visualization_element = streamlit_flow(
         nodes=[

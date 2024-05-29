@@ -447,19 +447,23 @@ class Pipeline(BaseModel):
 
         return node_positions
 
+    @classmethod
     def create_dag_visualization_schema(
-        self, include_task_io: bool = True
+        cls,
+        inputs: List[PipelineInputParameter],
+        dag: List[PipelineNode],
+        include_task_io: bool = True,
     ) -> DagVisualizationSchema:
         """Utility method to generate the assets the barfi/baklavajs rendering
         engine uses to display the Pipeline's dag property on the frontend."""
 
-        node_positions = self.create_dag_visualization_node_positions(
-            self.inputs, self.dag, include_task_io
+        node_positions = cls.create_dag_visualization_node_positions(
+            inputs, dag, include_task_io
         )
         connections: List[Dict] = []
         nodes: List[Dict] = []
 
-        for task_node in self.dag:
+        for task_node in dag:
 
             task_node_name = task_node.name
 
@@ -557,7 +561,7 @@ class Pipeline(BaseModel):
                                 )
 
         if include_task_io:
-            for input in self.inputs:
+            for input in inputs:
                 node_name = f"pipeline_outputs_parameters_{input.name}"
                 nodes.append(
                     DagNode(
