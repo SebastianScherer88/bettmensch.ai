@@ -7,7 +7,7 @@ from bettmensch_ai import (
     _pipeline_context,
     component,
 )
-from hera.workflows import DAG, Parameter, WorkflowTemplate
+from hera.workflows import DAG, Parameter, Resources, WorkflowTemplate
 
 
 def test_artifact_component(test_output_dir):
@@ -69,7 +69,7 @@ def test_artifact_component(test_output_dir):
     _pipeline_context.deactivate()
 
     with WorkflowTemplate(
-        name="test-parameter-component-workflow-template",
+        name="test-artifact-component-workflow-template",
         entrypoint="test_dag",
         namespace="argo",
         arguments=[
@@ -115,12 +115,14 @@ def test_parameter_component(test_output_dir):
         "a_plus_b",
         a=pipeline_input_a,
         b=pipeline_input_b,
+        hera_template_kwargs={"resources": Resources(cpu_request=0.2)},
     )
 
     a_plus_b_plus_2 = add(
         "a_plus_b_plus_2",
         a=a_plus_b.outputs["sum"],
         b=InputParameter("two", 2),
+        hera_template_kwargs={"resources": Resources(cpu_request=0.3)},
     )
 
     # close pipeline context
