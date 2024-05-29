@@ -15,7 +15,7 @@ from bettmensch_ai.server.dag import (
     DagPipelineIONode,
     DagTaskIONode,
     DagTaskNode,
-    DagVisualizationSchema,
+    DagVisualizationItems,
 )
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
 from pydantic import BaseModel
@@ -358,100 +358,10 @@ class Pipeline(BaseModel):
 
         return transformed_x_y
 
-    def create_dag_visualization_node_positions(
-        self,
-        include_task_io: bool = True,
-    ) -> Dict[str, Tuple[int, int]]:
-        """Utility to generate positional (x,y) coordinate tuples for each node
-        of the dag that is getting visualized. Uses the networkx library's
-        utilities to arrange nodes in a dag-friendly directional manner for
-        visualization. Based on the DAG example at
-        https://networkx.org/documentation/stable/auto_examples/graph/plot_dag_layout.html.
-        Args:
-            include_task_io (bool): Whether to include the IO objects in the
-                visualization, or just display task nodes.
-
-        Returns:
-            Dict[str,Tuple[int,int]]: A node uid->positional (x,y) coordinate
-                mapping.
-        """
-
-        node_positions = {}
-
-        G = nx.DiGraph()
-
-        # add directed edges (adds nodes automatically)
-        for task_node in self.dag:
-            G.add_node(task_node.name)
-
-            if not include_task_io:
-                if task_node.depends is not None:
-                    for upstream_node_name in task_node.depends:
-                        G.add_edge(upstream_node_name, task_node.name)
-            else:
-                for interface_type in ["inputs", "outputs"]:
-
-                    for argument_type in ["parameters", "artifacts"]:
-                        arguments = getattr(
-                            getattr(task_node, interface_type), argument_type
-                        )
-                        if not arguments:
-                            continue
-
-                        for argument in arguments:
-                            # add the task io node
-                            task_io_node_name = f"{task_node.name}_{interface_type}_{argument_type}_{argument.name}"
-                            G.add_node(task_io_node_name)
-
-                            # connect that task io node with the task node
-                            if interface_type == "inputs":
-                                upstream_node_name = task_io_node_name
-                                node_name = task_node.name
-                            else:
-                                upstream_node_name = task_node.name
-                                node_name = task_io_node_name
-
-                            G.add_edge(upstream_node_name, node_name)
-
-                            # connect the input type task io node with the
-                            # upstream output type task io node - where appropriate
-                            if (
-                                interface_type == "inputs"
-                                and getattr(argument, "source", None)
-                                is not None
-                            ):
-                                task_io_source = argument.source
-                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
-                                G.add_edge(
-                                    upstream_node_name, task_io_node_name
-                                )
-
-        if include_task_io:
-            for input in self.inputs:
-                G.add_node(f"pipeline_outputs_parameters_{input.name}")
-
-        # add layer attribute - required for multipartite layout
-        for layer, nodes in enumerate(nx.topological_generations(G)):
-            # `multipartite_layout` expects the layer as a node attribute, so
-            # add the numeric layer value as a node attribute
-            for node in nodes:
-                G.nodes[node]["layer"] = layer
-
-        node_positions_ar = nx.multipartite_layout(G, subset_key="layer")
-
-        node_positions = dict(
-            [
-                (k, Pipeline.transform_dag_visualization_node_position(list(v)))
-                for k, v in node_positions_ar.items()
-            ]
-        )
-
-        return node_positions
-
     def create_dag_visualization_schema(
         self,
         include_task_io: bool = True,
-    ) -> DagVisualizationSchema:
+    ) -> DagVisualizationItems:
         """Utility method to generate the assets the barfi/baklavajs rendering
         engine uses to display the Pipeline's dag property on the frontend.
 
@@ -459,13 +369,10 @@ class Pipeline(BaseModel):
             include_task_io (bool): Whether to include the IO objects in the
                 visualization, or just display task nodes.
         Returns:
-            DagVisualizationSchema: The schema containing all design specs for
+            DagVisualizationItems: The schema containing all design specs for
                 visualizing the DAG on the dashboard.
         """
 
-        node_positions = self.create_dag_visualization_node_positions(
-            include_task_io
-        )
         connections: List[Dict] = []
         nodes: List[Dict] = []
 
@@ -476,7 +383,6 @@ class Pipeline(BaseModel):
             nodes.append(
                 DagTaskNode(
                     id=task_node_name,
-                    pos=node_positions[task_node_name],
                     data={
                         "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"
                     },
@@ -518,7 +424,6 @@ class Pipeline(BaseModel):
                             nodes.append(
                                 DagTaskIONode(
                                     id=task_io_node_name,
-                                    pos=node_positions[task_io_node_name],
                                     data={
                                         "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",
                                         "value": getattr(
@@ -571,7 +476,6 @@ class Pipeline(BaseModel):
                 nodes.append(
                     DagPipelineIONode(
                         id=node_name,
-                        pos=node_positions[node_name],
                         data={
                             "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",
                             "value": input.value,
@@ -580,7 +484,7 @@ class Pipeline(BaseModel):
                     )
                 )
 
-        return DagVisualizationSchema(connections=connections, nodes=nodes)
+        return DagVisualizationItems(connections=connections, nodes=nodes)
 
 
 def main_test():

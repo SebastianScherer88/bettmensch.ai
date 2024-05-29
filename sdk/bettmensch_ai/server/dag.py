@@ -18,7 +18,7 @@ class DagConnection(BaseModel):
 
 class DagNode(BaseModel):
     id: str
-    pos: Tuple[float, float]
+    pos: Tuple[float, float] = (0, 0)
     data: Dict = {"label": None}
     style: Dict = {
         "backgroundColor": "lightblue",  # roughly the same color as the light
@@ -29,6 +29,8 @@ class DagNode(BaseModel):
     node_type: str = "default"
     source_position: str = "bottom"
     target_position: str = "top"
+    width: int = 50
+    height: int = 20
     # height: int = 5
 
 
@@ -56,17 +58,18 @@ class DagTaskIONode(DagNode):
     }
 
 
-class DagVisualizationSchema(BaseModel):
+class DagVisualizationItems(BaseModel):
     connections: List[DagConnection]
     nodes: List[Union[DagPipelineIONode, DagTaskNode, DagTaskIONode]]
 
 
-class DagLayoutSetting(BaseModel):
+class DagVisualizationSettings(BaseModel):
     get_node_on_click: bool = True
     get_edge_on_click: bool = True
+    # layout: Any = TreeLayout(direction="down")
     fit_view: bool = True
     direction: Literal["down", "up", "right", "left"] = "down"
     style: Dict = {}
-    layout_vertical_spacing: int = 25
-    layout_horizontal_spacing: int = 100
-    height: int = 600
+    layout_vertical_spacing: int = 150
+    # layout_horizontal_spacing: int = 100
+    height: int = 450
