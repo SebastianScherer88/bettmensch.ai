@@ -1,4 +1,14 @@
 import argo_workflows
+from hera.workflows import WorkflowsService
+
+
+def client() -> WorkflowsService:
+
+    workflow_service = WorkflowsService(
+        host="https://127.0.0.1:2746", verify_ssl=False, namespace="argo"
+    )
+
+    return workflow_service
 
 
 def argo_client():
@@ -9,4 +19,4 @@ def argo_client():
     return api_client
 
 
-client = argo_client()
+client = client()

@@ -42,9 +42,8 @@ def validate_func_args(func: Callable, argument_types: List[type]):
 
     Raises:
         TypeError: Raised if any of the func arguments input argument type
-            annotations are something other than
-            - ComponentInput
-            - ComponentOutput
+            annotations are something other than the types listed in the
+            argument_types argument
     """
 
     func_args = get_func_args(func)

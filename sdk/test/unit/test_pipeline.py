@@ -57,7 +57,7 @@ def test_artifact_pipeline(test_output_dir):
 
     parameter_to_artifact.export(test_output_dir)
     # parameter_to_artifact.register()
-    # parameter_to_artifact.run(a="Test value A", b="Test value b")
+    # parameter_to_artifact.run(inputs={'a':"Test value A", 'b':"Test value b"})
 
 
 def test_parameter_pipeline(test_output_dir):
@@ -88,4 +88,4 @@ def test_parameter_pipeline(test_output_dir):
 
     a_plus_b_plus_2.export(test_output_dir)
     # a_plus_b_plus_2.register()
-    # a_plus_b_plus_2.run(a=3, b=2)
+    # a_plus_b_plus_2.run(inputs={'a':3, 'b':2})
