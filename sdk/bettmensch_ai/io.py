@@ -33,6 +33,26 @@ class IO(object):
         with open(self.path, "w") as output_file:
             output_file.write(str(self.value))
 
+    def __eq__(self, other):
+
+        return (
+            self.name == other.name
+            and self.value == other.value
+            and self.source == other.source
+            and self.owner == other.owner
+        )
+
+    def __repr__(self):
+
+        return str(
+            {
+                "name": self.name,
+                "value": self.value,
+                "source": self.source,
+                "owner": self.owner,
+            }
+        )
+
 
 class Input(IO):
 

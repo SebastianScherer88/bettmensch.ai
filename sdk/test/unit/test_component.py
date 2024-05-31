@@ -25,9 +25,6 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    _pipeline_context.activate()
-    _pipeline_context.clear()
-
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
     test_input_b.set_owner(test_mock_pipeline)
@@ -43,13 +40,13 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
         "d": test_input_d,
     }
 
-    # add components to pipeline context
-    test_component = Component(
-        func=test_function, name="test_name", **task_inputs
-    )
+    with _pipeline_context:
+        _pipeline_context.clear()
 
-    # close pipeline context
-    _pipeline_context.deactivate()
+        # add components to pipeline context
+        test_component = Component(
+            func=test_function, name="test_name", **task_inputs
+        )
 
     # validate addition of component to pipeline context
     assert test_component == _pipeline_context.components[0]
@@ -108,9 +105,6 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
 
     test_component_factory = component(test_function)
 
-    _pipeline_context.activate()
-    _pipeline_context.clear()
-
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
     test_input_b.set_owner(test_mock_pipeline)
@@ -126,11 +120,11 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
         "d": test_input_d,
     }
 
-    # add components to pipeline context
-    test_component = test_component_factory(name="test_name", **task_inputs)
+    with _pipeline_context:
+        _pipeline_context.clear()
 
-    # close pipeline context
-    _pipeline_context.deactivate()
+        # add components to pipeline context
+        test_component = test_component_factory(name="test_name", **task_inputs)
 
     # validate addition of component to pipeline context
     assert test_component == _pipeline_context.components[0]
@@ -173,33 +167,32 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.task_factory is not None
 
 
-def test_component_to_hera(test_add_function, test_mock_pipeline):
+def test_parameter_component_to_hera(test_add_function, test_mock_pipeline):
     """Declaration of Component using InputParameter and OutputParameter"""
 
     add_component_factory = component(test_add_function)
 
-    # mock active pipeline with 3 inputs
+    # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
     pipeline_input_b = InputParameter(name="b", value=2)
     pipeline_input_b.set_owner(test_mock_pipeline)
 
-    _pipeline_context.activate()
-    _pipeline_context.clear()
+    with _pipeline_context:
+        _pipeline_context.clear()
 
-    # add components to pipeline context
-    a_plus_b = add_component_factory(
-        "a_plus_b",
-        a=pipeline_input_a,
-        b=pipeline_input_b,
-    )
+        # add components to pipeline context
+        a_plus_b = add_component_factory(
+            "a_plus_b",
+            a=pipeline_input_a,
+            b=pipeline_input_b,
+        )
 
-    a_plus_b_plus_2 = add_component_factory(
-        "a_plus_b_plus_2", a=a_plus_b.outputs["sum"], b=InputParameter("two", 2)
-    )
-
-    # close pipeline context
-    _pipeline_context.deactivate()
+        a_plus_b_plus_2 = add_component_factory(
+            "a_plus_b_plus_2",
+            a=a_plus_b.outputs["sum"],
+            b=InputParameter("two", 2),
+        )
 
     with WorkflowTemplate(
         name="test-parameter-component-workflow-template",
@@ -220,3 +213,55 @@ def test_component_to_hera(test_add_function, test_mock_pipeline):
 
     script_template_names = [template.name for template in wft.templates[1:]]
     assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
+
+
+def test_artifact_component_to_hera(
+    test_convert_to_artifact_function,
+    test_show_artifact_function,
+    test_mock_pipeline,
+):
+
+    convert_component_factory = component(test_convert_to_artifact_function)
+    show_component_factory = component(test_show_artifact_function)
+
+    # mock active pipeline with 2 inputs
+    pipeline_input_a = InputParameter(name="a", value=1)
+    pipeline_input_a.set_owner(test_mock_pipeline)
+    pipeline_input_b = InputParameter(name="b", value=2)
+    pipeline_input_b.set_owner(test_mock_pipeline)
+
+    with _pipeline_context:
+        _pipeline_context.clear()
+
+        # add components to pipeline context
+        convert = convert_component_factory(
+            "convert_parameters",
+            a=pipeline_input_a,
+            b=pipeline_input_b,
+        )
+
+        show = show_component_factory(
+            "show_artifacts",
+            a=convert.outputs["a_art"],
+            b=convert.outputs["b_art"],
+        )
+
+    with WorkflowTemplate(
+        name="test-artifact-component-workflow-template",
+        entrypoint="test_dag",
+        namespace="argo",
+        arguments=[
+            Parameter(name="a", value=1),
+            Parameter(name="b", value=2),
+        ],
+    ) as wft:
+
+        with DAG(name="test_dag"):
+            convert.to_hera()
+            show.to_hera()
+
+    task_names = [task.name for task in wft.templates[0].tasks]
+    assert task_names == ["convert-parameters-0", "show-artifacts-0"]
+
+    script_template_names = [template.name for template in wft.templates[1:]]
+    assert script_template_names == ["convert-parameters", "show-artifacts"]
