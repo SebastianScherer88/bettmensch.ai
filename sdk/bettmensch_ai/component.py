@@ -39,7 +39,16 @@ class PipelineContext(object):
 
     def get_component_name_counter(self, component_base_name: str) -> int:
         """Utility to get the counter for the name of a potential component to
-        ensure uniqueness of identifier in the PipelineContext."""
+        ensure uniqueness of identifier in the PipelineContext.
+
+        Args:
+            component_base_name (str): The `_base_name` attribute value of a
+                Component instance.
+
+        Returns:
+            int: The unique counter of that Component w.r.t. the global
+                PipelineContext.
+        """
 
         counter = len(
             [
@@ -51,7 +60,16 @@ class PipelineContext(object):
 
         return counter
 
-    def add_component(self, component):
+    def add_component(self, component: "Component"):
+        """Adds the specified Component instance to the global PipelineContext.
+
+        Args:
+            component (Component): The Component instance that will be added.
+
+        Raises:
+            Exception: Raised if this method was not called within an active
+                PipelineContext.
+        """
         if self.active:
             component_counter = self.get_component_name_counter(
                 component.base_name
@@ -65,6 +83,13 @@ class PipelineContext(object):
             )
 
     def clear(self):
+        """Removes all components from the active PipelineContext. Useful when
+        defining a (new) Pipeline and you want to ensure a clean slate.
+
+        Raises:
+            Exception: Raised if this method was not called within an active
+                PipelineContext.
+        """
         if self.active:
             self.components = []
         else:
@@ -79,27 +104,55 @@ _pipeline_context = PipelineContext()
 
 class ComponentInlineScriptRunner(InlineScriptConstructor):
 
-    """A custom script constructor that submits a script as a `source` to Argo.
-
-    This script constructor has been adapted from hera's
-    InlineScriptConstructor to
-    - consider template input type annotations to disambiguate inputs and
-        outputs,
-    - add output instance initialization before the main function body
-    - add output file writing after the main function body
+    """
+    A customised version of the InlineScriptConstructor that implements a
+    modified `_get_param_script_portion` method to ensure proper handling of the
+    SDK's I/O objects at runtime.
     """
 
     add_cwd_to_sys_path: Optional[bool] = None
 
-    def _get_script_preprocessing(self, instance: Script) -> str:
-        """Constructs and returns a script that loads the parameters of the
-        specified arguments. Adapted from the `_get_param_script_portion`
-        method of the `InlineScriptRunner` class.
+    def _get_param_script_portion(self, instance: Script) -> str:
+        """
+        Adapted from the `_get_param_script_portion`
+        method of the `InlineScriptRunner` class. Generates the code
+        implementing the I/O import and preprocessing for the Component's
+        underlying function:
+
+        If the underlying function has at least one argument annotated with
+        `InputParameter`, the values will be obtained from reading respective
+        json string representations and stored in local variables named after
+        the input.
+
+        If the underlying function has at least one argument annotated with
+        `InputArtifact`, the class will be imported and an instance will be
+        initialized for each argument. This will make the hera input
+        `Artifact`'s  content accessible throught the `InputArtifact` instance's
+        `path` property, allowing the user function to access the value from
+        inside the original function's scope at runtime.
+
+        If the underlying function has at least one argument annotated with
+        `OutputParameter`, the class will be imported and an instance will be
+        initialized for each argument. This will make the hera output
+        `Parameter`'s content source file location available through the
+        `OutputParameter` instance's `assign()` method, allowing the user
+        function to write to this location from inside the original function's
+        scope at runtime.
+
+        If the underlying function has at least one argument annotated with
+        `OutputArtifact`, the class will be imported and an instance will be
+        initialized for each argument. This will make the hera output
+        `Artifact`'s content source file location available through the
+        `OutputArtifact` instance's `path` property, allowing the user function
+        to write to this location from inside the original function's scope at
+        runtime.
+
+        Args:
+            instance (Script): The Script instance holding
 
         Returns:
-        -------
-        str
-            The string representation of the script to load.
+            str: The preprocessing code section that needs to be prepended to
+                the component's underlying function's code.
         """
 
         # populate input related vars
@@ -167,56 +220,6 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         )
 
         return preprocess
-
-    def generate_source(self, instance: Script) -> str:
-        """Assembles and returns a script representation of the given function.
-
-        This also assembles any extra script material prefixed to the string
-        source. The script is expected to be a callable function the client is
-        interested in submitting for execution on Argo and the `script_extra`
-        material represents the parameter loading part obtained, likely,
-        through `get_param_script_portion`.
-
-        Returns:
-        -------
-        str
-            Final formatted script.
-        """
-        if not callable(instance.source):
-            assert isinstance(instance.source, str)
-            return instance.source
-        args = inspect.getfullargspec(instance.source).args
-
-        script = ""
-        # Argo will save the script as a file and run it with cmd:
-        # - python /argo/staging/script
-        # However, this prevents the script from importing modules in its cwd,
-        # since it's looking for files relative to the script path.
-        # We fix this by appending the cwd path to sys:
-        if instance.add_cwd_to_sys_path or self.add_cwd_to_sys_path:
-            script = "import os\nimport sys\nsys.path.append(os.getcwd())\n"
-
-        script_extra = (
-            self._get_script_preprocessing(instance) if args else None
-        )
-        if script_extra:
-            script += copy.deepcopy(script_extra)
-            script += "\n"
-
-        # We use ast parse/unparse to get the source code of the function
-        # in order to have consistent looking functions and getting rid of any
-        # comments parsing issues.
-        # See https://github.com/argoproj-labs/hera/issues/572
-        content = roundtrip(
-            textwrap.dedent(inspect.getsource(instance.source))
-        ).splitlines()
-        for i, line in enumerate(content):
-            if line.startswith("def") or line.startswith("async def"):
-                break
-
-        s = "\n".join(content[i + 1 :])
-        script += textwrap.dedent(s)
-        return textwrap.dedent(script)
 
 
 global_config.set_class_defaults(
@@ -473,6 +476,7 @@ class Component(object):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
+        # this will invoke our custom ComponentInlineScriptRunner under the hood
         script_wrapper = script(**script_decorator_kwargs)
 
         task_factory = script_wrapper(func=self.func)
@@ -516,16 +520,9 @@ def component(func: Callable) -> Callable:
         sum.assign(a + b)
     ```
 
-    Decorating the above `add` method should return a component factory that
-    - generates a Component class instance when called from within an active
-        PipelineContext
-      1. add a post function output processing step that ensures hera-compatible
-        writing of output parameters to sensible local file paths
-      2. add the inputs parameter type inputs 'a' and 'b' to the component
-      3. add the parameter type output 'sum' to the component
-          3.1 this should facilitate the reference the file path from step 1.
-            in the `from` argument further downstream at the stage of mapping
-            to a ArgoWorkflowTemplate
+    Decorating the above `add` method returns a component factory that
+    generates a Component class instance when called from within an active
+    PipelineContext.
     """
 
     def component_factory(
