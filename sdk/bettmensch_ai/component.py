@@ -369,13 +369,12 @@ class Component(object):
 
         Args:
             func (Callable): The function the we want to wrap in a Component.
-            inputs (Dict[str,Union[PipelineInput,ComponentOutput]]): The
-                PipelineInput or ComponentOutput instances that the Component's
-                constructor receives.
+            inputs (Dict[str,Union[InputParameter, OutputParameter, OutputArtifact]]): The
+                I/O instances that the Component's constructor receives.
 
         Raises:
             TypeError: Raised if any of the inputs arent of the supported types
-                [PipelineInput,ComponentOutput]
+                [InputParameter, OutputParameter, OutputArtifact]
             ValueError: Raised if the component is given an input that cannot
                 be mapped onto any the underlying function's arguments that
                 have been annotated with the InputParameter type.
@@ -384,7 +383,7 @@ class Component(object):
                 default value.
 
         Returns:
-            Dict[str,ComponentInput]: The component's inputs.
+            Dict[str,Union[InputParameter, InputArtifact]]: The component's inputs.
         """
 
         func_inputs = get_func_args(
@@ -510,9 +509,12 @@ def component(func: Callable) -> Callable:
     PipelineContext.
 
     Usage:
+
+    ```python
     @bettmensch_ai.component #-> component factory
-    def add(a: ComponentInput = 1, b: ComponentInput = 2, sum: ComponentOutput = None):
+    def add(a: InputParameter = 1, b: InputParameter = 2, sum: OutputParameter = None):
         sum.assign(a + b)
+    ```
 
     Decorating the above `add` method should return a component factory that
     - generates a Component class instance when called from within an active

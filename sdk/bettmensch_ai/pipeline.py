@@ -138,13 +138,13 @@ class Pipeline(object):
         self, func: Callable
     ) -> Dict[str, InputParameter]:
         """Generates pipeline inputs from the underlying function. Also
-        - checks for correct PipelineInput type annotations in the decorated
+        - checks for correct InputParameter type annotations in the decorated
             original function
         - ensures all original function inputs without default values are being
             specified
 
         Args:
-            func (Callable): The function the we want to wrap in a Component.
+            func (Callable): The function the we want to wrap in a Pipeline.
 
         Raises:
             Exception: Raised if the pipeline is not given an input for at
@@ -192,6 +192,12 @@ class Pipeline(object):
         return result
 
     def build_workflow_template(self) -> WorkflowTemplate:
+        """Builds the fully functional Argo WorkflowTemplate that implements
+        the user specified Pipeline object.
+
+        Returns:
+            WorkflowTemplate: The (unsubmitted) Argo WorkflowTemplate object.
+        """
         # add components to the global pipeline context
         with self:
             self.func(**self.inputs)
@@ -411,6 +417,8 @@ def pipeline(
     instance that implements the pipeline defined in the decorated callable.
 
     Usage:
+
+    ```python
     @component
     def add(a: InputParameter, b: InputParameter, sum: OutputParameter = None) -> None:
 
@@ -423,6 +431,7 @@ def pipeline(
 
         a_plus_b = add(a = a, b = b)
         a_plus_b_plus_c = add(a = a_plus_b.outputs['sum'], b = c)
+    ```
     """
 
     def pipeline_factory(func: Callable) -> Pipeline:
