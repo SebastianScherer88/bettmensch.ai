@@ -199,7 +199,7 @@ class Pipeline(object):
             WorkflowTemplate: The (unsubmitted) Argo WorkflowTemplate object.
         """
         # add components to the global pipeline context
-        with self:
+        with self.context:
             self.func(**self.inputs)
 
         # invoke all components' hera task generators from within a nested
@@ -216,19 +216,6 @@ class Pipeline(object):
                     component.to_hera()
 
         return wft
-
-    def __enter__(self):
-        _pipeline_context.activate()
-
-        # clear the global pipeline context when entering the pipeline
-        # instance's context, if specified
-        if self.clear_context:
-            _pipeline_context.clear()
-
-        return self
-
-    def __exit__(self, *args, **kwargs):
-        _pipeline_context.deactivate()
 
     def export(self, dir: str = "."):
         """Writes workflow_template attribute as f"{self.name}.yaml"
