@@ -136,7 +136,7 @@ class Pipeline(object):
     @property
     def registered_namespace(self):
         if not self.registered:
-            return self._name
+            return None
 
         return self.registered_workflow_template.metadata.namespace
 

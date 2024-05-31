@@ -231,9 +231,9 @@ class Component(object):
 
     type = "tasks"
     name: str = None
-    original_func: Callable = None
     func: Callable = None
     base_name: str = None
+    name: str = None
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
@@ -307,7 +307,6 @@ class Component(object):
 
     @property
     def outputs(self) -> Dict[str, Union[OutputParameter, OutputArtifact]]:
-        print(self.template_outputs)
         return self.template_outputs
 
     def generate_name(self, n: int):
@@ -347,11 +346,6 @@ class Component(object):
         template_ios = {}
 
         for io_name, io_param in func_ios.items():
-            print(
-                f"IO name: {io_name}. IO param {io_param}. IO param type: {type(io_param.annotation)}"
-            )
-            # import pdb
-            # pdb.set_trace()
             template_io = io_param.annotation(name=io_name)
             template_io.set_owner(self)
 
