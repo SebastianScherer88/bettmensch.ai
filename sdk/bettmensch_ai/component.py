@@ -98,6 +98,15 @@ class PipelineContext(object):
                 "is not active."
             )
 
+    def __enter__(self):
+        self._active = True
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+
+        pass
+
 
 _pipeline_context = PipelineContext()
 

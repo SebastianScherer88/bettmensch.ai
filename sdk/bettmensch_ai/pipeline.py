@@ -229,6 +229,9 @@ class Pipeline(object):
         """
         # add components to the global pipeline context
         with self.context:
+            if self.clear_context:
+                self.context.clear()
+
             self.func(**self.inputs)
 
         # invoke all components' hera task generators from within a nested

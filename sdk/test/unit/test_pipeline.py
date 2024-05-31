@@ -7,85 +7,112 @@ from bettmensch_ai import (
     component,
     pipeline,
 )
+from hera.workflows import WorkflowTemplate
 
 
-def test_artifact_pipeline(test_output_dir):
+def test_artifact_pipeline(
+    test_convert_to_artifact_function, test_show_artifact_function
+):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    @component
-    def convert_to_artifact(
-        a_param: InputParameter,
-        b_param: InputParameter,
-        a_art: OutputArtifact = None,
-        b_art: OutputArtifact = None,
-    ) -> None:
-
-        with open(a_art.path, "w") as a_art_file:
-            a_art_file.write(str(a_param))
-
-        with open(b_art.path, "w") as b_art_file:
-            b_art_file.write(str(b_param))
-
-    @component
-    def show_artifact(a: InputArtifact, b: InputArtifact) -> None:
-
-        with open(a.path, "r") as a_art_file:
-            a_content = a_art_file.read()
-
-        with open(b.path, "r") as b_art_file:
-            b_content = b_art_file.read()
-
-        print(f"Content of input artifact a: {a_content}")
-        print(f"Content of input artifact b: {b_content}")
+    convert_component_factory = component(test_convert_to_artifact_function)
+    show_component_factory = component(test_show_artifact_function)
 
     @pipeline("test-artifact-pipeline", "argo", True)
     def parameter_to_artifact(
         a: InputParameter = "Param A",
         b: InputParameter = "Param B",
     ) -> None:
-        convert = convert_to_artifact(
+        convert = convert_component_factory(
             "convert-to-artifact",
-            a_param=a,
-            b_param=b,
+            a=a,
+            b=b,
         )
 
-        show = show_artifact(
+        show = show_component_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
             b=convert.outputs["b_art"],
         )
 
-    parameter_to_artifact.export(test_output_dir)
-    # parameter_to_artifact.register()
-    # parameter_to_artifact.run(inputs={'a':"Test value A", 'b':"Test value b"})
+    assert parameter_to_artifact.built
+    assert not parameter_to_artifact.registered
+    assert parameter_to_artifact.registered_id is None
+    assert parameter_to_artifact.registered_name is None
+    assert parameter_to_artifact.registered_namespace is None
+    assert set(parameter_to_artifact.inputs.keys()) == {"a", "b"}
+    for pipeline_input_name, pipeline_input_default in (
+        ("a", "Param A"),
+        ("b", "Param B"),
+    ):
+        assert (
+            parameter_to_artifact.inputs[pipeline_input_name].name
+            == pipeline_input_name
+        )
+        assert (
+            parameter_to_artifact.inputs[pipeline_input_name].owner
+            == parameter_to_artifact
+        )
+        assert (
+            parameter_to_artifact.inputs[pipeline_input_name].value
+            == pipeline_input_default
+        )
+    assert isinstance(
+        parameter_to_artifact.user_built_workflow_template, WorkflowTemplate
+    )
+
+    wft = parameter_to_artifact.user_built_workflow_template
+
+    task_names = [task.name for task in wft.templates[0].tasks]
+    assert task_names == ["convert-to-artifact-0", "show-artifact-0"]
+
+    script_template_names = [template.name for template in wft.templates[1:]]
+    assert script_template_names == ["convert-to-artifact", "show-artifact"]
 
 
-def test_parameter_pipeline(test_output_dir):
+def test_parameter_pipeline(test_add_function):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    @component
-    def add(
-        a: InputParameter = 1,
-        b: InputParameter = 2,
-        sum: OutputParameter = None,
-    ) -> None:
-
-        sum.assign(a + b)
+    add_component_factory = component(test_add_function)
 
     @pipeline("test-parameter-pipeline", "argo", True)
-    def a_plus_b_plus_2(a: InputParameter = 1, b: InputParameter = 2) -> None:
-        a_plus_b = add(
+    def adding_parameters(a: InputParameter = 1, b: InputParameter = 2) -> None:
+        a_plus_b = add_component_factory(
             "a-plus-b",
             a=a,
             b=b,
         )
 
-        a_plus_b_plus_2 = add(
+        a_plus_b_plus_2 = add_component_factory(
             "a-plus-b-plus-2",
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),
         )
 
-    a_plus_b_plus_2.export(test_output_dir)
-    # a_plus_b_plus_2.register()
-    # a_plus_b_plus_2.run(inputs={'a':3, 'b':2})
+    assert adding_parameters.built
+    assert not adding_parameters.registered
+    assert adding_parameters.registered_id is None
+    assert adding_parameters.registered_name is None
+    assert adding_parameters.registered_namespace is None
+    assert set(adding_parameters.inputs.keys()) == {"a", "b"}
+    for pipeline_input_name, pipeline_input_default in (("a", 1), ("b", 2)):
+        assert (
+            adding_parameters.inputs[pipeline_input_name].name
+            == pipeline_input_name
+        )
+        assert (
+            adding_parameters.inputs[pipeline_input_name].owner
+            == adding_parameters
+        )
+        assert (
+            adding_parameters.inputs[pipeline_input_name].value
+            == pipeline_input_default
+        )
+
+    wft = adding_parameters.user_built_workflow_template
+
+    task_names = [task.name for task in wft.templates[0].tasks]
+    assert task_names == ["a-plus-b-0", "a-plus-b-plus-2-0"]
+
+    script_template_names = [template.name for template in wft.templates[1:]]
+    assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
