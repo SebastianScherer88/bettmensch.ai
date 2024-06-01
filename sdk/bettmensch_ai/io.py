@@ -189,9 +189,8 @@ class InputArtifact(OriginMixin, Input):
                 return Artifact(name=self.name, from_=self.source.id)
             else:
                 raise ValueError(
-                    f"InputArtifact must have be associated "
-                    "with a source that is owned either by a Pipeline"
-                    "or another Component"
+                    "InputArtifact must be associated with a source that is "
+                    "owned either by a Pipeline or another Component"
                 )
 
 
