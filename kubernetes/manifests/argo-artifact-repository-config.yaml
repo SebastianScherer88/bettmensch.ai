@@ -1,4 +1,14 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: my-s3-cred
+  namespace: argo
+type: Opaque
+data:
+  accesskey: "echo -n {access_key_id} | base64"
+  secretkey: "echo -n {secrret_access_key} | base64"
+---
+apiVersion: v1
 data:
   bettmensch-ai-artifact-repository: |
     s3:
