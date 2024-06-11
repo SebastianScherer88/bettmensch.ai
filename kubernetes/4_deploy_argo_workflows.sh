@@ -9,5 +9,3 @@ kubectl apply -n argo -f ./manifests/argo-artifact-repository-config.yaml
 
 # Confirm that the operator is running in the namespace `default`.
 kubectl get pods -n argo -w
-# NAME                                READY   STATUS    RESTARTS   AGE
-# kuberay-operator-7fbdbf8c89-pt8bk   1/1     Running   0          27s
