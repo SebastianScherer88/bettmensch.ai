@@ -1,0 +1,278 @@
+access_entries = {
+  "cluster_creator" = {
+    "access_entry_arn" = "arn:aws:eks:us-east-1:743582000746:access-entry/bettmensch-ai/root/743582000746//eec8066b-374d-c86c-ebf5-bfb469dfe989"
+    "cluster_name" = "bettmensch-ai"
+    "created_at" = "2024-06-12T14:24:58Z"
+    "id" = "bettmensch-ai:arn:aws:iam::743582000746:root"
+    "kubernetes_groups" = toset([])
+    "modified_at" = "2024-06-12T14:24:58Z"
+    "principal_arn" = "arn:aws:iam::743582000746:root"
+    "tags" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "timeouts" = null /* object */
+    "type" = "STANDARD"
+    "user_name" = "arn:aws:iam::743582000746:root"
+  }
+}
+argo_iam_role_arn = "arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role"
+cloudwatch_log_group_arn = "arn:aws:logs:us-east-1:743582000746:log-group:/aws/eks/bettmensch-ai/cluster"
+cloudwatch_log_group_name = "/aws/eks/bettmensch-ai/cluster"
+cluster_addons = {
+  "coredns" = {
+    "addon_name" = "coredns"
+    "addon_version" = "v1.11.1-eksbuild.4"
+    "arn" = "arn:aws:eks:us-east-1:743582000746:addon/bettmensch-ai/coredns/38c8066c-77a8-7fdf-32d5-9caaa1ff98da"
+    "cluster_name" = "bettmensch-ai"
+    "configuration_values" = ""
+    "created_at" = "2024-06-12T14:27:42Z"
+    "id" = "bettmensch-ai:coredns"
+    "modified_at" = "2024-06-12T14:27:55Z"
+    "preserve" = true
+    "resolve_conflicts" = tostring(null)
+    "resolve_conflicts_on_create" = "OVERWRITE"
+    "resolve_conflicts_on_update" = "OVERWRITE"
+    "service_account_role_arn" = ""
+    "tags" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "timeouts" = {
+      "create" = tostring(null)
+      "delete" = tostring(null)
+      "update" = tostring(null)
+    }
+  }
+  "kube-proxy" = {
+    "addon_name" = "kube-proxy"
+    "addon_version" = "v1.29.0-eksbuild.1"
+    "arn" = "arn:aws:eks:us-east-1:743582000746:addon/bettmensch-ai/kube-proxy/e0c8066c-77a6-97d9-3d4d-6043bf0f0191"
+    "cluster_name" = "bettmensch-ai"
+    "configuration_values" = ""
+    "created_at" = "2024-06-12T14:27:42Z"
+    "id" = "bettmensch-ai:kube-proxy"
+    "modified_at" = "2024-06-12T14:27:49Z"
+    "preserve" = true
+    "resolve_conflicts" = tostring(null)
+    "resolve_conflicts_on_create" = "OVERWRITE"
+    "resolve_conflicts_on_update" = "OVERWRITE"
+    "service_account_role_arn" = ""
+    "tags" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "timeouts" = {
+      "create" = tostring(null)
+      "delete" = tostring(null)
+      "update" = tostring(null)
+    }
+  }
+  "vpc-cni" = {
+    "addon_name" = "vpc-cni"
+    "addon_version" = "v1.16.0-eksbuild.1"
+    "arn" = "arn:aws:eks:us-east-1:743582000746:addon/bettmensch-ai/vpc-cni/28c8066c-77a4-8447-8231-b65b4185dec1"
+    "cluster_name" = "bettmensch-ai"
+    "configuration_values" = ""
+    "created_at" = "2024-06-12T14:27:42Z"
+    "id" = "bettmensch-ai:vpc-cni"
+    "modified_at" = "2024-06-12T14:28:20Z"
+    "preserve" = true
+    "resolve_conflicts" = tostring(null)
+    "resolve_conflicts_on_create" = "OVERWRITE"
+    "resolve_conflicts_on_update" = "OVERWRITE"
+    "service_account_role_arn" = ""
+    "tags" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "karpenter.sh/discovery" = "bettmensch-ai"
+      "project" = "bettmensch-ai"
+    })
+    "timeouts" = {
+      "create" = tostring(null)
+      "delete" = tostring(null)
+      "update" = tostring(null)
+    }
+  }
+}
+cluster_arn = "arn:aws:eks:us-east-1:743582000746:cluster/bettmensch-ai"
+cluster_certificate_authority_data = "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURCVENDQWUyZ0F3SUJBZ0lJUGZMbDZmQ1kwMHd3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TkRBMk1USXhOREUwTWpWYUZ3MHpOREEyTVRBeE5ERTVNalZhTUJVeApFekFSQmdOVkJBTVRDbXQxWW1WeWJtVjBaWE13Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURiOE1yN204QnBaUE9pNTAwUHMzcUNsSEV3OXlTWGxONml6ZVhFcjVsRUt5aWN2TjdpQ3NneENPb2oKZjVTSFQwbjJRcnNKZmFlcTR6Q2twS2NETkxXb1hoZUptWnR2eU9Nak5PempZUTMzZklTSnpIS1FEZnlYOTRyaApxc1pUWVVxbXJYaDNoYnFscXQxWVQwVEd1TUR2UEFRUXQ1b1NhSExHY2czVExNSHJ3SkprMk9oclJXdVJZWVhLCnAyYTg5RW45eHUxRGhiTXBJb1l6d1FzMFpXK3lsTFdsUVBjRk5XWGw1RVZQTldmQjJROC9oSzRVRlgyb0lBY1QKd3NacWJleFB1bFM1SFVjUEhYWGRGR2RwcGdkNXVCU21DQk5Rc3kwTVJzWDdxSFo3T2kvNXdsTndrZi9ITzEzNwp2QnVEdHkvTjhVcFEzc3dhMjlidzZQQ1RFb1dkQWdNQkFBR2pXVEJYTUE0R0ExVWREd0VCL3dRRUF3SUNwREFQCkJnTlZIUk1CQWY4RUJUQURBUUgvTUIwR0ExVWREZ1FXQkJURGpjTzF2ak54Zms0K2RPL0NrNEdNeTI1RC9qQVYKQmdOVkhSRUVEakFNZ2dwcmRXSmxjbTVsZEdWek1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQXZyclVxTktpUgpMSGlHOExsYjFuTEZLTmQvdjdlU053cFkzTXV1Q3JWeFB2d00ydzNwbVZBSTJUME92dFRicUtPdFhobFVNcjQ3ClJpb3Q1RzN0YTZVMVNxSkVOcHZSdys2Ym40NU1DdG9pSlQvdTFqM1JRNjZCYm80MUxieEdTbjRQM3BHSXFLbWEKczVJRmNvbW1hYVc2b2xSZEdsdVlQSDVZODlUWi80NTFYbSt2bEpXNEdTcjkwdXNzSFREbHJJNkJqeHdpbVNTcApWMUFXbzgwazdNRmxCUmI4YVpodUFhY0xFeU5GUDNFT1o2U0pmWWpWQkg5d1VsbkhHVUVHNmJONS9iTUdMVGMvCitJU3BKUWRDVFdrNE5GcWRyY0hMMWNpcHNBK1FhcUJrVDA4RXpvVlp0RGJ0cks3QWhkVWZVd2kydzFIaFJuYW0KbC9mNWVSNk9FR0pnCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K"
+cluster_endpoint = "https://9CF0C339999CBD376EF49AA03C779A5A.gr7.us-east-1.eks.amazonaws.com"
+cluster_iam_role_arn = "arn:aws:iam::743582000746:role/bettmensch-ai-cluster-20240612141400892800000001"
+cluster_iam_role_name = "bettmensch-ai-cluster-20240612141400892800000001"
+cluster_iam_role_unique_id = "AROA22IHQ4ZVAMC5E7PMW"
+cluster_identity_providers = {}
+cluster_name = "bettmensch-ai"
+cluster_oidc_issuer_url = "https://oidc.eks.us-east-1.amazonaws.com/id/9CF0C339999CBD376EF49AA03C779A5A"
+cluster_platform_version = "eks.7"
+cluster_primary_security_group_id = "sg-0d6079a4a69d200da"
+cluster_status = "ACTIVE"
+cluster_tls_certificate_sha1_fingerprint = "9e99a48a9960b14926bb7f3b02e22da2b0ab7280"
+eks_managed_node_groups = {
+  "initial" = {
+    "autoscaling_group_schedule_arns" = {}
+    "iam_role_arn" = "arn:aws:iam::743582000746:role/initial-eks-node-group-20240612141400909300000002"
+    "iam_role_name" = "initial-eks-node-group-20240612141400909300000002"
+    "iam_role_unique_id" = "AROA22IHQ4ZVOUMTLLXF5"
+    "launch_template_arn" = "arn:aws:ec2:us-east-1:743582000746:launch-template/lt-054b606a893fd6a07"
+    "launch_template_id" = "lt-054b606a893fd6a07"
+    "launch_template_latest_version" = 2
+    "launch_template_name" = "initial-2024061214255480060000001a"
+    "node_group_arn" = "arn:aws:eks:us-east-1:743582000746:nodegroup/bettmensch-ai/initial-2024061214255516740000001c/66c8066b-a700-9685-7e60-c6dc7b70901e"
+    "node_group_autoscaling_group_names" = [
+      "eks-initial-2024061214255516740000001c-66c8066b-a700-9685-7e60-c6dc7b70901e",
+    ]
+    "node_group_id" = "bettmensch-ai:initial-2024061214255516740000001c"
+    "node_group_labels" = tomap({})
+    "node_group_resources" = tolist([
+      {
+        "autoscaling_groups" = tolist([
+          {
+            "name" = "eks-initial-2024061214255516740000001c-66c8066b-a700-9685-7e60-c6dc7b70901e"
+          },
+        ])
+        "remote_access_security_group_id" = ""
+      },
+    ])
+    "node_group_status" = "ACTIVE"
+    "node_group_taints" = toset([])
+    "platform" = "linux"
+  }
+}
+eks_managed_node_groups_autoscaling_group_names = tolist([
+  "eks-initial-2024061214255516740000001c-66c8066b-a700-9685-7e60-c6dc7b70901e",
+])
+fargate_profiles = {}
+karpenter_event_rules = {
+  "health_event" = {
+    "arn" = "arn:aws:events:us-east-1:743582000746:rule/KarpenterHealthEvent-20240612142500352300000011"
+    "description" = "Karpenter interrupt - AWS health event"
+    "event_bus_name" = "default"
+    "event_pattern" = "{\"detail-type\":[\"AWS Health Event\"],\"source\":[\"aws.health\"]}"
+    "force_destroy" = false
+    "id" = "KarpenterHealthEvent-20240612142500352300000011"
+    "is_enabled" = true
+    "name" = "KarpenterHealthEvent-20240612142500352300000011"
+    "name_prefix" = "KarpenterHealthEvent-"
+    "role_arn" = ""
+    "schedule_expression" = ""
+    "state" = "ENABLED"
+    "tags" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+  }
+  "instance_rebalance" = {
+    "arn" = "arn:aws:events:us-east-1:743582000746:rule/KarpenterInstanceRebalance-20240612142500337200000010"
+    "description" = "Karpenter interrupt - EC2 instance rebalance recommendation"
+    "event_bus_name" = "default"
+    "event_pattern" = "{\"detail-type\":[\"EC2 Instance Rebalance Recommendation\"],\"source\":[\"aws.ec2\"]}"
+    "force_destroy" = false
+    "id" = "KarpenterInstanceRebalance-20240612142500337200000010"
+    "is_enabled" = true
+    "name" = "KarpenterInstanceRebalance-20240612142500337200000010"
+    "name_prefix" = "KarpenterInstanceRebalance-"
+    "role_arn" = ""
+    "schedule_expression" = ""
+    "state" = "ENABLED"
+    "tags" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+  }
+  "instance_state_change" = {
+    "arn" = "arn:aws:events:us-east-1:743582000746:rule/KarpenterInstanceStateChange-20240612142500358200000013"
+    "description" = "Karpenter interrupt - EC2 instance state-change notification"
+    "event_bus_name" = "default"
+    "event_pattern" = "{\"detail-type\":[\"EC2 Instance State-change Notification\"],\"source\":[\"aws.ec2\"]}"
+    "force_destroy" = false
+    "id" = "KarpenterInstanceStateChange-20240612142500358200000013"
+    "is_enabled" = true
+    "name" = "KarpenterInstanceStateChange-20240612142500358200000013"
+    "name_prefix" = "KarpenterInstanceStateChange-"
+    "role_arn" = ""
+    "schedule_expression" = ""
+    "state" = "ENABLED"
+    "tags" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+  }
+  "spot_interrupt" = {
+    "arn" = "arn:aws:events:us-east-1:743582000746:rule/KarpenterSpotInterrupt-2024061214250023750000000f"
+    "description" = "Karpenter interrupt - EC2 spot instance interruption warning"
+    "event_bus_name" = "default"
+    "event_pattern" = "{\"detail-type\":[\"EC2 Spot Instance Interruption Warning\"],\"source\":[\"aws.ec2\"]}"
+    "force_destroy" = false
+    "id" = "KarpenterSpotInterrupt-2024061214250023750000000f"
+    "is_enabled" = true
+    "name" = "KarpenterSpotInterrupt-2024061214250023750000000f"
+    "name_prefix" = "KarpenterSpotInterrupt-"
+    "role_arn" = ""
+    "schedule_expression" = ""
+    "state" = "ENABLED"
+    "tags" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+    "tags_all" = tomap({
+      "ClusterName" = "bettmensch-ai"
+      "github" = "https://github.com/SebastianScherer88/bettmensch.ai"
+      "project" = "bettmensch-ai"
+    })
+  }
+}
+karpenter_iam_role_arn = "arn:aws:iam::743582000746:role/KarpenterController-2024061214245934450000000e"
+karpenter_iam_role_name = "KarpenterController-2024061214245934450000000e"
+karpenter_iam_role_unique_id = "AROA22IHQ4ZVMM7YFPQYC"
+karpenter_node_iam_role_arn = "arn:aws:iam::743582000746:role/Karpenter-bettmensch-ai-20240612142500354100000012"
+karpenter_node_iam_role_name = "Karpenter-bettmensch-ai-20240612142500354100000012"
+karpenter_node_iam_role_unique_id = "AROA22IHQ4ZVEZQPEQLV4"
+karpenter_queue_arn = "arn:aws:sqs:us-east-1:743582000746:Karpenter-bettmensch-ai"
+karpenter_queue_name = "Karpenter-bettmensch-ai"
+karpenter_queue_url = "https://sqs.us-east-1.amazonaws.com/743582000746/Karpenter-bettmensch-ai"
+oidc_provider = "oidc.eks.us-east-1.amazonaws.com/id/9CF0C339999CBD376EF49AA03C779A5A"
+oidc_provider_arn = "arn:aws:iam::743582000746:oidc-provider/oidc.eks.us-east-1.amazonaws.com/id/9CF0C339999CBD376EF49AA03C779A5A"
+self_managed_node_groups = {}
+self_managed_node_groups_autoscaling_group_names = tolist([])

@@ -888,23 +888,42 @@ spec:
     storage: true
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: Namespace
 metadata:
   name: argo
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: argo
+  namespace: argo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
   name: argo-server
+  namespace: argo
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo-workflow
+  namespace: argo
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: github.com
+  namespace: argo
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  namespace: argo
   annotations:
     workflows.argoproj.io/description: |
       This is the minimum recommended permissions needed if you want to use the agent, e.g. for HTTP or plugin templates.
@@ -930,6 +949,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: argo-role
+  namespace: argo
 rules:
 - apiGroups:
   - coordination.k8s.io
@@ -1048,6 +1068,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: argo-server-role
+  namespace: argo
 rules:
 - apiGroups:
   - ""
@@ -1117,6 +1138,7 @@ metadata:
     workflows.argoproj.io/description: |
       This is the minimum recommended permissions needed if you want to use artifact GC.
   name: artifactgc
+  namespace: argo
 rules:
 - apiGroups:
   - argoproj.io
@@ -1139,6 +1161,7 @@ metadata:
     workflows.argoproj.io/description: |
       Recomended minimum permissions for the `emissary` executor.
   name: executor
+  namespace: argo
 rules:
 - apiGroups:
   - argoproj.io
@@ -1156,6 +1179,7 @@ metadata:
       This is an example of the permissions you would need if you wanted to use a resource template to create and manage
       other pods. The same pattern would be suitable for other resurces, e.g. a service
   name: pod-manager
+  namespace: argo
 rules:
 - apiGroups:
   - ""
@@ -1170,6 +1194,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: submit-workflow-template
+  namespace: argo
 rules:
 - apiGroups:
   - argoproj.io
@@ -1198,6 +1223,7 @@ metadata:
       This is an example of the permissions you would need if you wanted to use a resource template to create and manage
       other workflows. The same pattern would be suitable for other resurces, e.g. a service
   name: workflow-manager
+  namespace: argo
 rules:
 - apiGroups:
   - argoproj.io
@@ -1244,6 +1270,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: agent-default
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1256,6 +1283,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: argo-binding
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1268,6 +1296,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: argo-server-binding
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1280,6 +1309,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: artifactgc-default
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1292,6 +1322,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: executor-default
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1304,6 +1335,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: github.com
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1311,12 +1343,12 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: github.com
-  namespace: argo
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: pod-manager-default
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1329,6 +1361,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: workflow-manager-default
+  namespace: argo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1362,39 +1395,6 @@ subjects:
 - kind: ServiceAccount
   name: argo-server
   namespace: argo
----
-apiVersion: v1
-data:
-  default-v1: |
-    archiveLogs: true
-    s3:
-      bucket: my-bucket
-      endpoint: minio:9000
-      insecure: true
-      accessKeySecret:
-        name: my-minio-cred
-        key: accesskey
-      secretKeySecret:
-        name: my-minio-cred
-        key: secretkey
-  empty: ""
-  my-key: |
-    archiveLogs: true
-    s3:
-      bucket: my-bucket
-      endpoint: minio:9000
-      insecure: true
-      accessKeySecret:
-        name: my-minio-cred
-        key: accesskey
-      secretKeySecret:
-        name: my-minio-cred
-        key: secretkey
-kind: ConfigMap
-metadata:
-  annotations:
-    workflows.argoproj.io/default-artifact-repository: default-v1
-  name: artifact-repositories
 ---
 apiVersion: v1
 data:
@@ -1452,11 +1452,13 @@ data:
 kind: ConfigMap
 metadata:
   name: workflow-controller-configmap
+  namespace: argo
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: argo-server-sso
+  namespace: argo
 stringData:
   clientID: argo-server
   clientSecret: ZXhhbXBsZS1hcHAtc2VjcmV0
@@ -1465,6 +1467,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: argo-workflows-webhook-clients
+  namespace: argo
 stringData:
   bitbucket.org: |
     type: bitbucket
@@ -1485,6 +1488,7 @@ metadata:
   annotations:
     kubernetes.io/service-account.name: default
   name: default.service-account-token
+  namespace: argo
 type: kubernetes.io/service-account-token
 ---
 apiVersion: v1
@@ -1493,6 +1497,7 @@ metadata:
   annotations:
     kubernetes.io/service-account.name: github.com
   name: github.com.service-account-token
+  namespace: argo
 type: kubernetes.io/service-account-token
 ---
 apiVersion: v1
@@ -1501,6 +1506,7 @@ metadata:
   labels:
     app: httpbin
   name: my-httpbin-cred
+  namespace: argo
 stringData:
   cert.pem: |
     -----BEGIN CERTIFICATE-----
@@ -1596,6 +1602,7 @@ metadata:
   labels:
     app: minio
   name: my-minio-cred
+  namespace: argo
 stringData:
   accesskey: admin
   secretkey: password
@@ -1605,6 +1612,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: argo-server
+  namespace: argo
 spec:
   ports:
   - name: web
@@ -1619,6 +1627,7 @@ metadata:
   labels:
     app: httpbin
   name: httpbin
+  namespace: argo
 spec:
   ports:
   - name: api
@@ -1634,6 +1643,7 @@ metadata:
   labels:
     app: minio
   name: minio
+  namespace: argo
 spec:
   ports:
   - name: api
@@ -1651,12 +1661,14 @@ apiVersion: scheduling.k8s.io/v1
 kind: PriorityClass
 metadata:
   name: workflow-controller
+  namespace: argo
 value: 1000000
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: argo-server
+  namespace: argo
 spec:
   selector:
     matchLabels:
@@ -1710,6 +1722,7 @@ metadata:
   labels:
     app: httpbin
   name: httpbin
+  namespace: argo
 spec:
   selector:
     matchLabels:
@@ -1745,6 +1758,7 @@ metadata:
   labels:
     app: minio
   name: minio
+  namespace: argo
 spec:
   selector:
     matchLabels:
@@ -1798,6 +1812,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: workflow-controller
+  namespace: argo
 spec:
   selector:
     matchLabels:
