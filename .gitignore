@@ -2,3 +2,9 @@ __pycache__
 *.egg-info
 */build
 sdk/test/outputs
+
+# terraform
+infrastructure/terraform/.terraform*
+infrastructure/terraform/.terraform.lock.hcl
+infrastructure/terraform/.terraform.tfstate.lock.info
+infrastructure/terraform/terraform.tfstate.backup
