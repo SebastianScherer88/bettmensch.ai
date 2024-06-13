@@ -101,6 +101,23 @@ resource "kubectl_manifest" "karpenter_node_pool" {
 }
 
 ################################################################################
+# Nvidia device plugin (GPUs)
+################################################################################
+
+resource "helm_release" "nvidia-device-plugin" {
+  namespace           = "kube-system"
+  create_namespace    = false
+  name                = "nvidia-device-plugin"
+  repository          = "https://nvidia.github.io/k8s-device-plugin"
+  # repository_username = data.aws_ecrpublic_authorization_token.token.user_name
+  # repository_password = data.aws_ecrpublic_authorization_token.token.password
+  chart               = "nvidia-device-plugin"
+  version             = "0.15.0"
+  wait                = false
+
+}
+
+################################################################################
 # Argo Workflows
 ################################################################################
 
