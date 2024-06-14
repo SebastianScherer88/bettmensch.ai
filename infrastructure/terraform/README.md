@@ -13,5 +13,5 @@ and then configure your `kubectl` to point towards the EKS cluster, run:
 terraform init
 terraform plan
 terraform apply -auto-approve
-aws eks --region us-east-1 update-kubeconfig --name bettmensch-ai
+aws eks --region us-east-2 update-kubeconfig --name bettmensch-ai
 ```

@@ -3,8 +3,8 @@ provider "aws" {
 }
 
 provider "aws" {
-  region = "us-east-1"
-  alias  = "north_virginia"
+  region = "us-east-2"
+  alias  = "ohio"
 }
 
 provider "helm" {

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cpu-nodepool-provisioning-test
+  name: test-cpu-nodepool
 spec:
   replicas: 20
   selector:
