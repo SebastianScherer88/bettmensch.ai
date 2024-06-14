@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gpu-nodepool-provisioning-test
+  name: test-gpu-nodepool
 spec:
   replicas: 2
   selector:

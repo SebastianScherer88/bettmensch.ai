@@ -39,17 +39,17 @@ spec:
       requirements:
         - key: "karpenter.k8s.aws/instance-category"
           operator: In
-          values: ["p"]
+          values: ["p","g"]
         - key: "karpenter.k8s.aws/instance-generation"
           operator: Gt
           values: ["2"]
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ["on-demand"]
+          values: ["spot","on-demand"]
       taints:
-      - key: nvidia.com/gpu
-        value: "true"
-        effect: "NoSchedule"
+        - key: nvidia.com/gpu
+          value: "true"
+          effect: "NoSchedule"
   limits:
     cpu: 100
     memory: 1000Gi
