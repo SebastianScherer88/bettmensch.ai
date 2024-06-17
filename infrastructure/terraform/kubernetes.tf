@@ -33,16 +33,16 @@ module "karpenter_disabled" {
 }
 
  # karpenter installation
-# data "aws_ecrpublic_authorization_token" "token" {
-#   provider = aws.ohio
-# }
+data "aws_ecrpublic_authorization_token" "token" {
+  provider = aws.north_virginia
+}
 resource "helm_release" "karpenter" {
   namespace           = "karpenter"
   create_namespace    = true
   name                = "karpenter"
   repository          = "oci://public.ecr.aws/karpenter"
-  # repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  # repository_password = data.aws_ecrpublic_authorization_token.token.password
+  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
+  repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
   version             = "0.35.1"
   wait                = false
@@ -63,23 +63,7 @@ resource "helm_release" "karpenter" {
 
 # karpenter node class
 resource "kubectl_manifest" "karpenter_node_class" {
-#   yaml_body = <<-YAML
-#     apiVersion: karpenter.k8s.aws/v1beta1
-#     kind: EC2NodeClass
-#     metadata:
-#       name: default
-#     spec:
-#       amiFamily: AL2
-#       role: ${module.karpenter.node_iam_role_name}
-#       subnetSelectorTerms:
-#         - tags:
-#             karpenter.sh/discovery: ${module.eks.cluster_name}
-#       securityGroupSelectorTerms:
-#         - tags:
-#             karpenter.sh/discovery: ${module.eks.cluster_name}
-#       tags:
-#         karpenter.sh/discovery: ${module.eks.cluster_name}
-#   YAML
+
     yaml_body = <<-YAML
       apiVersion: karpenter.k8s.aws/v1beta1
       kind: EC2NodeClass
@@ -146,20 +130,6 @@ resource "kubectl_manifest" "karpenter_node_class" {
   ]
 }
 
-# # karpenter node class
-# data "kubectl_file_documents" "karpenter_node_class" {
-#     content = file("../../kubernetes/manifests/karpenter/karpenter-ec2nodeclass.yaml")
-# }
-
-# resource "kubectl_manifest" "karpenter_node_class" {
-#   for_each  = data.kubectl_file_documents.karpenter_node_class.manifests
-#   yaml_body = each.value
-  
-#   depends_on = [
-#     helm_release.karpenter
-#   ]
-# }
-
 # karpenter nodepool
 data "kubectl_file_documents" "karpenter_node_pool" {
     content = file("../../kubernetes/manifests/karpenter/karpenter-nodepool.yaml")
@@ -183,11 +153,25 @@ resource "helm_release" "nvidia-device-plugin" {
   create_namespace    = false
   name                = "nvidia-device-plugin"
   repository          = "https://nvidia.github.io/k8s-device-plugin"
-  # repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  # repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "nvidia-device-plugin"
   version             = "0.15.0"
   wait                = false
+
+  values = [
+    <<-EOT
+    affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: karpenter.k8s.aws/instance-gpu-count # karpenter applies this "well known" label
+                operator: Exists
+              - key: karpenter.k8s.aws/instance-gpu-count # karpenter applies this "well known" label
+                operator: Gt
+                values:
+                - "0"
+    EOT
+  ]
 
 }
 
