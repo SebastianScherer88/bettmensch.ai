@@ -15,7 +15,8 @@ spec:
       terminationGracePeriodSeconds: 0
       containers:
         - name: inflate
-          image: public.ecr.aws/eks-distro/kubernetes/pause:3.7
+          image: nvidia/cuda:12.5.0-devel-ubuntu22.04
+          command: ["nvidia-smi"]
           resources:
             limits:
               nvidia.com/gpu: "1"
