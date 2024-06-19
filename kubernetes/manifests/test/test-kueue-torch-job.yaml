@@ -1,0 +1,66 @@
+# Service configuration for multinode.
+apiVersion: v1
+kind: Service
+metadata:
+  name: multinode-job-svc
+  labels:
+    app: multinode
+spec:
+  clusterIP: None  # ClusterIP set to None for headless service.
+  ports:
+  - name: nccl  # Port for torchrun master-worker node communication.
+    port: 29500
+    targetPort: 29500
+  selector:
+    job-name: multinode-job  # Selector for pods associated with this service.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode
+  name: multinode-job
+spec:
+  completionMode: Indexed
+  completions: 2  # Should match the number of nodes.
+  parallelism: 2  # Should match the number of nodes.
+  template:
+    spec:
+      subdomain: multinode-job-svc
+      nodeSelector:
+        "kubernetes.io/hostname": "ip-10-0-31-0.us-east-2.compute.internal"
+      containers:
+        - command:
+          - bash
+          - -c
+          - torchrun --nnodes 2 --nproc_per_node 2 --tee 3 --node_rank $JOB_COMPLETION_INDEX --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_app.py
+          env:
+            - name: MASTER_ADDR
+              value: multinode-job-0.multinode-job-svc  # Node with rank 0 is chosen as the master node.
+            - name: MASTER_PORT
+              value: '29500'
+          image: bettmensch88/bettmensch.ai:8c14805139b79784fc9411acf4c4feb4f9d7fe775b4a4233ad8df9ad959f058b
+          name: multinode
+          ports:
+          - containerPort: 29500
+            name: c10d
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 700M
+            requests:
+              cpu: 500m
+              memory: 0M
+          securityContext: {}
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+      restartPolicy: Never
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: dshm
+    
