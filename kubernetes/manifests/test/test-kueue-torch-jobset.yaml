@@ -1,0 +1,45 @@
+# jobset-sample.yaml
+apiVersion: jobset.x-k8s.io/v1alpha2
+kind: JobSet
+metadata:
+  name: multinode-jobset
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+spec:
+  network:
+    enableDNSHostnames: true
+    subdomain: multinode-jobset-svc
+  replicatedJobs:
+    - name: multinode-job
+      replicas: 1
+      template:
+        spec:
+          parallelism: 4
+          completions: 4
+          backoffLimit: 0
+          template:
+            spec:
+              containers:
+                - command:
+                  - bash
+                  - -c
+                  - torchrun --rdzv_id=123 --nnodes=4 --nproc_per_node=1 --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$JOB_COMPLETION_INDEX --role '' ./dist_app.py
+                  env:
+                  - name: MASTER_ADDR
+                    value: multinode-jobset-multinode-job-0-0.multinode-jobset-svc  # Node with rank 0 is chosen as the master node.
+                  - name: MASTER_PORT
+                    value: '29500'
+                  image: bettmensch88/bettmensch.ai:8c14805139b79784fc9411acf4c4feb4f9d7fe775b4a4233ad8df9ad959f058b
+                  name: multinode
+                  ports:
+                  - containerPort: 29500
+                    name: c10d
+                    protocol: TCP
+                  resources:
+                    limits:
+                      cpu: 500m
+                      memory: 700M
+                    requests:
+                      cpu: 500m
+                      memory: 0M
+              restartPolicy: Never
