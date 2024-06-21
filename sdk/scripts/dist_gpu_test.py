@@ -4,8 +4,6 @@ import torch.distributed as dist
 dist.init_process_group(backend="nccl")
 print(f"Backend {dist.get_backend()}")
 print(f"World size {dist.get_world_size()}")
-print(f"Global rank {dist.get_global_rank()}")
-print(f"Group rank {dist.get_group_rank()}")
 print(f"Rank {dist.get_rank()}")
 print(
     f"This makes me worker process {dist.get_rank() + 1}/{dist.get_world_size()} globally!"
