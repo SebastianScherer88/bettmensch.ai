@@ -54,10 +54,27 @@
 
           with open('./coin_output.txt', 'w') as output:
               output.write(coin)
-    - inputs:
+    - affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                - antarctica-east1
+                - antarctica-west1
+      inputs:
         parameters:
         - name: coin
+      metadata:
+        annotations:
+          key_annotations: value_annotations
+        labels:
+          key_labels: value_labels
       name: show-coin
+      nodeSelector:
+        key_node_selector: value_node_selector
       script:
         command:
         - python
@@ -71,6 +88,11 @@
           except: coin = r'''{{inputs.parameters.coin}}'''
 
           print(f'it was {coin}')
+      tolerations:
+      - effect: NoSchedule
+        key: key1
+        operator: Equal
+        value: value1
     workflowMetadata:
       annotations:
         annotation_key_a: annotation_value_a
