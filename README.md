@@ -4,6 +4,36 @@
 
 :factory: Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
 
+# Installation
+
+To provision 
+- the S3 bucket for the Argo Workflows artifact repository
+- Karpenter required infrastructure (IAM, message queues, etc.)
+- a working EKS cluster
+- the configured Karpenter, Argo Workflows & Volcano kubernetes installations 
+    on the cluster,
+
+change into the `infrastructure/terraform` directory and run:
+
+```bash
+terraform init
+terraform plan
+terraform apply -auto-approve
+```
+
+To configure your kubectl to point towards the EKS cluster, run:
+
+```bash
+aws eks --region us-east-2 update-kubeconfig --name bettmensch-ai
+```
+
+To port forward the argo server to your local port `2746` so you can access the argo dashboard and start
+submitting & running pipelines, change back into the top level directory and run
+
+```bash
+bash kubernetes/port_forward_argo_server.sh
+```
+
 # Features (under active development )
 
 ## :computer: Dashboard
