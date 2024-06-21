@@ -1,0 +1,145 @@
+# Service configuration for multinode.
+apiVersion: v1
+kind: Service
+metadata:
+  name: multinode-gpu-pod-driver-svc
+  labels:
+    app: multinode-gpu
+spec:
+  clusterIP: None  # ClusterIP set to None for headless service.
+  ports:
+  - name: nccl  # Port for torchrun master-worker node communication.
+    port: 29500
+    targetPort: 29500
+  selector:
+    app: multinode-gpu
+    torch-node: driver  # Selector for pods associated with this service.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode-gpu
+    torch-node: driver
+  name: multinode-gpu-pod-driver
+spec:
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  containers:
+    - command:
+      - bash
+      - -c
+      - torchrun --nnodes 3 --nproc_per_node 2 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      env:
+        - name: PYTORCH_NODE_RANK
+          value: "0"
+        - name: MASTER_ADDR
+          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+        - name: MASTER_PORT
+          value: '29500'
+      image: bettmensch88/bettmensch.ai:8c14805139b79784fc9411acf4c4feb4f9d7fe775b4a4233ad8df9ad959f058b
+      name: multinode-gpu-driver
+      ports:
+      - containerPort: 29500
+        name: c10d
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+        requests:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode-gpu
+    torch-node: worker
+  name: multinode-gpu-pod-worker-1
+spec:
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  containers:
+    - command:
+      - bash
+      - -c
+      - torchrun --nnodes 3 --nproc_per_node 2 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      env:
+        - name: PYTORCH_NODE_RANK
+          value: "1"
+        - name: MASTER_ADDR
+          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+        - name: MASTER_PORT
+          value: '29500'
+      image: bettmensch88/bettmensch.ai:8c14805139b79784fc9411acf4c4feb4f9d7fe775b4a4233ad8df9ad959f058b
+      name: multinode-gpu-worker
+      ports:
+      - containerPort: 29500
+        name: c10d
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+        requests:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+  restartPolicy: Never
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode-gpu
+    torch-node: worker
+  name: multinode-gpu-pod-worker-2
+spec:
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  containers:
+    - command:
+      - bash
+      - -c
+      - torchrun --nnodes 3 --nproc_per_node 2 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      env:
+        - name: PYTORCH_NODE_RANK
+          value: "2"
+        - name: MASTER_ADDR
+          value: multinode-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+        - name: MASTER_PORT
+          value: '29500'
+      image: bettmensch88/bettmensch.ai:8c14805139b79784fc9411acf4c4feb4f9d7fe775b4a4233ad8df9ad959f058b
+      name: multinode-gpu-worker
+      ports:
+      - containerPort: 29500
+        name: c10d
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+        requests:
+          cpu: 500m
+          memory: 700M
+          nvidia.com/gpu: 1
+  restartPolicy: Never
