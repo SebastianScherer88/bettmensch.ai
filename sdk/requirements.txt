@@ -3,4 +3,4 @@ pydantic
 hera
 PyYAML
 networkx
-pytorch
+torch
