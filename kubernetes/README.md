@@ -16,7 +16,7 @@ After completing the setup, you can try submitting a workflow.
 1. Run `6_submit_argo_workflow.sh`
 
 To check on the cluster state, jobs, serve applications etc run the following dashboard port forwarding in a separate terminal:
-`port_forward_argo_dashboard.sh`
+`port_forward_argo_server.sh`
 
 Make sure you connect using `https` when accessing on local; this will work:
 

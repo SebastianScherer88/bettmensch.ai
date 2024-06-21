@@ -215,21 +215,3 @@ resource "kubectl_manifest" "argo_workflows_artifact_repository" {
     kubectl_manifest.karpenter_node_pool
   ]
 }
-
-################################################################################
-# Volcano
-################################################################################
-
-# volcano installation
-data "kubectl_file_documents" "volcano" {
-    content = file("../../kubernetes/manifests/volcano/volcano-installation.yaml")
-}
-
-resource "kubectl_manifest" "volcano" {
-    for_each  = data.kubectl_file_documents.volcano.manifests
-    yaml_body = each.value
-
-depends_on = [
-    kubectl_manifest.karpenter_node_pool
-  ]
-}
