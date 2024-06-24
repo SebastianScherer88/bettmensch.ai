@@ -33,7 +33,7 @@ spec:
     - command:
       - bash
       - -c
-      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./torch_ddp_test.py
       env:
         - name: PYTORCH_NODE_RANK
           value: "0"
@@ -77,7 +77,7 @@ spec:
     - command:
       - bash
       - -c
-      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./torch_ddp_test.py
       env:
         - name: PYTORCH_NODE_RANK
           value: "1"
@@ -121,7 +121,7 @@ spec:
     - command:
       - bash
       - -c
-      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_gpu_test.py
+      - torchrun --nnodes 2:3 --nproc_per_node 1 --tee 3 --node_rank $PYTORCH_NODE_RANK --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./torch_ddp_test.py
       env:
         - name: PYTORCH_NODE_RANK
           value: "2"
