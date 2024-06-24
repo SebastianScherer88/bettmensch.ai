@@ -1,3 +1,5 @@
+import time
+
 import torch
 import torch.distributed as dist
 
@@ -12,24 +14,28 @@ print(
 has_gpu = torch.cuda.is_available()
 print(f"GPU present: {has_gpu}")
 
-a = torch.tensor([dist.get_rank()])
+for i in range(100):
 
-if has_gpu:
-    device = torch.device("cuda:0")
+    time.sleep(10)
 
-    device_count = torch.cuda.device_count()
-    print(f"GPU count: {device_count}")
+    a = torch.tensor([dist.get_rank()])
 
-    device_name = torch.cuda.get_device_name(0)
-    print(f"GPU name: {device_name}")
+    if has_gpu:
+        device = torch.device("cuda:0")
 
-    device_property = torch.cuda.get_device_capability(device)
-    print(f"GPU property: {device_property}")
+        device_count = torch.cuda.device_count()
+        print(f"GPU count: {device_count}")
 
-else:
-    device = torch.device("cpu")
+        device_name = torch.cuda.get_device_name(0)
+        print(f"GPU name: {device_name}")
 
-a_placed = a.to(device)
-print(f"Pre-`all_reduce` tensor: {a_placed}")
-dist.all_reduce(a_placed)
-print(f"Post-`all_reduce` tensor: {a_placed}")
+        device_property = torch.cuda.get_device_capability(device)
+        print(f"GPU property: {device_property}")
+
+    else:
+        device = torch.device("cpu")
+
+    a_placed = a.to(device)
+    print(f"Pre-`all_reduce` tensor: {a_placed}")
+    dist.all_reduce(a_placed)
+    print(f"Post-`all_reduce` tensor: {a_placed}")

@@ -25,7 +25,7 @@ spec:
     memory: 1000Gi
   disruption:
     consolidationPolicy: WhenUnderutilized
-    expireAfter: 30s
+    expireAfter: 30m # ~5 minutes required for larger images, otherwise karpenter will deprovision before pods are running
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
@@ -56,4 +56,4 @@ spec:
     nvidia.com/gpu: 5
   disruption:
     consolidationPolicy: WhenUnderutilized
-    expireAfter: 30s
+    expireAfter: 30m # ~5 minutes required for larger images, otherwise karpenter will deprovision before pods are running
