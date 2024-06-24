@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: multinode-gpu-pod-driver-svc
+  name: multinode-cpu-pod-driver-svc
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
   ports:
@@ -12,7 +12,7 @@ spec:
     port: 29500
     targetPort: 29500
   selector:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: driver  # Selector for pods associated with this service.
 ---
 apiVersion: v1
@@ -21,14 +21,10 @@ metadata:
   labels:
     kueue.x-k8s.io/queue-name: user-queue
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: driver
-  name: multinode-gpu-pod-driver
+  name: multinode-cpu-pod-driver
 spec:
-  tolerations:
-    - effect: NoSchedule
-      key: nvidia.com/gpu
-      operator: Exists
   containers:
     - command:
       - bash
@@ -38,12 +34,12 @@ spec:
         - name: PYTORCH_NODE_RANK
           value: "0"
         - name: MASTER_ADDR
-          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+          value: multinode-cpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
         - name: MASTER_PORT
           value: '29500'
       image: bettmensch88/bettmensch.ai:3.11-latest
       imagePullPolicy: Always
-      name: multinode-gpu-driver
+      name: multinode-cpu-driver
       ports:
       - containerPort: 29500
         name: c10d
@@ -52,11 +48,9 @@ spec:
         limits:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
         requests:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
   restartPolicy: OnFailure
 ---
 apiVersion: v1
@@ -65,14 +59,10 @@ metadata:
   labels:
     kueue.x-k8s.io/queue-name: user-queue
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: worker
-  name: multinode-gpu-pod-worker-1
+  name: multinode-cpu-pod-worker-1
 spec:
-  tolerations:
-    - effect: NoSchedule
-      key: nvidia.com/gpu
-      operator: Exists
   containers:
     - command:
       - bash
@@ -82,12 +72,12 @@ spec:
         - name: PYTORCH_NODE_RANK
           value: "1"
         - name: MASTER_ADDR
-          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+          value: multinode-cpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
         - name: MASTER_PORT
           value: '29500'
       image: bettmensch88/bettmensch.ai:3.11-latest
       imagePullPolicy: Always
-      name: multinode-gpu-worker
+      name: multinode-cpu-worker
       ports:
       - containerPort: 29500
         name: c10d
@@ -96,11 +86,9 @@ spec:
         limits:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
         requests:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
   restartPolicy: OnFailure
 ---
 apiVersion: v1
@@ -109,14 +97,10 @@ metadata:
   labels:
     kueue.x-k8s.io/queue-name: user-queue
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: worker
-  name: multinode-gpu-pod-worker-2
+  name: multinode-cpu-pod-worker-2
 spec:
-  tolerations:
-    - effect: NoSchedule
-      key: nvidia.com/gpu
-      operator: Exists
   containers:
     - command:
       - bash
@@ -126,12 +110,12 @@ spec:
         - name: PYTORCH_NODE_RANK
           value: "2"
         - name: MASTER_ADDR
-          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+          value: multinode-cpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
         - name: MASTER_PORT
           value: '29500'
       image: bettmensch88/bettmensch.ai:3.11-latest
       imagePullPolicy: Always
-      name: multinode-gpu-worker
+      name: multinode-cpu-worker
       ports:
       - containerPort: 29500
         name: c10d
@@ -140,11 +124,9 @@ spec:
         limits:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
         requests:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
   restartPolicy: OnFailure
 ---
 apiVersion: v1
@@ -153,14 +135,10 @@ metadata:
   labels:
     kueue.x-k8s.io/queue-name: user-queue
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: worker
-  name: multinode-gpu-pod-worker-3
+  name: multinode-cpu-pod-worker-3
 spec:
-  tolerations:
-    - effect: NoSchedule
-      key: nvidia.com/gpu
-      operator: Exists
   containers:
     - command:
       - bash
@@ -170,12 +148,12 @@ spec:
         - name: PYTORCH_NODE_RANK
           value: "3"
         - name: MASTER_ADDR
-          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+          value: multinode-cpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
         - name: MASTER_PORT
           value: '29500'
       image: bettmensch88/bettmensch.ai:3.11-latest
       imagePullPolicy: Always
-      name: multinode-gpu-worker
+      name: multinode-cpu-worker
       ports:
       - containerPort: 29500
         name: c10d
@@ -184,11 +162,9 @@ spec:
         limits:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
         requests:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
   restartPolicy: OnFailure
 ---
 apiVersion: v1
@@ -197,14 +173,10 @@ metadata:
   labels:
     kueue.x-k8s.io/queue-name: user-queue
   labels:
-    app: multinode-gpu
+    app: multinode-cpu
     torch-node: worker
-  name: multinode-gpu-pod-worker-4
+  name: multinode-cpu-pod-worker-4
 spec:
-  tolerations:
-    - effect: NoSchedule
-      key: nvidia.com/gpu
-      operator: Exists
   containers:
     - command:
       - bash
@@ -214,12 +186,12 @@ spec:
         - name: PYTORCH_NODE_RANK
           value: "4"
         - name: MASTER_ADDR
-          value: multinode-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+          value: multinode-cpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
         - name: MASTER_PORT
           value: '29500'
       image: bettmensch88/bettmensch.ai:3.11-latest
       imagePullPolicy: Always
-      name: multinode-gpu-worker
+      name: multinode-cpu-worker
       ports:
       - containerPort: 29500
         name: c10d
@@ -228,9 +200,7 @@ spec:
         limits:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
         requests:
           cpu: 500m
           memory: 700M
-          nvidia.com/gpu: 1
   restartPolicy: OnFailure
