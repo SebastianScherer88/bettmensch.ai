@@ -25,10 +25,11 @@ if has_gpu:
 
     device_property = torch.cuda.get_device_capability(device)
     print(f"GPU property: {device_property}")
+
 else:
     device = torch.device("cpu")
 
-a.to(device)
-print(f"Pre-`all_reduce` tensor: {a}")
-dist.all_reduce(a)
-print(f"Post-`all_reduce` tensor: {a}")
+a_placed = a.to(device)
+print(f"Pre-`all_reduce` tensor: {a_placed}")
+dist.all_reduce(a_placed)
+print(f"Post-`all_reduce` tensor: {a_placed}")
