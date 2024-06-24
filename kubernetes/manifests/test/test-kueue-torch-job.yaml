@@ -35,7 +35,7 @@ spec:
         - command:
           - bash
           - -c
-          - torchrun --nnodes 2 --nproc_per_node 2 --tee 3 --node_rank $JOB_COMPLETION_INDEX --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./dist_app.py
+          - torchrun --nnodes 2 --nproc_per_node 2 --tee 3 --node_rank $JOB_COMPLETION_INDEX --master_addr $MASTER_ADDR --master_port $MASTER_PORT --role '' ./torch_ddp_test.py
           env:
             - name: MASTER_ADDR
               value: multinode-job-0.multinode-job-svc  # Node with rank 0 is chosen as the master node.
