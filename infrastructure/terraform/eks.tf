@@ -16,6 +16,7 @@ module "vpc" {
 
   enable_nat_gateway = true
   single_nat_gateway = true
+  map_public_ip_on_launch = true
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
@@ -48,7 +49,19 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types = ["t3.small"]
-      disk_size    = 100
+      block_device_mappings = {
+        xvda = {
+          device_name = "/dev/xvda"
+          ebs = {
+            volume_size           = 200
+            volume_type           = "gp3"
+            iops                  = 3000
+            throughput            = 125
+            encrypted             = true
+            delete_on_termination = true
+          }
+        }
+      }
 
       min_size     = 2
       max_size     = 3
