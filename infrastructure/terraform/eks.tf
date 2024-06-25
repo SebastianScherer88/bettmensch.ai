@@ -19,12 +19,12 @@ module "vpc" {
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
+    # Tags subnets for Karpenter auto-discovery
+    "karpenter.sh/discovery" = local.name
   }
 
   private_subnet_tags = {
     "kubernetes.io/role/internal-elb" = 1
-    # Tags subnets for Karpenter auto-discovery
-    "karpenter.sh/discovery" = local.name
   }
 
   tags = local.tags
@@ -48,6 +48,7 @@ module "eks" {
   eks_managed_node_groups = {
     initial = {
       instance_types = ["t3.small"]
+      disk_size    = 100
 
       min_size     = 2
       max_size     = 3
@@ -62,7 +63,7 @@ module "eks" {
   }
 
   vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
+  subnet_ids               = module.vpc.public_subnets
   control_plane_subnet_ids = module.vpc.intra_subnets
 
   # Fargate profiles use the cluster primary security group so these are not utilized
