@@ -1,10 +1,9 @@
-import uuid
-from typing import Any, Callable, Optional, Union
+from typing import Callable, Optional
+from uuid import uuid4
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from torch.distributed.elastic.multiprocessing.api import Std
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
-from torch.distributed.run import config_from_args, determine_local_world_size
 
 
 class LaunchConfigSettings(BaseSettings):
@@ -60,6 +59,10 @@ class LaunchConfigSettings(BaseSettings):
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
 
+    model_config = SettingsConfigDict(
+        env_prefix="bettmensch_ai_distributed_torch_"
+    )
+
 
 def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
     """
@@ -110,7 +113,7 @@ def torch_distribute(**config_settings_kwargs):
             if "run_id" not in config_settings_kwargs.keys():
                 config_settings_kwargs[
                     "run_id"
-                ] = f"{function.__name__}_{str(uuid.uuid3())}"
+                ] = f"{function.__name__}_{str(uuid4())}"
 
             launch_config = get_launch_config(**config_settings_kwargs)
 
