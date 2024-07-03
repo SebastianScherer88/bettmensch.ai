@@ -1,6 +1,8 @@
+import uuid
 from typing import Any, Callable, Optional, Union
 
 from pydantic_settings import BaseSettings
+from torch.distributed.elastic.multiprocessing.api import Std
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
 from torch.distributed.run import config_from_args, determine_local_world_size
 
@@ -53,47 +55,70 @@ class LaunchConfigSettings(BaseSettings):
     role: str = ""
     max_restarts: int = 3
     monitor_interval: float = 30
+    redirects: str = "3"
+    tee: str = "0"
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
-    tee: int = 3
 
 
-def get_launch_config(from_env: bool = True, **config_kwargs) -> LaunchConfig:
+def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
     """
     Utility torch distributed config constructor from environment variables
     using the LaunchConfigSettings.
     """
 
-    if from_env:
-        launch_config_settings_from_env = LaunchConfigSettings()
-        return LaunchConfig(
-            min_modes=launch_config_settings_from_env.min_nodes,
-            max_modes=launch_config_settings_from_env.max_nodes,
-            nproc_per_node=launch_config_settings_from_env.nproc_per_node,
-            rdzv_endpoint=f"{launch_config_settings_from_env.rdvz_endpoint_url}:{launch_config_settings_from_env.rdvz_endpoint_port}",
-            rdzv_backend=launch_config_settings_from_env.rdzv_backend,
-            run_id=launch_config_settings_from_env.run_id,
-            role=launch_config_settings_from_env.role,
-            max_restarts=launch_config_settings_from_env.max_restarts,
-            monitor_interval=launch_config_settings_from_env.monitor_interval,
-            log_dir=launch_config_settings_from_env.log_dir,
-            log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,
-            tee=launch_config_settings_from_env.tee,
-            rdzv_configs={"rank": launch_config_settings_from_env.node_rank},
-        )
-    else:
-        return LaunchConfig(**config_kwargs)
+    launch_config_settings_from_env = LaunchConfigSettings(
+        **config_settings_kwargs
+    )
+
+    return LaunchConfig(
+        min_nodes=launch_config_settings_from_env.min_nodes,
+        max_nodes=launch_config_settings_from_env.max_nodes,
+        nproc_per_node=launch_config_settings_from_env.nproc_per_node,
+        rdzv_endpoint=f"{launch_config_settings_from_env.rdvz_endpoint_url}:{launch_config_settings_from_env.rdvz_endpoint_port}",
+        rdzv_backend=launch_config_settings_from_env.rdzv_backend,
+        run_id=launch_config_settings_from_env.run_id,
+        role=launch_config_settings_from_env.role,
+        max_restarts=launch_config_settings_from_env.max_restarts,
+        monitor_interval=launch_config_settings_from_env.monitor_interval,
+        tee=Std.from_str(launch_config_settings_from_env.tee),
+        redirects=Std.from_str(launch_config_settings_from_env.redirects),
+        log_dir=launch_config_settings_from_env.log_dir,
+        log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,
+        rdzv_configs={"rank": launch_config_settings_from_env.node_rank},
+    )
 
 
-def launch_distributed_function(
-    launch_config: LaunchConfig, function: Callable, *function_args
-) -> None:
+def torch_distribute(**config_settings_kwargs):
+    """Keyword decorator that wraps a callable in a torch distributed elastic
+    launch runtime context.
+
+    Example:
+
+    @torch_distribute(run_id="test_id",min_nodes=1,max_nodes=2,nproc_per_node=1)
+    def test_function(a: int = 1):
+        return a
+
+    # launch a torch.distributed elastic_launch
+    test_function()
     """
-    Utility to launch a callable via torch distributed, using env variable
-    configuration for the LaunchConfig.
-    """
 
-    elastic_launch(
-        config=launch_config,
-        entrypoint=function,
-    )(*function_args)
+    def decorator(function: Callable):
+        def wrapper(*function_args):
+
+            # provide a consistent run_id naming convention as a convenience
+            if "run_id" not in config_settings_kwargs.keys():
+                config_settings_kwargs[
+                    "run_id"
+                ] = f"{function.__name__}_{str(uuid.uuid3())}"
+
+            launch_config = get_launch_config(**config_settings_kwargs)
+
+            elastic_launch(
+                config=launch_config,
+                entrypoint=function,
+            )(*function_args)
+
+        return wrapper
+
+    return decorator
