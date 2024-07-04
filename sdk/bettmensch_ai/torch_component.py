@@ -26,6 +26,11 @@ class TorchComponent(object):
     func: Callable = None
     base_name: str = None
     name: str = None
+    hera_template_kwargs: Dict = {}
+    n_nodes: int
+    min_nodes: int
+    max_nodes: int
+    nproc_per_node: int
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
@@ -36,12 +41,20 @@ class TorchComponent(object):
         func: Callable,
         name: str = "",
         hera_template_kwargs: Dict = {},
+        n_nodes: int = 1,
+        min_nodes: int = 1,
+        max_nodes: int = 1,
+        nproc_per_node: int = 1,
         **component_inputs_kwargs: Union[
             InputParameter, OutputParameter, OutputArtifact
         ],
     ):
 
         self.hera_template_kwargs = hera_template_kwargs
+        self.n_nodes = n_nodes
+        self.min_nodes = min_nodes
+        self.max_nodes = max_nodes
+        self.nproc_per_node = nproc_per_node
         self.build(func, component_inputs_kwargs, name=name)
 
     def build(
@@ -285,7 +298,9 @@ class TorchComponent(object):
 
         for i in range(self.n_nodes):
 
-            name_i = self.name if i == 0 else f"{self.name}_{i}"
+            name_i = (
+                f"{self.name}-master" if i == 0 else f"{self.name}-worker-{i}"
+            )
 
             distributed_tasks = self.task_factory(
                 arguments=[
@@ -334,7 +349,8 @@ def torch_component(func: Callable) -> Callable:
             n_nodes=n_nodes,
             min_nodes=min_nodes,
             max_nodes=max_nodes,
-            nproc_per_node=nproc_per_node**component_inputs_kwargs,
+            nproc_per_node=nproc_per_node,
+            **component_inputs_kwargs,
         )
 
     return torch_component_factory

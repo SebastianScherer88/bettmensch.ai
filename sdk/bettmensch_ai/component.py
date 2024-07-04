@@ -243,6 +243,7 @@ class Component(object):
     func: Callable = None
     base_name: str = None
     name: str = None
+    hera_template_kwargs: Dict = {}
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
