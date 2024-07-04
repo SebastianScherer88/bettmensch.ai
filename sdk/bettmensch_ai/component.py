@@ -12,6 +12,8 @@ from bettmensch_ai.io import (
 )
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
+    BettmenschAIScript,
+    bettmensch_ai_script,
     get_func_args,
     validate_func_args,
 )
@@ -232,7 +234,7 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
 
 
 global_config.set_class_defaults(
-    Script, constructor=ComponentInlineScriptRunner()
+    BettmenschAIScript, constructor=ComponentInlineScriptRunner()
 )
 
 
@@ -453,8 +455,8 @@ class Component(object):
         of an active hera context.
 
         Returns:
-            Task: A task that implements this Component instance in the hera
-                library.
+            Callable: A callable which, if called inside an active hera DAG
+                context, generate the hera Task.
         """
 
         script_decorator_kwargs = self.hera_template_kwargs.copy()
@@ -481,7 +483,7 @@ class Component(object):
             ] = ImagePullPolicy.always
 
         # this will invoke our custom ComponentInlineScriptRunner under the hood
-        script_wrapper = script(**script_decorator_kwargs)
+        script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)
 
         task_factory = script_wrapper(func=self.func)
 

@@ -1,7 +1,13 @@
+import copy
 import inspect
+import textwrap
 from typing import Callable, Dict, List, Tuple, Union
+from uuid import uuid4
 
-from bettmensch_ai.component import _pipeline_context
+from bettmensch_ai.component import (
+    ComponentInlineScriptRunner,
+    _pipeline_context,
+)
 from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.io import (
     InputArtifact,
@@ -11,12 +17,87 @@ from bettmensch_ai.io import (
 )
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
+    BettmenschAITorchScript,
+    bettmensch_ai_script,
     get_func_args,
     validate_func_args,
 )
-from hera.workflows import Resource, Task, script
+from hera.shared import global_config
+from hera.workflows import Env, Resource, Script, Task
+from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ImagePullPolicy
-from torch.distributed.launcher.api import elastic_launch
+
+
+class TorchComponentInlineScriptRunner(ComponentInlineScriptRunner):
+
+    """
+    A customised version of the TorchComponentInlineScriptRunner that adds the
+    decoration of the callable with the
+    bettmensch_ai.torch_utils.torch_distribute decorator.
+    """
+
+    def generate_source(self, instance: Script) -> str:
+        """Assembles and returns a script representation of the given function.
+
+        This also assembles any extra script material prefixed to the string source.
+        The script is expected to be a callable function the client is interested in submitting
+        for execution on Argo and the `script_extra` material represents the parameter loading part obtained, likely,
+        through `get_param_script_portion`.
+
+        Returns:
+        -------
+        str
+            Final formatted script.
+        """
+        if not callable(instance.source):
+            assert isinstance(instance.source, str)
+            return instance.source
+        args = inspect.getfullargspec(instance.source).args
+        script = ""
+        # Argo will save the script as a file and run it with cmd:
+        # - python /argo/staging/script
+        # However, this prevents the script from importing modules in its cwd,
+        # since it's looking for files relative to the script path.
+        # We fix this by appending the cwd path to sys:
+        if instance.add_cwd_to_sys_path or self.add_cwd_to_sys_path:
+            script = "import os\nimport sys\nsys.path.append(os.getcwd())\n"
+
+        script_extra = (
+            self._get_param_script_portion(instance) if args else None
+        )
+        if script_extra:
+            script += copy.deepcopy(script_extra)
+            script += "\n"
+
+        # We use ast parse/unparse to get the source code of the function
+        # in order to have consistent looking functions and getting rid of any comments
+        # parsing issues.
+        # See https://github.com/argoproj-labs/hera/issues/572
+        content = roundtrip(
+            textwrap.dedent(inspect.getsource(instance.source))
+        ).splitlines()
+        for i, line in enumerate(content):
+            if line.startswith("def") or line.startswith("async def"):
+                break
+
+        # function definition + decoration with `torch_distribute`
+        torch_distribute_decoration = [
+            "from bettmensch_ai import torch_distribute\n",
+            "@torch_distribute()",
+        ]
+        s = "\n".join(torch_distribute_decoration + content[i:])
+        script += s
+
+        # add function call
+        script += f"\n\n{instance.source.__name__}"
+        script += "(" + ",".join(args) + ")"
+
+        return textwrap.dedent(script)
+
+
+global_config.set_class_defaults(
+    BettmenschAITorchScript, constructor=TorchComponentInlineScriptRunner()
+)
 
 
 class TorchComponent(object):
@@ -35,6 +116,8 @@ class TorchComponent(object):
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     task_factory: Callable = None
+    k8s_namespace: str = "argo"
+    k8s_service_name: str = ""
 
     def __init__(
         self,
@@ -80,6 +163,7 @@ class TorchComponent(object):
                 OutputArtifact,
             ],
         )
+        self.k8s_service_name = f"{self.name}-{uuid4()}"
         self.template_inputs = self.build_template_ios(func, (InputArtifact,))
         self.template_outputs = self.build_template_ios(
             func, (OutputParameter, OutputArtifact)
@@ -242,14 +326,15 @@ class TorchComponent(object):
 
         return result
 
-    def build_hera_task_factory(self) -> Callable:
+    def build_hera_task_factory(self) -> List[Callable]:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
         of an active hera context.
 
         Returns:
-            Task: A task that implements this Component instance in the hera
-                library.
+            List[Callable]: A list of callables which, if called inside an
+                active hera DAG context, generate the hera Tasks, one for each
+                node in the distributed torch run.
         """
 
         script_decorator_kwargs = self.hera_template_kwargs.copy()
@@ -275,10 +360,44 @@ class TorchComponent(object):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
-        # this will invoke our custom ComponentInlineScriptRunner under the hood
-        script_wrapper = script(**script_decorator_kwargs)
+        # add torch run environment variables to script kwargs
+        task_factory = []
 
-        task_factory = script_wrapper(func=self.func)
+        for torch_node_rank in range(self.n_nodes):
+            script_decorator_kwargs["env"] = [
+                Env(
+                    name="bettmensch_ai_distributed_torch_min_nodes",
+                    value=self.min_nodes,
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_max_nodes",
+                    value=self.max_nodes,
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_node_rank",
+                    value=torch_node_rank,
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_nproc_per_node",
+                    value=self.nproc_per_node,
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_rdvz_endpoint_url",
+                    value=f"{self.k8s_service_name}.{self.k8s_namespace}.svc.cluster.local",
+                ),
+            ]
+
+            script_decorator_kwargs[
+                "name"
+            ] = f"{self.base_name}-{torch_node_rank}"
+
+            # this will invoke our custom TorchComponentInlineScriptRunner under the hood
+            script_wrapper = bettmensch_ai_script(
+                torch_component=True, **script_decorator_kwargs
+            )
+
+            task_node_factory = script_wrapper(func=self.func)
+            task_factory.append(task_node_factory)
 
         return task_factory
 
@@ -296,11 +415,15 @@ class TorchComponent(object):
                 library.
         """
 
-        for i in range(self.n_nodes):
+        for torch_node_rank in range(self.n_nodes):
 
-            name_i = self.name if i == 0 else f"{self.name}-worker-{i}"
+            name_i = (
+                self.name
+                if torch_node_rank == 0
+                else f"{self.name}-worker-{torch_node_rank}"
+            )
 
-            distributed_tasks = self.task_factory(
+            distributed_tasks = self.task_factory[torch_node_rank](
                 arguments=[
                     task_input.to_hera()
                     for task_input in self.task_inputs.values()
