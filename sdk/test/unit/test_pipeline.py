@@ -75,7 +75,11 @@ def test_artifact_pipeline(
     ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["convert-to-artifact", "show-artifact"]
+    assert script_template_names == [
+        "convert-to-artifact-0",
+        "convert-to-artifact-1",
+        "show-artifact",
+    ]
 
     parameter_to_artifact.export()
 
@@ -131,6 +135,10 @@ def test_parameter_pipeline(test_add_function):
     ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
+    assert script_template_names == [
+        "a-plus-b-0",
+        "a-plus-b-1",
+        "a-plus-b-plus-2",
+    ]
 
     adding_parameters.export()

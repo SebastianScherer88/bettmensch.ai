@@ -248,7 +248,12 @@ def test_parameter_torch_component_to_hera(
     ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
+    assert script_template_names == [
+        "a-plus-b-0",
+        "a-plus-b-1",
+        "a-plus-b-plus-2-0",
+        "a-plus-b-plus-2-1",
+    ]
 
 
 def test_artifact_torch_component_to_hera(
@@ -309,4 +314,8 @@ def test_artifact_torch_component_to_hera(
     ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["convert-parameters", "show-artifacts"]
+    assert script_template_names == [
+        "convert-parameters-0",
+        "convert-parameters-1",
+        "show-artifacts-0",
+    ]
