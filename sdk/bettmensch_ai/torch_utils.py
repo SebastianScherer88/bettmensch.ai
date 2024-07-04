@@ -152,7 +152,7 @@ spec:
     targetPort: 29500
   selector:
     app: {service_name}
-    torch-node: driver  # Selector for pods associated with this service.
+    torch-node: '0'  # Selector for pods associated with this service.
 """,
     )
 

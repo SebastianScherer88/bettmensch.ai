@@ -410,14 +410,10 @@ class TorchComponent(object):
                 "name"
             ] = f"{self.base_name}-{torch_node_rank}"
 
-            script_decorator_kwargs["label"] = [
-                Label(key="torch-node", value=torch_node_rank)
-            ]
+            script_decorator_kwargs["labels"] = {"torch-node": torch_node_rank}
 
             if torch_node_rank == 0:
-                script_decorator_kwargs["label"].append(
-                    Label(key="app", value=self.k8s_service_name),
-                )
+                script_decorator_kwargs["labels"]["app"] = self.k8s_service_name
 
             # this will invoke our custom TorchComponentInlineScriptRunner under the hood
             script_wrapper = bettmensch_ai_script(
