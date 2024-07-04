@@ -4,8 +4,9 @@
 
 :factory: Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
 
-# Installation
+# Setup
 
+## AWS Infrastructure & Kubernetes
 To provision 
 - the S3 bucket for the Argo Workflows artifact repository
 - Karpenter required infrastructure (IAM, message queues, etc.)
@@ -33,6 +34,15 @@ submitting & running pipelines, change back into the top level directory and run
 ```bash
 bash kubernetes/port_forward_argo_server.sh
 ```
+
+## SDK installation
+
+To install the python library `bettmensch_ai`:
+
+1. Clone this repository
+2. From the top directory, run `pip install ./sdk/`
+
+You can now start authoring `Pipeline`s and start submitting `Flow`s.
 
 # Features (under active development )
 
