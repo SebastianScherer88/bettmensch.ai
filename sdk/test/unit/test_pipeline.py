@@ -6,6 +6,7 @@ from bettmensch_ai import (
     OutputParameter,
     component,
     pipeline,
+    torch_component,
 )
 from hera.workflows import WorkflowTemplate
 
@@ -15,7 +16,9 @@ def test_artifact_pipeline(
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    convert_component_factory = component(test_convert_to_artifact_function)
+    convert_torch_component_factory = torch_component(
+        test_convert_to_artifact_function
+    )
     show_component_factory = component(test_show_artifact_function)
 
     @pipeline("test-artifact-pipeline", "argo", True)
@@ -23,8 +26,9 @@ def test_artifact_pipeline(
         a: InputParameter = "Param A",
         b: InputParameter = "Param B",
     ) -> None:
-        convert = convert_component_factory(
+        convert = convert_torch_component_factory(
             "convert-to-artifact",
+            n_nodes=2,
             a=a,
             b=b,
         )
@@ -64,21 +68,29 @@ def test_artifact_pipeline(
     wft = parameter_to_artifact.user_built_workflow_template
 
     task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == ["convert-to-artifact-0", "show-artifact-0"]
+    assert task_names == [
+        "convert-to-artifact-0",
+        "convert-to-artifact-0-worker-1",
+        "show-artifact-0",
+    ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
     assert script_template_names == ["convert-to-artifact", "show-artifact"]
+
+    parameter_to_artifact.export()
 
 
 def test_parameter_pipeline(test_add_function):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
     add_component_factory = component(test_add_function)
+    add_torch_component_factory = torch_component(test_add_function)
 
     @pipeline("test-parameter-pipeline", "argo", True)
     def adding_parameters(a: InputParameter = 1, b: InputParameter = 2) -> None:
-        a_plus_b = add_component_factory(
+        a_plus_b = add_torch_component_factory(
             "a-plus-b",
+            n_nodes=2,
             a=a,
             b=b,
         )
@@ -112,7 +124,13 @@ def test_parameter_pipeline(test_add_function):
     wft = adding_parameters.user_built_workflow_template
 
     task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == ["a-plus-b-0", "a-plus-b-plus-2-0"]
+    assert task_names == [
+        "a-plus-b-0",
+        "a-plus-b-0-worker-1",
+        "a-plus-b-plus-2-0",
+    ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
     assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
+
+    adding_parameters.export()

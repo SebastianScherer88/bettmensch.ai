@@ -241,9 +241,9 @@ def test_parameter_torch_component_to_hera(
 
     task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == [
-        "a-plus-b-0-master",
+        "a-plus-b-0",
         "a-plus-b-0-worker-1",
-        "a-plus-b-plus-2-0-master",
+        "a-plus-b-plus-2-0",
         "a-plus-b-plus-2-0-worker-1",
     ]
 
@@ -303,9 +303,9 @@ def test_artifact_torch_component_to_hera(
 
     task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == [
-        "convert-parameters-0-master",
+        "convert-parameters-0",
         "convert-parameters-0-worker-1",
-        "show-artifacts-0-master",
+        "show-artifacts-0",
     ]
 
     script_template_names = [template.name for template in wft.templates[1:]]
