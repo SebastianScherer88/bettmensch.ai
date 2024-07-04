@@ -298,9 +298,7 @@ class TorchComponent(object):
 
         for i in range(self.n_nodes):
 
-            name_i = (
-                f"{self.name}-master" if i == 0 else f"{self.name}-worker-{i}"
-            )
+            name_i = self.name if i == 0 else f"{self.name}-worker-{i}"
 
             distributed_tasks = self.task_factory(
                 arguments=[
