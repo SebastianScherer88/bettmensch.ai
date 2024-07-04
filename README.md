@@ -35,7 +35,7 @@ submitting & running pipelines, change back into the top level directory and run
 bash kubernetes/port_forward_argo_server.sh
 ```
 
-## SDK installation
+## :books: Python SDK installation
 
 To install the python library `bettmensch_ai`, run `pip install ./sdk/` from the
 repository's top directory.
