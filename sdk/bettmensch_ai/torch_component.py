@@ -15,6 +15,10 @@ from bettmensch_ai.io import (
     OutputArtifact,
     OutputParameter,
 )
+from bettmensch_ai.torch_utils import (
+    create_torch_service_template,
+    delete_torch_service_template,
+)
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
     BettmenschAITorchScript,
@@ -23,7 +27,8 @@ from bettmensch_ai.utils import (
     validate_func_args,
 )
 from hera.shared import global_config
-from hera.workflows import Env, Resource, Script, Task
+from hera.workflows import Env, Label, Resource, Script, Task
+from hera.workflows._context import _context
 from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ImagePullPolicy
 
@@ -115,7 +120,8 @@ class TorchComponent(object):
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
-    task_factory: Callable = None
+    service_templates: Dict[str, Callable] = None
+    task_factory: List[Callable] = None
     k8s_namespace: str = "argo"
     k8s_service_name: str = ""
 
@@ -326,6 +332,19 @@ class TorchComponent(object):
 
         return result
 
+    def build_service_templates(self) -> Dict[str, Callable]:
+
+        return {
+            "create": create_torch_service_template(
+                component_base_name=self.base_name,
+                service_name=self.k8s_service_name,
+            ),
+            "delete": delete_torch_service_template(
+                component_base_name=self.base_name,
+                service_name=self.k8s_service_name,
+            ),
+        }
+
     def build_hera_task_factory(self) -> List[Callable]:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
@@ -391,6 +410,15 @@ class TorchComponent(object):
                 "name"
             ] = f"{self.base_name}-{torch_node_rank}"
 
+            script_decorator_kwargs["label"] = [
+                Label(key="torch-node", value=torch_node_rank)
+            ]
+
+            if torch_node_rank == 0:
+                script_decorator_kwargs["label"].append(
+                    Label(key="app", value=self.k8s_service_name),
+                )
+
             # this will invoke our custom TorchComponentInlineScriptRunner under the hood
             script_wrapper = bettmensch_ai_script(
                 torch_component=True, **script_decorator_kwargs
@@ -415,6 +443,14 @@ class TorchComponent(object):
                 library.
         """
 
+        # create the torch service creation template and task
+        create_service = Task(
+            name=self.service_templates["create"].name,
+            template=self.service_templates["create"].name,
+        )
+
+        distributed_tasks = []
+
         for torch_node_rank in range(self.n_nodes):
 
             name_i = (
@@ -423,16 +459,35 @@ class TorchComponent(object):
                 else f"{self.name}-worker-{torch_node_rank}"
             )
 
-            distributed_tasks = self.task_factory[torch_node_rank](
-                arguments=[
-                    task_input.to_hera()
-                    for task_input in self.task_inputs.values()
-                ],
-                name=name_i,
-                depends=self.depends,
+            distributed_tasks.append(
+                self.task_factory[torch_node_rank](
+                    arguments=[
+                        task_input.to_hera()
+                        for task_input in self.task_inputs.values()
+                    ],
+                    name=name_i,
+                    depends=f"{self.depends} && {create_service.name}"
+                    if self.depends
+                    else create_service.name,
+                )
             )
 
-        return distributed_tasks
+        # delete the torch service creation template and task
+        delete_service = Task(
+            name=self.service_templates["delete"].name,
+            template=self.service_templates["delete"].name,
+            depends=distributed_tasks[0].name,
+        )
+
+        return (
+            [
+                create_service,
+            ]
+            + distributed_tasks
+            + [
+                delete_service,
+            ]
+        )
 
 
 def torch_component(func: Callable) -> Callable:

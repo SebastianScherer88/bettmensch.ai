@@ -67,15 +67,20 @@ def test_artifact_pipeline(
 
     wft = parameter_to_artifact.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[0].tasks]
+    task_names = [task.name for task in wft.templates[2].tasks]
     assert task_names == [
+        "convert-to-artifact-create-torch-service",
         "convert-to-artifact-0",
         "convert-to-artifact-0-worker-1",
+        "convert-to-artifact-delete-torch-service",
         "show-artifact-0",
     ]
 
-    script_template_names = [template.name for template in wft.templates[1:]]
+    script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
+        "convert-to-artifact-create-torch-service",
+        "convert-to-artifact-delete-torch-service",
+        "bettmensch-ai-dag",
         "convert-to-artifact-0",
         "convert-to-artifact-1",
         "show-artifact",
@@ -127,15 +132,20 @@ def test_parameter_pipeline(test_add_function):
 
     wft = adding_parameters.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[0].tasks]
+    task_names = [task.name for task in wft.templates[2].tasks]
     assert task_names == [
+        "a-plus-b-create-torch-service",
         "a-plus-b-0",
         "a-plus-b-0-worker-1",
+        "a-plus-b-delete-torch-service",
         "a-plus-b-plus-2-0",
     ]
 
-    script_template_names = [template.name for template in wft.templates[1:]]
+    script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
+        "a-plus-b-create-torch-service",
+        "a-plus-b-delete-torch-service",
+        "bettmensch-ai-dag",
         "a-plus-b-0",
         "a-plus-b-1",
         "a-plus-b-plus-2",
