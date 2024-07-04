@@ -5,6 +5,7 @@ from bettmensch_ai.client import client as pipeline_client
 from bettmensch_ai.component import PipelineContext, _pipeline_context
 from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
+from bettmensch_ai.torch_component import TorchComponent
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
@@ -242,6 +243,13 @@ class Pipeline(object):
             namespace=self._namespace,
             arguments=[input.to_hera() for input in self.inputs.values()],
         ) as wft:
+
+            # add non-script template
+            for component in self.context.components:
+                if isinstance(component, TorchComponent):
+                    component.service_templates = (
+                        component.build_service_templates()
+                    )
 
             with DAG(name="bettmensch-ai-dag"):
                 for component in self.context.components:

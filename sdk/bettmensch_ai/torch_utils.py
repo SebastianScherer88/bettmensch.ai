@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 from uuid import uuid4
 
+from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from torch.distributed.elastic.multiprocessing.api import Std
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
@@ -125,3 +126,45 @@ def torch_distribute(**config_settings_kwargs):
         return wrapper
 
     return decorator
+
+
+def create_torch_service_template(
+    component_base_name: str, service_name: str, namespace: str = "argo"
+) -> Resource:
+    """Utility for a template creating the service resource required for
+    accessing a TorchComponent's master node on K8s."""
+
+    return Resource(
+        name=f"{component_base_name}-create-torch-service",
+        action="create",
+        manifest=f"""apiVersion: v1
+kind: Service
+metadata:
+  name: {service_name}
+  namespace: {namespace}
+  labels:
+    app: {service_name}
+spec:
+  clusterIP: None  # ClusterIP set to None for headless service.
+  ports:
+  - name: nccl  # Port for torchrun master-worker node communication.
+    port: 29500
+    targetPort: 29500
+  selector:
+    app: {service_name}
+    torch-node: driver  # Selector for pods associated with this service.
+""",
+    )
+
+
+def delete_torch_service_template(
+    component_base_name: str, service_name: str, namespace: str = "argo"
+) -> Resource:
+    """Utility for a template deleting the service resource required for
+    accessing a TorchComponent's master node on K8s."""
+
+    return Resource(
+        name=f"{component_base_name}-delete-torch-service",
+        action="delete",
+        flags=["service", "--selector", f"app={service_name}", "-n", namespace],
+    )

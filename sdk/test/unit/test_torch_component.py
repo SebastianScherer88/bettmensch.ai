@@ -235,20 +235,34 @@ def test_parameter_torch_component_to_hera(
         ],
     ) as wft:
 
+        a_plus_b.service_templates = a_plus_b.build_service_templates()
+        a_plus_b_plus_2.service_templates = (
+            a_plus_b_plus_2.build_service_templates()
+        )
+
         with DAG(name="test_dag"):
             a_plus_b.to_hera()
             a_plus_b_plus_2.to_hera()
 
-    task_names = [task.name for task in wft.templates[0].tasks]
+    task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
+        "a-plus-b-create-torch-service",
         "a-plus-b-0",
         "a-plus-b-0-worker-1",
+        "a-plus-b-delete-torch-service",
+        "a-plus-b-plus-2-create-torch-service",
         "a-plus-b-plus-2-0",
         "a-plus-b-plus-2-0-worker-1",
+        "a-plus-b-plus-2-delete-torch-service",
     ]
 
-    script_template_names = [template.name for template in wft.templates[1:]]
+    script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
+        "a-plus-b-create-torch-service",
+        "a-plus-b-delete-torch-service",
+        "a-plus-b-plus-2-create-torch-service",
+        "a-plus-b-plus-2-delete-torch-service",
+        "test_dag",
         "a-plus-b-0",
         "a-plus-b-1",
         "a-plus-b-plus-2-0",
@@ -302,19 +316,31 @@ def test_artifact_torch_component_to_hera(
         ],
     ) as wft:
 
+        convert.service_templates = convert.build_service_templates()
+        show.service_templates = show.build_service_templates()
+
         with DAG(name="test_dag"):
             convert.to_hera()
             show.to_hera()
 
-    task_names = [task.name for task in wft.templates[0].tasks]
+    task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
+        "convert-parameters-create-torch-service",
         "convert-parameters-0",
         "convert-parameters-0-worker-1",
+        "convert-parameters-delete-torch-service",
+        "show-artifacts-create-torch-service",
         "show-artifacts-0",
+        "show-artifacts-delete-torch-service",
     ]
 
-    script_template_names = [template.name for template in wft.templates[1:]]
+    script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
+        "convert-parameters-create-torch-service",
+        "convert-parameters-delete-torch-service",
+        "show-artifacts-create-torch-service",
+        "show-artifacts-delete-torch-service",
+        "test_dag",
         "convert-parameters-0",
         "convert-parameters-1",
         "show-artifacts-0",
