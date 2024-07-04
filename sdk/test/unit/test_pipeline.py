@@ -86,6 +86,10 @@ def test_artifact_pipeline(
         "show-artifact",
     ]
 
+    assert wft.templates[3].labels["torch-node"] == "0"
+    assert wft.templates[3].labels["app"].startswith("convert-to-artifact-0-")
+    assert wft.templates[4].labels["torch-node"] == "1"
+
     parameter_to_artifact.export()
 
 
@@ -150,5 +154,9 @@ def test_parameter_pipeline(test_add_function):
         "a-plus-b-1",
         "a-plus-b-plus-2",
     ]
+
+    assert wft.templates[3].labels["torch-node"] == "0"
+    assert wft.templates[3].labels["app"].startswith("a-plus-b-0-")
+    assert wft.templates[4].labels["torch-node"] == "1"
 
     adding_parameters.export()

@@ -269,6 +269,14 @@ def test_parameter_torch_component_to_hera(
         "a-plus-b-plus-2-1",
     ]
 
+    assert wft.templates[5].labels["torch-node"] == "0"
+    assert wft.templates[5].labels["app"].startswith("a-plus-b-0-")
+    assert wft.templates[6].labels["torch-node"] == "1"
+
+    assert wft.templates[7].labels["torch-node"] == "0"
+    assert wft.templates[7].labels["app"].startswith("a-plus-b-plus-2-0-")
+    assert wft.templates[8].labels["torch-node"] == "1"
+
 
 def test_artifact_torch_component_to_hera(
     test_convert_to_artifact_function,
@@ -345,3 +353,10 @@ def test_artifact_torch_component_to_hera(
         "convert-parameters-1",
         "show-artifacts-0",
     ]
+
+    assert wft.templates[5].labels["torch-node"] == "0"
+    assert wft.templates[5].labels["app"].startswith("convert-parameters-0-")
+    assert wft.templates[6].labels["torch-node"] == "1"
+
+    assert wft.templates[7].labels["torch-node"] == "0"
+    assert wft.templates[7].labels["app"].startswith("show-artifacts-0-")
