@@ -2,6 +2,7 @@ __pycache__
 *.log
 *.egg-info
 */build
+*.tfstate
 sdk/test/outputs
 
 # terraform
