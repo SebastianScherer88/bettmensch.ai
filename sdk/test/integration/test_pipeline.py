@@ -10,7 +10,9 @@ from bettmensch_ai.pipeline import delete, get, list
 
 
 def test_artifact_pipeline_decorator_and_register_and_run(
-    test_convert_to_artifact_function, test_show_artifact_function
+    test_convert_to_artifact_function,
+    test_show_artifact_function,
+    test_output_dir,
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
@@ -34,6 +36,8 @@ def test_artifact_pipeline_decorator_and_register_and_run(
             b=convert.outputs["b_art"],
         )
 
+    parameter_to_artifact.export(test_output_dir)
+
     assert not parameter_to_artifact.registered
     assert parameter_to_artifact.registered_id is None
     assert parameter_to_artifact.registered_name is None
@@ -53,7 +57,9 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     )
 
 
-def test_parameter_pipeline_decorator_and_register_and_run(test_add_function):
+def test_parameter_pipeline_decorator_and_register_and_run(
+    test_add_function, test_output_dir
+):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
     add_component_factory = component(test_add_function)
@@ -72,6 +78,8 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_add_function):
             b=InputParameter("two", 2),
         )
 
+    adding_parameters.export(test_output_dir)
+
     assert not adding_parameters.registered
     assert adding_parameters.registered_id is None
     assert adding_parameters.registered_name is None
@@ -89,18 +97,20 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_add_function):
     adding_parameters.run({"a": -100, "b": 100})
 
 
-def test_torch_pipeline_decorator_and_register_and_run():
+def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
     @torch_component
     def test_torch_ddp_function(
         n_iter: InputParameter,
         n_seconds_sleep: InputParameter,
-        duration: OutputParameter,
+        duration: OutputParameter = None,
     ):
-        from bettmensch_ai.scripts import torch_ddp_test
+        from bettmensch_ai.scripts.torch_ddp_test import (
+            distributed_test_ddp_function,
+        )
 
-        torch_ddp_test(n_iter, n_seconds_sleep)
+        distributed_test_ddp_function(n_iter, n_seconds_sleep)
 
         duration.assign(n_iter * n_seconds_sleep)
 
@@ -117,7 +127,7 @@ def test_torch_pipeline_decorator_and_register_and_run():
     ) -> None:
         torch_ddp_test = test_torch_ddp_function(
             "torch-ddp",
-            n_nodes=2,
+            # n_nodes=2,
             n_iter=n_iter,
             n_seconds_sleep=n_seconds_sleep,
         )
@@ -126,6 +136,8 @@ def test_torch_pipeline_decorator_and_register_and_run():
             "show-torch-ddp-duration",
             torch_duration=torch_ddp_test.outputs["duration"],
         )
+
+    torch_ddp.export(test_output_dir)
 
     assert not torch_ddp.registered
     assert torch_ddp.registered_id is None

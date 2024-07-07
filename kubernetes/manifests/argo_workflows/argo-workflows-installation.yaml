@@ -1193,6 +1193,26 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
+  annotations:
+    workflows.argoproj.io/description: |
+      This is an example of the permissions you would need if you wanted to use a resource template to create and manage
+      other services.
+  name: service-manager
+  namespace: argo
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - get
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
   name: submit-workflow-template
   namespace: argo
 rules:
@@ -1353,6 +1373,19 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: pod-manager
+subjects:
+- kind: ServiceAccount
+  name: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-manager-default
+  namespace: argo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: service-manager
 subjects:
 - kind: ServiceAccount
   name: default
