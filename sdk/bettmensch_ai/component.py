@@ -196,6 +196,10 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
             preprocess += f"""try: {input_parameter.name} = json.loads(r'''{{{{inputs.parameters.{input_parameter.name}}}}}''')\n"""
             preprocess += f"""except: {input_parameter.name} = r'''{{{{inputs.parameters.{input_parameter.name}}}}}'''\n"""
 
+        # technically only needed for the torch_component, but add here to simplify subclassing for now
+        if input_parameters:
+            preprocess += "\nfrom bettmensch_ai.io import InputParameter\n"
+
         # input artifact initialization to provide user access to input artifact
         # file location
         if input_artifacts:

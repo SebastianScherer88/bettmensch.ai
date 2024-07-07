@@ -12,7 +12,9 @@ from hera.workflows import WorkflowTemplate
 
 
 def test_artifact_pipeline(
-    test_convert_to_artifact_function, test_show_artifact_function
+    test_convert_to_artifact_function,
+    test_show_artifact_function,
+    test_output_dir,
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
@@ -90,10 +92,10 @@ def test_artifact_pipeline(
     assert wft.templates[3].labels["app"].startswith("convert-to-artifact-0-")
     assert wft.templates[4].labels["torch-node"] == "1"
 
-    parameter_to_artifact.export()
+    parameter_to_artifact.export(test_output_dir)
 
 
-def test_parameter_pipeline(test_add_function):
+def test_parameter_pipeline(test_add_function, test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
     add_component_factory = component(test_add_function)
@@ -159,4 +161,4 @@ def test_parameter_pipeline(test_add_function):
     assert wft.templates[3].labels["app"].startswith("a-plus-b-0-")
     assert wft.templates[4].labels["torch-node"] == "1"
 
-    adding_parameters.export()
+    adding_parameters.export(test_output_dir)

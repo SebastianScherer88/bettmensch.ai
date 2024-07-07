@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from bettmensch_ai import (
     COMPONENT_TYPE,
@@ -7,6 +9,11 @@ from bettmensch_ai import (
     OutputArtifact,
     OutputParameter,
 )
+
+
+@pytest.fixture
+def test_output_dir():
+    return os.path.join(".", "sdk", "test", "unit")
 
 
 @pytest.fixture
