@@ -1,5 +1,6 @@
 argo-workflows
 pydantic
+pydantic-settings
 hera
 PyYAML
 networkx
