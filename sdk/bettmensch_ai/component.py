@@ -199,26 +199,20 @@ class ComponentInlineScriptRunner(InlineScriptConstructor):
         # input artifact initialization to provide user access to input artifact
         # file location
         if input_artifacts:
-            preprocess += (
-                "\nfrom bettmensch_ai.arguments import InputArtifact\n"
-            )
+            preprocess += "\nfrom bettmensch_ai.io import InputArtifact\n"
             for input_artifact in sorted(input_artifacts, key=lambda x: x.name):
                 preprocess += f"""{input_artifact.name} = InputArtifact("{input_artifact.name}")\n"""
 
         # output parameter initialization
         if output_parameters:
-            preprocess += (
-                "\nfrom bettmensch_ai.arguments import OutputParameter\n"
-            )
+            preprocess += "\nfrom bettmensch_ai.io import OutputParameter\n"
             for output_param in sorted(output_parameters, key=lambda x: x.name):
                 preprocess += f"""{output_param.name} = OutputParameter("{output_param.name}")\n"""
 
         # output artifact initialization to provide user access to output
         # artifact file location
         if output_artifacts:
-            preprocess += (
-                "\nfrom bettmensch_ai.arguments import OutputArtifact\n"
-            )
+            preprocess += "\nfrom bettmensch_ai.io import OutputArtifact\n"
             for output_artifact in sorted(
                 output_artifacts, key=lambda x: x.name
             ):

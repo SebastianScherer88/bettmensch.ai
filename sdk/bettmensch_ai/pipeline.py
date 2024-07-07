@@ -96,7 +96,10 @@ class Pipeline(object):
 
         self.registered_workflow_template = registered_workflow_template
         self.inputs = self.build_pipeline_inputs_from_wft()
+
         self._registered = True
+        self.name = "-".join(self.registered_name.split("-")[1:-1])
+        self._namespace = self.registered_namespace
 
     @property
     def io_owner_name(self) -> str:
@@ -125,21 +128,21 @@ class Pipeline(object):
         if not self.registered:
             return None
 
-        return self.registered_workflow_template.metadata.uid
+        return self.registered_workflow_template.uid
 
     @property
     def registered_name(self):
         if not self.registered:
             return None
 
-        return self.registered_workflow_template.metadata.name
+        return self.registered_workflow_template.name
 
     @property
     def registered_namespace(self):
         if not self.registered:
             return None
 
-        return self.registered_workflow_template.metadata.namespace
+        return self.registered_workflow_template.namespace
 
     def build_pipeline_inputs_from_func(
         self, func: Callable
@@ -210,9 +213,9 @@ class Pipeline(object):
 
         result = {}
 
-        wft_template_inputs = self.registered_workflow_template.to_dict()[
-            "spec"
-        ]["arguments"]["parameters"]
+        wft_template_inputs: List[
+            Parameter
+        ] = self.registered_workflow_template.arguments.parameters
 
         for wft_input in wft_template_inputs:
             result[wft_input.name] = InputParameter(
@@ -287,7 +290,11 @@ class Pipeline(object):
             self.user_built_workflow_template.create()
         )
 
-        self.build_from_registry(registered_workflow_template)
+        workflow_template = WorkflowTemplate.from_dict(
+            registered_workflow_template.dict()
+        )
+
+        self.build_from_registry(workflow_template)
 
     def run(
         self, inputs: Dict[str, Any], wait: bool = False, poll_interval: int = 5
@@ -358,7 +365,7 @@ class Pipeline(object):
             Pipeline: The (registered) Pipeline instance.
         """
 
-        return cls(workflow_template=workflow_template)
+        return cls(registered_pipeline=workflow_template)
 
     @classmethod
     def from_registry(
@@ -399,8 +406,12 @@ def get(
         Pipeline: The registered Pipeline instance.
     """
 
-    workflow_template = pipeline_client.get_workflow_template(
+    registered_workflow_template = pipeline_client.get_workflow_template(
         namespace=registered_namespace, name=registered_name
+    )
+
+    workflow_template = WorkflowTemplate.from_dict(
+        registered_workflow_template.dict()
     )
 
     pipeline = Pipeline.from_workflow_template(workflow_template)
@@ -422,20 +433,28 @@ def list(
             scope.
     """
 
-    workflow_templates_response = pipeline_client.list_workflow_templates(
-        namespace=registered_namespace,
-        name_pattern=registered_name_pattern,
-        label_selector=label_selector,
-        field_selector=field_selector,
-        **kwargs,
+    registered_workflow_templates_response = (
+        pipeline_client.list_workflow_templates(
+            namespace=registered_namespace,
+            name_pattern=registered_name_pattern,
+            label_selector=label_selector,
+            field_selector=field_selector,
+            **kwargs,
+        )
     )
 
-    workflow_templates = workflow_templates_response.items
+    if registered_workflow_templates_response.items is not None:
+        workflow_templates = [
+            WorkflowTemplate.from_dict(registered_workflow_template.dict())
+            for registered_workflow_template in registered_workflow_templates_response.items
+        ]
 
-    pipelines = [
-        Pipeline.from_workflow_template(workflow_template)
-        for workflow_template in workflow_templates
-    ]
+        pipelines = [
+            Pipeline.from_workflow_template(workflow_template)
+            for workflow_template in workflow_templates
+        ]
+    else:
+        pipelines = []
 
     return pipelines
 
