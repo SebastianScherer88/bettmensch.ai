@@ -75,6 +75,10 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         **config_settings_kwargs
     )
 
+    print(
+        f"Torch distributed launch config settings: {launch_config_settings_from_env.model_dump()}"
+    )
+
     return LaunchConfig(
         min_nodes=launch_config_settings_from_env.min_nodes,
         max_nodes=launch_config_settings_from_env.max_nodes,
@@ -85,7 +89,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         role=launch_config_settings_from_env.role,
         max_restarts=launch_config_settings_from_env.max_restarts,
         monitor_interval=launch_config_settings_from_env.monitor_interval,
-        tee=Std.from_str(launch_config_settings_from_env.tee),
+        # tee=Std.from_str(launch_config_settings_from_env.tee),
         redirects=Std.from_str(launch_config_settings_from_env.redirects),
         log_dir=launch_config_settings_from_env.log_dir,
         log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,
