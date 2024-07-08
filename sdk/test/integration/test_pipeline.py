@@ -7,33 +7,35 @@ from bettmensch_ai import (
     torch_component,
 )
 from bettmensch_ai.pipeline import delete, get, list
+from bettmensch_ai.scripts.example_components import (
+    add,
+    convert_to_artifact,
+    show_artifact,
+    show_parameter,
+    torch_ddp,
+)
 
 
 def test_artifact_pipeline_decorator_and_register_and_run(
-    test_convert_to_artifact_function,
-    test_show_artifact_function,
     test_output_dir,
 ):
-    """Declaration of Pipeline using InputArtifact and OutputArtifact"""
+    """Defines, registers and runs a Pipeline passing artifacts across components."""
 
-    convert_component_factory = component(test_convert_to_artifact_function)
-    show_component_factory = component(test_show_artifact_function)
+    convert_component_factory = component(convert_to_artifact)
+    show_component_factory = component(show_artifact)
 
     @pipeline("test-artifact-pipeline", "argo", True)
     def parameter_to_artifact(
         a: InputParameter = "Param A",
-        b: InputParameter = "Param B",
     ) -> None:
         convert = convert_component_factory(
             "convert-to-artifact",
             a=a,
-            b=b,
         )
 
         show = show_component_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
-            b=convert.outputs["b_art"],
         )
 
     parameter_to_artifact.export(test_output_dir)
@@ -57,12 +59,10 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     )
 
 
-def test_parameter_pipeline_decorator_and_register_and_run(
-    test_add_function, test_output_dir
-):
-    """Declaration of Pipeline using InputParameter and OutputParameter"""
+def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
+    """Defines, registers and runs a Pipeline passing parameters across components."""
 
-    add_component_factory = component(test_add_function)
+    add_component_factory = component(add)
 
     @pipeline("test-parameter-pipeline", "argo", True)
     def adding_parameters(a: InputParameter = 1, b: InputParameter = 2) -> None:
@@ -98,43 +98,25 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 
 
 def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
-    """Declaration of Pipeline using InputParameter and OutputParameter"""
+    """Defines, registers and runs a Pipeline containing a non-trivial TorchComponent."""
 
-    @torch_component
-    def test_torch_ddp_function(
-        n_iter: InputParameter,
-        n_seconds_sleep: InputParameter,
-        duration: OutputParameter = None,
-    ):
-        from bettmensch_ai.scripts.torch_ddp_test import (
-            distributed_test_ddp_function,
-        )
-
-        distributed_test_ddp_function(n_iter, n_seconds_sleep)
-
-        duration.assign(n_iter * n_seconds_sleep)
-
-    @component
-    def show_parameter(torch_duration: InputParameter):
-
-        print(
-            f"The previous torch ddp component took {torch_duration} seconds."
-        )
+    torch_ddp_factory = torch_component(torch_ddp)
+    show_parameter_factory = component(show_parameter)
 
     @pipeline("test-torch-pipeline", "argo", True)
     def torch_ddp(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
-        torch_ddp_test = test_torch_ddp_function(
+        torch_ddp_test = torch_ddp_factory(
             "torch-ddp",
-            # n_nodes=2,
+            n_nodes=2,
             n_iter=n_iter,
             n_seconds_sleep=n_seconds_sleep,
         )
 
-        torch_ddp_duration = show_parameter(
-            "show-torch-ddp-duration",
-            torch_duration=torch_ddp_test.outputs["duration"],
+        torch_ddp_duration_1 = show_parameter_factory(
+            "show-duration-param",
+            a=torch_ddp_test.outputs["duration"],
         )
 
     torch_ddp.export(test_output_dir)
