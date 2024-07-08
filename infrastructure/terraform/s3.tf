@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "artifact_repository_assume_policy" {
       variable = "${local.oidc_issuer_url}:sub"
       values   = [
         "system:serviceaccount:argo:argo-server",
-        "system:serviceaccount:argo:argo-workflow",
+        "system:serviceaccount:argo:default",
         ]
     }
 

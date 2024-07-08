@@ -12,4 +12,5 @@ RUN pip install -e "git+https://github.com/SebastianScherer88/bettmensch.ai.git@
 RUN wget https://github.com/SebastianScherer88/bettmensch.ai/archive/refs/heads/master.zip
 RUN unzip master.zip
 
-WORKDIR bettmensch.ai-master/sdk/scripts
+# set cwd back to root so the artifact setup done in the init container resolves correctly
+WORKDIR / 

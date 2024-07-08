@@ -207,7 +207,7 @@ resource "kubectl_manifest" "argo_workflows_artifact_repository" {
       bettmensch-ai-artifact-repository: |
         s3:
           bucket: ${resource.aws_s3_bucket.artifact_repository.id}
-          endpoint: s3.amazonaws.com
+          endpoint: s3.${local.region}.amazonaws.com
           insecure: true
   YAML
 
