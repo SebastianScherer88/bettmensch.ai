@@ -3,7 +3,7 @@ import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import PIPELINE_TYPE
+from bettmensch_ai.constants import PIPELINE_TYPE, SERVICE_ACCOUNT_NAME
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -479,6 +479,8 @@ class Component(object):
             script_decorator_kwargs[
                 "image_pull_policy"
             ] = ImagePullPolicy.always
+
+        script_decorator_kwargs["service_account_name"] = SERVICE_ACCOUNT_NAME
 
         # this will invoke our custom ComponentInlineScriptRunner under the hood
         script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)

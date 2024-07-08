@@ -1,11 +1,4 @@
-from bettmensch_ai import (
-    InputParameter,
-    OutputParameter,
-    Pipeline,
-    component,
-    pipeline,
-    torch_component,
-)
+from bettmensch_ai import InputParameter, component, pipeline, torch_component
 from bettmensch_ai.pipeline import delete, get, list
 from bettmensch_ai.scripts.example_components import (
     add,
@@ -25,7 +18,7 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     show_component_factory = component(show_artifact)
 
     @pipeline("test-artifact-pipeline", "argo", True)
-    def parameter_to_artifact(
+    def parameter_to_artifact_pipeline(
         a: InputParameter = "Param A",
     ) -> None:
         convert = convert_component_factory(
@@ -38,24 +31,26 @@ def test_artifact_pipeline_decorator_and_register_and_run(
             a=convert.outputs["a_art"],
         )
 
-    parameter_to_artifact.export(test_output_dir)
+    parameter_to_artifact_pipeline.export(test_output_dir)
 
-    assert not parameter_to_artifact.registered
-    assert parameter_to_artifact.registered_id is None
-    assert parameter_to_artifact.registered_name is None
-    assert parameter_to_artifact.registered_namespace is None
+    assert not parameter_to_artifact_pipeline.registered
+    assert parameter_to_artifact_pipeline.registered_id is None
+    assert parameter_to_artifact_pipeline.registered_name is None
+    assert parameter_to_artifact_pipeline.registered_namespace is None
 
-    parameter_to_artifact.register()
+    parameter_to_artifact_pipeline.register()
 
-    assert parameter_to_artifact.registered
-    assert parameter_to_artifact.registered_id is not None
-    assert parameter_to_artifact.registered_name.startswith(
-        f"pipeline-{parameter_to_artifact.name}-"
+    assert parameter_to_artifact_pipeline.registered
+    assert parameter_to_artifact_pipeline.registered_id is not None
+    assert parameter_to_artifact_pipeline.registered_name.startswith(
+        f"pipeline-{parameter_to_artifact_pipeline.name}-"
     )
-    assert parameter_to_artifact.registered_namespace == "argo"
+    assert parameter_to_artifact_pipeline.registered_namespace == "argo"
 
-    parameter_to_artifact.run(
-        {"a": "Integration test value a", "b": "Integration test value b"}
+    parameter_to_artifact_pipeline.run(
+        {
+            "a": "Integration test value a",
+        }
     )
 
 
@@ -65,7 +60,9 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
     add_component_factory = component(add)
 
     @pipeline("test-parameter-pipeline", "argo", True)
-    def adding_parameters(a: InputParameter = 1, b: InputParameter = 2) -> None:
+    def adding_parameters_pipeline(
+        a: InputParameter = 1, b: InputParameter = 2
+    ) -> None:
         a_plus_b = add_component_factory(
             "a-plus-b",
             a=a,
@@ -78,23 +75,23 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
             b=InputParameter("two", 2),
         )
 
-    adding_parameters.export(test_output_dir)
+    adding_parameters_pipeline.export(test_output_dir)
 
-    assert not adding_parameters.registered
-    assert adding_parameters.registered_id is None
-    assert adding_parameters.registered_name is None
-    assert adding_parameters.registered_namespace is None
+    assert not adding_parameters_pipeline.registered
+    assert adding_parameters_pipeline.registered_id is None
+    assert adding_parameters_pipeline.registered_name is None
+    assert adding_parameters_pipeline.registered_namespace is None
 
-    adding_parameters.register()
+    adding_parameters_pipeline.register()
 
-    assert adding_parameters.registered
-    assert adding_parameters.registered_id is not None
-    assert adding_parameters.registered_name.startswith(
-        f"pipeline-{adding_parameters.name}-"
+    assert adding_parameters_pipeline.registered
+    assert adding_parameters_pipeline.registered_id is not None
+    assert adding_parameters_pipeline.registered_name.startswith(
+        f"pipeline-{adding_parameters_pipeline.name}-"
     )
-    assert adding_parameters.registered_namespace == "argo"
+    assert adding_parameters_pipeline.registered_namespace == "argo"
 
-    adding_parameters.run({"a": -100, "b": 100})
+    adding_parameters_pipeline.run({"a": -100, "b": 100})
 
 
 def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
@@ -104,7 +101,7 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     show_parameter_factory = component(show_parameter)
 
     @pipeline("test-torch-pipeline", "argo", True)
-    def torch_ddp(
+    def torch_ddp_pipeline(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
         torch_ddp_test = torch_ddp_factory(
@@ -119,21 +116,23 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
             a=torch_ddp_test.outputs["duration"],
         )
 
-    torch_ddp.export(test_output_dir)
+    torch_ddp_pipeline.export(test_output_dir)
 
-    assert not torch_ddp.registered
-    assert torch_ddp.registered_id is None
-    assert torch_ddp.registered_name is None
-    assert torch_ddp.registered_namespace is None
+    assert not torch_ddp_pipeline.registered
+    assert torch_ddp_pipeline.registered_id is None
+    assert torch_ddp_pipeline.registered_name is None
+    assert torch_ddp_pipeline.registered_namespace is None
 
-    torch_ddp.register()
+    torch_ddp_pipeline.register()
 
-    assert torch_ddp.registered
-    assert torch_ddp.registered_id is not None
-    assert torch_ddp.registered_name.startswith(f"pipeline-{torch_ddp.name}-")
-    assert torch_ddp.registered_namespace == "argo"
+    assert torch_ddp_pipeline.registered
+    assert torch_ddp_pipeline.registered_id is not None
+    assert torch_ddp_pipeline.registered_name.startswith(
+        f"pipeline-{torch_ddp_pipeline.name}-"
+    )
+    assert torch_ddp_pipeline.registered_namespace == "argo"
 
-    torch_ddp.run({"n_iter": 12, "n_seconds_sleep": 5})
+    torch_ddp_pipeline.run({"n_iter": 12, "n_seconds_sleep": 5})
 
 
 def test_list():

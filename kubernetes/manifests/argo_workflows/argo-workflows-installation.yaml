@@ -909,7 +909,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: argo-workflow
+  name: default
   namespace: argo
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role

@@ -8,7 +8,7 @@ from bettmensch_ai.component import (
     ComponentInlineScriptRunner,
     _pipeline_context,
 )
-from bettmensch_ai.constants import PIPELINE_TYPE
+from bettmensch_ai.constants import PIPELINE_TYPE, SERVICE_ACCOUNT_NAME
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -378,6 +378,8 @@ class TorchComponent(object):
             script_decorator_kwargs[
                 "image_pull_policy"
             ] = ImagePullPolicy.always
+
+        script_decorator_kwargs["service_account_name"] = SERVICE_ACCOUNT_NAME
 
         # add torch run environment variables to script kwargs
         task_factory = []

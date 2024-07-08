@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-s3-access
+  namespace: argo
+spec:
+  serviceAccountName: argo-server # argo-server/argo-workflow
+  containers:
+    - command:
+        - python3
+        - -c 
+        - "import boto3; file=open('test-file.txt','w'); file.write('hello'); file.close(); s3=boto3.client('s3'); print('Buckets: ' + str(s3.list_buckets())); s3.upload_file('test-file.txt','bettmensch-ai-artifact-repository','test-file-1.txt'); print('Files: ' + str(s3.list_objects_v2(Bucket='bettmensch-ai-artifact-repository')))"
+      image: bettmensch88/aws:latest
+      imagePullPolicy: Always
+      name: boto3
