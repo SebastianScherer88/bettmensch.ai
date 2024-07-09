@@ -436,6 +436,10 @@ class TorchComponent(object):
                     name="bettmensch_ai_distributed_torch_run_id",
                     value=1,
                 ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_tee",
+                    value=3,
+                ),
             ]
 
             script_decorator_kwargs[

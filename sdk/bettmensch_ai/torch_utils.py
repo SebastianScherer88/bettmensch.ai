@@ -50,13 +50,13 @@ class LaunchConfigSettings(BaseSettings):
     node_rank: int = 0
     nproc_per_node: int = 1
     rdzv_backend: str = "static"
-    rdvz_endpoint_url: str = "localhost"
-    rdvz_endpoint_port: int = 29500
+    rdzv_endpoint_url: str = "localhost"
+    rdzv_endpoint_port: int = 29500
     run_id: str = ""
     role: str = ""
     max_restarts: int = 3
     monitor_interval: float = 30
-    redirects: str = "3"
+    redirects: str = "0"
     tee: str = "0"
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
@@ -84,7 +84,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         min_nodes=launch_config_settings_from_env.min_nodes,
         max_nodes=launch_config_settings_from_env.max_nodes,
         nproc_per_node=launch_config_settings_from_env.nproc_per_node,
-        rdzv_endpoint=f"{launch_config_settings_from_env.rdvz_endpoint_url}:{launch_config_settings_from_env.rdvz_endpoint_port}",
+        rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",
         rdzv_backend=launch_config_settings_from_env.rdzv_backend,
         run_id=launch_config_settings_from_env.run_id,
         role=launch_config_settings_from_env.role,
