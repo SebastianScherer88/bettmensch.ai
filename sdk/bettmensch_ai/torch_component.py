@@ -87,15 +87,18 @@ class TorchComponentInlineScriptRunner(ComponentInlineScriptRunner):
 
         # function definition + decoration with `torch_distribute`
         torch_distribute_decoration = [
-            "from bettmensch_ai import torch_distribute\n",
-            "@torch_distribute()",
+            "\nfrom bettmensch_ai import torch_distribute\n",
+            "torch_distribute_decorator=torch_distribute()\n"
+            f"torch_distributed_function=torch_distribute_decorator({instance.source.__name__})\n",
         ]
-        s = "\n".join(torch_distribute_decoration + content[i:])
+        s = "\n".join(content[i:] + torch_distribute_decoration)
         script += s
 
         # add function call
-        script += f"\n\n{instance.source.__name__}"
-        script += "(" + ",".join(args) + ")"
+        torch_distributed_function_call = (
+            "\ntorch_distributed_function(" + ",".join(args) + ")"
+        )
+        script += torch_distributed_function_call
 
         return textwrap.dedent(script)
 
