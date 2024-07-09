@@ -480,8 +480,6 @@ class Component(object):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
-        script_decorator_kwargs["service_account_name"] = SERVICE_ACCOUNT_NAME
-
         # this will invoke our custom ComponentInlineScriptRunner under the hood
         script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)
 

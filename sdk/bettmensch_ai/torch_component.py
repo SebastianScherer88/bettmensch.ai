@@ -1,14 +1,19 @@
 import copy
 import inspect
 import textwrap
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from uuid import uuid4
 
 from bettmensch_ai.component import (
     ComponentInlineScriptRunner,
     _pipeline_context,
 )
-from bettmensch_ai.constants import PIPELINE_TYPE, SERVICE_ACCOUNT_NAME
+from bettmensch_ai.constants import (
+    DDP_PORT_NAME,
+    DDP_PORT_NUMBER,
+    PIPELINE_TYPE,
+    SERVICE_ACCOUNT_NAME,
+)
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -30,7 +35,7 @@ from hera.shared import global_config
 from hera.workflows import Env, Label, Resource, Script, Task
 from hera.workflows._context import _context
 from hera.workflows._unparse import roundtrip
-from hera.workflows.models import ImagePullPolicy
+from hera.workflows.models import ContainerPort, ImagePullPolicy, Protocol
 
 
 class TorchComponentInlineScriptRunner(ComponentInlineScriptRunner):
@@ -118,7 +123,6 @@ class TorchComponent(object):
     hera_template_kwargs: Dict = {}
     n_nodes: int
     min_nodes: int
-    max_nodes: int
     nproc_per_node: int
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
@@ -134,8 +138,7 @@ class TorchComponent(object):
         name: str = "",
         hera_template_kwargs: Dict = {},
         n_nodes: int = 1,
-        min_nodes: int = 1,
-        max_nodes: int = 1,
+        min_nodes: Optional[int] = None,
         nproc_per_node: int = 1,
         **component_inputs_kwargs: Union[
             InputParameter, OutputParameter, OutputArtifact
@@ -143,11 +146,21 @@ class TorchComponent(object):
     ):
 
         self.hera_template_kwargs = hera_template_kwargs
-        self.n_nodes = n_nodes
-        self.min_nodes = min_nodes
-        self.max_nodes = max_nodes
+        self.set_node_specs(n_nodes, min_nodes)
         self.nproc_per_node = nproc_per_node
         self.build(func, component_inputs_kwargs, name=name)
+
+    def set_node_specs(self, n_nodes: int, min_nodes: Optional[int]):
+
+        if min_nodes is not None:
+            assert (
+                n_nodes >= min_nodes
+            ), f"Mininum number of nodes {min_nodes} can not be greater than total number of nodes {n_nodes}."
+        else:
+            min_nodes = n_nodes
+
+        self.n_nodes = n_nodes
+        self.min_nodes = min_nodes
 
     def build(
         self,
@@ -382,7 +395,13 @@ class TorchComponent(object):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
-        script_decorator_kwargs["service_account_name"] = SERVICE_ACCOUNT_NAME
+        script_decorator_kwargs["ports"] = [
+            ContainerPort(
+                container_port=DDP_PORT_NUMBER,
+                protocol=Protocol.tcp,
+                name=DDP_PORT_NAME,
+            )
+        ]
 
         # add torch run environment variables to script kwargs
         task_factory = []
@@ -395,7 +414,7 @@ class TorchComponent(object):
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_max_nodes",
-                    value=self.max_nodes,
+                    value=self.n_nodes,
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_node_rank",
@@ -408,6 +427,10 @@ class TorchComponent(object):
                 Env(
                     name="bettmensch_ai_distributed_torch_rdvz_endpoint_url",
                     value=f"{self.k8s_service_name}.{self.k8s_namespace}.svc.cluster.local",
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_rdvz_endpoint_port",
+                    value=DDP_PORT_NUMBER,
                 ),
             ]
 
@@ -513,8 +536,7 @@ def torch_component(func: Callable) -> Callable:
         name: str = "",
         hera_template_kwargs: Dict = {},
         n_nodes: int = 1,
-        min_nodes: int = 1,
-        max_nodes: int = 1,
+        min_nodes: int = None,
         nproc_per_node: int = 1,
         **component_inputs_kwargs,
     ) -> TorchComponent:
@@ -525,7 +547,6 @@ def torch_component(func: Callable) -> Callable:
             hera_template_kwargs=hera_template_kwargs,
             n_nodes=n_nodes,
             min_nodes=min_nodes,
-            max_nodes=max_nodes,
             nproc_per_node=nproc_per_node,
             **component_inputs_kwargs,
         )

@@ -12,7 +12,7 @@ from bettmensch_ai import (
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
-def test_component___init__(test_mock_pipeline, test_mock_component):
+def test_torch_component___init__(test_mock_pipeline, test_mock_component):
     """Tests of Component constructor."""
 
     def test_function(
@@ -49,7 +49,6 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
             name="test_name",
             n_nodes=2,
             min_nodes=2,
-            max_nodes=4,
             nproc_per_node=2,
             **task_inputs
         )
@@ -65,7 +64,6 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
     assert test_component.hera_template_kwargs == {}
     assert test_component.n_nodes == 2
     assert test_component.min_nodes == 2
-    assert test_component.max_nodes == 4
     assert test_component.nproc_per_node == 2
     assert test_component.depends == "mock-component-0"
 
@@ -137,7 +135,6 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
         test_component = test_component_factory(
             n_nodes=2,
             min_nodes=2,
-            max_nodes=4,
             nproc_per_node=2,
             name="test_name",
             **task_inputs
@@ -154,7 +151,6 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.hera_template_kwargs == {}
     assert test_component.n_nodes == 2
     assert test_component.min_nodes == 2
-    assert test_component.max_nodes == 4
     assert test_component.nproc_per_node == 2
 
     # validate component task_inputs
@@ -209,7 +205,6 @@ def test_parameter_torch_component_to_hera(
             "a_plus_b",
             n_nodes=2,
             min_nodes=1,
-            max_nodes=4,
             nproc_per_node=5,
             a=pipeline_input_a,
             b=pipeline_input_b,
@@ -219,7 +214,6 @@ def test_parameter_torch_component_to_hera(
             "a_plus_b_plus_2",
             n_nodes=2,
             min_nodes=2,
-            max_nodes=3,
             nproc_per_node=4,
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),

@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 from uuid import uuid4
 
+from bettmensch_ai.constants import DDP_PORT_NAME, DDP_PORT_NUMBER
 from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from torch.distributed.elastic.multiprocessing.api import Std
@@ -114,12 +115,6 @@ def torch_distribute(**config_settings_kwargs):
     def decorator(function: Callable):
         def wrapper(*function_args):
 
-            # provide a consistent run_id naming convention as a convenience
-            if "run_id" not in config_settings_kwargs.keys():
-                config_settings_kwargs[
-                    "run_id"
-                ] = f"{function.__name__}_{str(uuid4())}"
-
             launch_config = get_launch_config(**config_settings_kwargs)
 
             elastic_launch(
@@ -151,9 +146,9 @@ metadata:
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
   ports:
-  - name: nccl  # Port for torchrun master-worker node communication.
-    port: 29500
-    targetPort: 29500
+  - name: {DDP_PORT_NAME}  # Port for torchrun master-worker node communication.
+    port: {DDP_PORT_NUMBER}
+    targetPort: {DDP_PORT_NUMBER}
   selector:
     app: {service_name}
     torch-node: '0'  # Selector for pods associated with this service.
