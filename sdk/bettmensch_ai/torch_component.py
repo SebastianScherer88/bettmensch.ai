@@ -432,6 +432,10 @@ class TorchComponent(object):
                     name="bettmensch_ai_distributed_torch_rdvz_endpoint_port",
                     value=DDP_PORT_NUMBER,
                 ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_run_id",
+                    value=1,
+                ),
             ]
 
             script_decorator_kwargs[
