@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 from uuid import uuid4
 
 from bettmensch_ai.constants import DDP_PORT_NAME, DDP_PORT_NUMBER
@@ -49,6 +49,7 @@ class LaunchConfigSettings(BaseSettings):
     max_nodes: int = 1
     node_rank: int = 0
     nproc_per_node: int = 1
+    start_method: Literal["spawn", "fork", "forkserver"] = "fork"
     rdzv_backend: str = "static"
     rdzv_endpoint_url: str = "localhost"
     rdzv_endpoint_port: int = 29500
@@ -84,6 +85,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         min_nodes=launch_config_settings_from_env.min_nodes,
         max_nodes=launch_config_settings_from_env.max_nodes,
         nproc_per_node=launch_config_settings_from_env.nproc_per_node,
+        start_method=launch_config_settings_from_env.start_method,
         rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",
         rdzv_backend=launch_config_settings_from_env.rdzv_backend,
         run_id=launch_config_settings_from_env.run_id,
