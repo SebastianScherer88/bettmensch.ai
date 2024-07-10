@@ -399,10 +399,10 @@ class TorchComponent(object):
         # testing the ddp example on K8s
         if "resources" not in script_decorator_kwargs:
             script_decorator_kwargs["resources"] = Resources(
-                cpu_request="900m",
-                cpu_limit="900m",
-                memory_request="700Mi",
-                memory_limit="700Mi",
+                cpu_request="100m",  # 100m works
+                cpu_limit="100m",
+                memory_request="300Mi",  # 300Mi works
+                memory_limit="300Mi",
             )
 
         script_decorator_kwargs["ports"] = [
