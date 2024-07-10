@@ -13,7 +13,7 @@ from bettmensch_ai import (
 
 @pytest.fixture
 def test_output_dir():
-    return os.path.join(".", "sdk", "test", "unit")
+    return os.path.join(".", "sdk", "test", "unit", "outputs")
 
 
 @pytest.fixture
