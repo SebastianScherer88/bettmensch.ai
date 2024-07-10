@@ -51,7 +51,7 @@ class LaunchConfigSettings(BaseSettings):
     nproc_per_node: int = 1
     start_method: Literal[
         "spawn", "fork", "forkserver"
-    ] = "fork"  # 'spawn' doesnt seem to work on K8s inside the hera emissary executor, but 'fork' works
+    ] = "fork"  # torch's LaunchConfig's default of 'spawn' doesnt seem to work inside the argo emissary runtime context for some reason
     rdzv_backend: str = "static"
     rdzv_endpoint_url: str = "localhost"
     rdzv_endpoint_port: int = 29500

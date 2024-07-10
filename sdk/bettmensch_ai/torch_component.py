@@ -436,7 +436,7 @@ class TorchComponent(object):
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_start_method",
-                    value="fork",
+                    value="fork",  # torch's LaunchConfig's default of 'spawn' doesnt seem to work inside the argo emissary runtime context for some reason
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
