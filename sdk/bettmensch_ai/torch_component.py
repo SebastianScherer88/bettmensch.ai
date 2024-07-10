@@ -401,8 +401,8 @@ class TorchComponent(object):
             script_decorator_kwargs["resources"] = Resources(
                 cpu_request="900m",
                 cpu_limit="900m",
-                memory_request="800Mi",
-                memory_limit="800Mi",
+                memory_request="700Mi",
+                memory_limit="700Mi",
             )
 
         script_decorator_kwargs["ports"] = [
@@ -433,6 +433,10 @@ class TorchComponent(object):
                 Env(
                     name="bettmensch_ai_distributed_torch_nproc_per_node",
                     value=self.nproc_per_node,
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_start_method",
+                    value="fork",
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
