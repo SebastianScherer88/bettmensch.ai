@@ -909,7 +909,7 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: default
+  name: argo-workflow
   namespace: argo
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
@@ -1299,7 +1299,7 @@ roleRef:
   name: agent
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1338,7 +1338,7 @@ roleRef:
   name: artifactgc
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1351,7 +1351,7 @@ roleRef:
   name: executor
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1377,7 +1377,7 @@ roleRef:
   name: pod-manager
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1390,7 +1390,7 @@ roleRef:
   name: service-manager
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -1403,7 +1403,7 @@ roleRef:
   name: workflow-manager
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: argo-workflow
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1484,6 +1484,9 @@ data:
     completed: 10
     failed: 3
     errored: 3
+  workflowDefaults: |
+    spec:
+      serviceAccountName: argo-workflow
 kind: ConfigMap
 metadata:
   name: workflow-controller-configmap

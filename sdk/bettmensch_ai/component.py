@@ -3,7 +3,7 @@ import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import PIPELINE_TYPE, SERVICE_ACCOUNT_NAME
+from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
