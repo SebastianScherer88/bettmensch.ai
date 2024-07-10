@@ -32,7 +32,7 @@ from bettmensch_ai.utils import (
     validate_func_args,
 )
 from hera.shared import global_config
-from hera.workflows import Env, Label, Resource, Script, Task
+from hera.workflows import Env, Label, Resource, Resources, Script, Task
 from hera.workflows._context import _context
 from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ContainerPort, ImagePullPolicy, Protocol
@@ -395,6 +395,16 @@ class TorchComponent(object):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
+        # if no resources are specified, set minimal requirements derived from
+        # testing the ddp example on K8s
+        if "resources" not in script_decorator_kwargs:
+            script_decorator_kwargs["resources"] = Resources(
+                cpu_request="900m",
+                cpu_limit="900m",
+                memory_request="800Mi",
+                memory_limit="800Mi",
+            )
+
         script_decorator_kwargs["ports"] = [
             ContainerPort(
                 container_port=DDP_PORT_NUMBER,
@@ -423,10 +433,6 @@ class TorchComponent(object):
                 Env(
                     name="bettmensch_ai_distributed_torch_nproc_per_node",
                     value=self.nproc_per_node,
-                ),
-                Env(
-                    name="bettmensch_ai_distributed_torch_start_method",
-                    value="fork",
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",

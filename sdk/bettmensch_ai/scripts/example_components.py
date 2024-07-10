@@ -1,8 +1,3 @@
-import time
-from datetime import datetime as dt
-
-import torch
-import torch.distributed as dist
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -52,6 +47,13 @@ def torch_ddp(
     duration: OutputParameter = None,
 ) -> None:
     """When decorated with the torch_component decorator, implements a bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in your K8s cluster."""
+
+    import time
+    from datetime import datetime as dt
+
+    import torch
+    import torch.distributed as dist
+
     has_gpu = torch.cuda.is_available()
     print(f"GPU present: {has_gpu}")
 
