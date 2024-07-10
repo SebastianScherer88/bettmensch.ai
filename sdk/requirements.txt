@@ -1,7 +1,7 @@
-argo-workflows
-pydantic
-pydantic-settings
-hera
-PyYAML
+argo-workflows==6.5.6
+pydantic==2.6.4
+pydantic-settings==2.2.1
+hera==5.15.1
+PyYAML==6.0.1
 networkx
-torch
+torch==2.2.2
