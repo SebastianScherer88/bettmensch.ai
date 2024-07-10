@@ -106,7 +106,7 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     ) -> None:
         torch_ddp_test = torch_ddp_factory(
             "torch-ddp",
-            n_nodes=2,
+            n_nodes=3,
             n_iter=n_iter,
             n_seconds_sleep=n_seconds_sleep,
         )
