@@ -12,7 +12,6 @@ from bettmensch_ai.constants import (
     DDP_PORT_NAME,
     DDP_PORT_NUMBER,
     PIPELINE_TYPE,
-    SERVICE_ACCOUNT_NAME,
 )
 from bettmensch_ai.io import (
     InputArtifact,

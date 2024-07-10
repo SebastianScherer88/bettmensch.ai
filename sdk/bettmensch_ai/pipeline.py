@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from bettmensch_ai.client import client as pipeline_client
 from bettmensch_ai.component import PipelineContext, _pipeline_context
-from bettmensch_ai.constants import PIPELINE_TYPE, SERVICE_ACCOUNT_NAME
+from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
 from bettmensch_ai.torch_component import TorchComponent
 from bettmensch_ai.utils import get_func_args, validate_func_args
@@ -245,7 +245,6 @@ class Pipeline(object):
             entrypoint="bettmensch-ai-dag",
             namespace=self._namespace,
             arguments=[input.to_hera() for input in self.inputs.values()],
-            service_account_name=SERVICE_ACCOUNT_NAME,
         ) as wft:
 
             # add non-script template
