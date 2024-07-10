@@ -49,7 +49,9 @@ class LaunchConfigSettings(BaseSettings):
     max_nodes: int = 1
     node_rank: int = 0
     nproc_per_node: int = 1
-    start_method: Literal["spawn", "fork", "forkserver"] = "spawn"
+    start_method: Literal[
+        "spawn", "fork", "forkserver"
+    ] = "fork"  # 'spawn' doesnt seem to work on K8s inside the hera emissary executor, but 'fork' works
     rdzv_backend: str = "static"
     rdzv_endpoint_url: str = "localhost"
     rdzv_endpoint_port: int = 29500
