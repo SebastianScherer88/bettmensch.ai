@@ -3,10 +3,14 @@ __pycache__
 *.egg-info
 */build
 *.tfstate
-sdk/test/outputs
+
+# test outputs
+sdk/test/unit/outputs
+sdk/test/integration/outputs
 
 # terraform
 infrastructure/terraform/.terraform*
 infrastructure/terraform/.terraform.lock.hcl
 infrastructure/terraform/.terraform.tfstate.lock.info
 infrastructure/terraform/terraform.tfstate.backup
+
