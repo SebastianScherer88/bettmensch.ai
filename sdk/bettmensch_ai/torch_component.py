@@ -425,11 +425,15 @@ class TorchComponent(object):
                     value=self.nproc_per_node,
                 ),
                 Env(
-                    name="bettmensch_ai_distributed_torch_rdvz_endpoint_url",
+                    name="bettmensch_ai_distributed_torch_start_method",
+                    value="fork",
+                ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
                     value=f"{self.k8s_service_name}.{self.k8s_namespace}.svc.cluster.local",
                 ),
                 Env(
-                    name="bettmensch_ai_distributed_torch_rdvz_endpoint_port",
+                    name="bettmensch_ai_distributed_torch_rdzv_endpoint_port",
                     value=DDP_PORT_NUMBER,
                 ),
                 Env(
