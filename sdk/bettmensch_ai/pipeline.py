@@ -10,9 +10,12 @@ from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
 from hera.workflows import DAG, Workflow, WorkflowsService, WorkflowTemplate
+from hera.workflows.models import Workflow as WorkflowModel
 from hera.workflows.models import (
-    WorkflowTemplateDeleteResponse,
-    WorkflowTemplateRef,
+    WorkflowTemplateDeleteResponse as WorkflowTemplateDeleteResponseModel,
+)
+from hera.workflows.models import (
+    WorkflowTemplateRef as WorkflowTemplateRefModel,
 )
 
 
@@ -291,14 +294,14 @@ class Pipeline(object):
         )
 
         workflow_template = WorkflowTemplate.from_dict(
-            registered_workflow_template.dict()
+            registered_workflow_template.model_dump()
         )
 
         self.build_from_registry(workflow_template)
 
     def run(
         self, inputs: Dict[str, Any], wait: bool = False, poll_interval: int = 5
-    ) -> Workflow:
+    ) -> WorkflowModel:
         """Run a Flow using the registered Pipeline instance and user specified
         inputs.
 
@@ -307,7 +310,9 @@ class Pipeline(object):
                 yet.
 
         Returns:
-            Workflow: The return of the Workflow.create class method call.
+            WorkflowModel: The return of the Workflow.create class method call.
+                Note that this is not the same as the hera.workflows.Workflow
+                class.
         """
 
         # validate registration status of pipeline
@@ -330,20 +335,20 @@ class Pipeline(object):
                 f"The following inputs are not known for this pipeline: {unknown_inputs}. Pipeline inputs: {self.inputs}"
             )
 
-        pipeline_ref = WorkflowTemplateRef(name=self.registered_name)
+        pipeline_ref = WorkflowTemplateRefModel(name=self.registered_name)
 
         workflow_inputs = [
             Parameter(name=k, value=v) for k, v in inputs.items()
         ]
 
-        workflow = Workflow(
+        workflow: Workflow = Workflow(
             generate_name=f"{self.registered_name}-flow-",
             workflow_template_ref=pipeline_ref,
             namespace=self.registered_namespace,
             arguments=workflow_inputs,
         )
 
-        registered_workflow = workflow.create(
+        registered_workflow: WorkflowModel = workflow.create(
             wait=wait, poll_interval=poll_interval
         )
 
@@ -461,7 +466,7 @@ def list(
 
 def delete(
     registered_name: str, registered_namespace: Optional[str] = None, **kwargs
-) -> WorkflowTemplateDeleteResponse:
+) -> WorkflowTemplateDeleteResponseModel:
     """Deletes the specified registered Pipeline from the server.
 
     Args:

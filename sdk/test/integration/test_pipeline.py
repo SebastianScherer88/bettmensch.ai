@@ -47,11 +47,14 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     )
     assert parameter_to_artifact_pipeline.registered_namespace == "argo"
 
-    parameter_to_artifact_pipeline.run(
+    parameter_to_artifact_flow = parameter_to_artifact_pipeline.run(
         {
             "a": "Integration test value a",
-        }
+        },
+        wait=True,
     )
+
+    assert parameter_to_artifact_flow.status.phase == "Succeeded"
 
 
 def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
@@ -91,7 +94,11 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
     )
     assert adding_parameters_pipeline.registered_namespace == "argo"
 
-    adding_parameters_pipeline.run({"a": -100, "b": 100})
+    adding_parameters_flow = adding_parameters_pipeline.run(
+        {"a": -100, "b": 100}, wait=True
+    )
+
+    assert adding_parameters_flow.status.phase == "Succeeded"
 
 
 def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
@@ -132,7 +139,11 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     )
     assert torch_ddp_pipeline.registered_namespace == "argo"
 
-    torch_ddp_pipeline.run({"n_iter": 12, "n_seconds_sleep": 5})
+    torch_ddp_flow = torch_ddp_pipeline.run(
+        {"n_iter": 12, "n_seconds_sleep": 5}, wait=True
+    )
+
+    assert torch_ddp_flow.status.phase == "Succeeded"
 
 
 def test_list():
