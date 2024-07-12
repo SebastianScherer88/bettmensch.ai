@@ -2,9 +2,9 @@ import inspect
 from typing import Any, Callable, Dict, List, Optional
 
 from bettmensch_ai.client import client as pipeline_client
-from bettmensch_ai.component import PipelineContext, _pipeline_context
 from bettmensch_ai.constants import PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
+from bettmensch_ai.pipeline_context import PipelineContext, _pipeline_context
 from bettmensch_ai.torch_component import TorchComponent
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
@@ -294,13 +294,16 @@ class Pipeline(object):
         )
 
         workflow_template = WorkflowTemplate.from_dict(
-            registered_workflow_template.model_dump()
+            registered_workflow_template.dict()
         )
 
         self.build_from_registry(workflow_template)
 
     def run(
-        self, inputs: Dict[str, Any], wait: bool = False, poll_interval: int = 5
+        self,
+        inputs: Dict[str, Any],
+        wait: bool = False,
+        poll_interval: int = 5,
     ) -> WorkflowModel:
         """Run a Flow using the registered Pipeline instance and user specified
         inputs.
@@ -318,7 +321,7 @@ class Pipeline(object):
         # validate registration status of pipeline
         if not self.registered:
             raise ValueError(
-                f"Pipeline needs to be registered first. Are you sure you have"
+                "Pipeline needs to be registered first. Are you sure you have"
                 "ran `register`?"
             )
 
@@ -327,12 +330,16 @@ class Pipeline(object):
         missing_inputs = [k for k in non_default_args if k not in inputs]
         if missing_inputs:
             raise Exception(
-                f"The following non default inputs are missing: {missing_inputs}. Pipeline inputs: {self.inputs}"
+                f"""The following non default inputs are missing: {
+                    missing_inputs
+                }. Pipeline inputs: {self.inputs}"""
             )
         unknown_inputs = [k for k in inputs if k not in non_default_args]
         if unknown_inputs:
             raise Exception(
-                f"The following inputs are not known for this pipeline: {unknown_inputs}. Pipeline inputs: {self.inputs}"
+                f"""The following inputs are not known for this pipeline: {
+                    unknown_inputs
+                }. Pipeline inputs: {self.inputs}"""
             )
 
         pipeline_ref = WorkflowTemplateRefModel(name=self.registered_name)
@@ -438,20 +445,18 @@ def list(
             scope.
     """
 
-    registered_workflow_templates_response = (
-        pipeline_client.list_workflow_templates(
-            namespace=registered_namespace,
-            name_pattern=registered_name_pattern,
-            label_selector=label_selector,
-            field_selector=field_selector,
-            **kwargs,
-        )
+    response = pipeline_client.list_workflow_templates(
+        namespace=registered_namespace,
+        name_pattern=registered_name_pattern,
+        label_selector=label_selector,
+        field_selector=field_selector,
+        **kwargs,
     )
 
-    if registered_workflow_templates_response.items is not None:
+    if response.items is not None:
         workflow_templates = [
             WorkflowTemplate.from_dict(registered_workflow_template.dict())
-            for registered_workflow_template in registered_workflow_templates_response.items
+            for registered_workflow_template in response.items
         ]
 
         pipelines = [
@@ -494,7 +499,11 @@ def pipeline(
 
     ```python
     @component
-    def add(a: InputParameter, b: InputParameter, sum: OutputParameter = None) -> None:
+    def add(
+        a: InputParameter,
+        b: InputParameter,
+        sum: OutputParameter = None
+    ) -> None:
 
         sum.assign(a + b)
 
