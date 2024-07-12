@@ -1,6 +1,4 @@
 from bettmensch_ai import (
-    COMPONENT_TYPE,
-    PIPELINE_TYPE,
     InputArtifact,
     InputParameter,
     OutputArtifact,
@@ -91,11 +89,13 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
 
     # validate component template_outputs
     assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["a_out"], OutputParameter)
+    assert isinstance(
+        test_component.template_outputs["a_out"], OutputParameter
+    )  # noqa: E501
     assert test_component.template_outputs["b_out"].owner == test_component
     assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
 
-    assert test_component.task_factory is not None
+    assert test_component.task_factory is None
 
 
 def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
@@ -177,11 +177,13 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
 
     # validate component template_outputs
     assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["a_out"], OutputParameter)
+    assert isinstance(
+        test_component.template_outputs["a_out"], OutputParameter
+    )  # noqa: E501
     assert test_component.template_outputs["b_out"].owner == test_component
     assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
 
-    assert test_component.task_factory is not None
+    assert test_component.task_factory is None
 
 
 def test_parameter_torch_component_to_hera(
@@ -218,6 +220,9 @@ def test_parameter_torch_component_to_hera(
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),
         )
+
+    a_plus_b.task_factory = a_plus_b.build_hera_task_factory()
+    a_plus_b_plus_2.task_factory = a_plus_b_plus_2.build_hera_task_factory()
 
     with WorkflowTemplate(
         name="test-parameter-component-workflow-template",
@@ -307,6 +312,9 @@ def test_artifact_torch_component_to_hera(
             a=convert.outputs["a_art"],
             b=convert.outputs["b_art"],
         )
+
+    convert.task_factory = convert.build_hera_task_factory()
+    show.task_factory = show.build_hera_task_factory()
 
     with WorkflowTemplate(
         name="test-artifact-component-workflow-template",

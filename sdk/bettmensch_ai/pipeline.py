@@ -241,6 +241,10 @@ class Pipeline(object):
 
             self.func(**self.inputs)
 
+        # build task factories
+        for component in self.context.components:
+            component.task_factory = component.build_hera_task_factory()
+
         # invoke all components' hera task generators from within a nested
         # WorkflowTemplate & DAG context
         with WorkflowTemplate(
