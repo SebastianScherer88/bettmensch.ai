@@ -67,7 +67,6 @@ class BaseComponent(object):
             func, (OutputParameter, OutputArtifact)
         )
         self.task_inputs = self.build_task_inputs(func, task_inputs)
-        self.task_factory = self.build_hera_task_factory()
 
     @property
     def io_owner_name(self) -> str:
