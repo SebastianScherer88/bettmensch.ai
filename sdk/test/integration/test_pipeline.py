@@ -1,3 +1,4 @@
+import pytest
 from bettmensch_ai import InputParameter, component, pipeline, torch_component
 from bettmensch_ai.pipeline import delete, get, list
 from bettmensch_ai.scripts.example_components import (
@@ -9,15 +10,16 @@ from bettmensch_ai.scripts.example_components import (
 )
 
 
+@pytest.mark.order(1)
 def test_artifact_pipeline_decorator_and_register_and_run(
-    test_output_dir,
+    test_output_dir, test_namespace
 ):
     """Defines, registers and runs a Pipeline passing artifacts across components."""
 
     convert_component_factory = component(convert_to_artifact)
     show_component_factory = component(show_artifact)
 
-    @pipeline("test-artifact-pipeline", "argo", True)
+    @pipeline("test-artifact-pipeline", test_namespace, True)
     def parameter_to_artifact_pipeline(
         a: InputParameter = "Param A",
     ) -> None:
@@ -45,11 +47,11 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     assert parameter_to_artifact_pipeline.registered_name.startswith(
         f"pipeline-{parameter_to_artifact_pipeline.name}-"
     )
-    assert parameter_to_artifact_pipeline.registered_namespace == "argo"
+    assert parameter_to_artifact_pipeline.registered_namespace == test_namespace
 
     parameter_to_artifact_flow = parameter_to_artifact_pipeline.run(
         {
-            "a": "Integration test value a",
+            "a": "First integration test value a",
         },
         wait=True,
     )
@@ -57,12 +59,15 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     assert parameter_to_artifact_flow.status.phase == "Succeeded"
 
 
-def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
+@pytest.mark.order(2)
+def test_parameter_pipeline_decorator_and_register_and_run(
+    test_output_dir, test_namespace
+):
     """Defines, registers and runs a Pipeline passing parameters across components."""
 
     add_component_factory = component(add)
 
-    @pipeline("test-parameter-pipeline", "argo", True)
+    @pipeline("test-parameter-pipeline", test_namespace, True)
     def adding_parameters_pipeline(
         a: InputParameter = 1, b: InputParameter = 2
     ) -> None:
@@ -92,7 +97,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
     assert adding_parameters_pipeline.registered_name.startswith(
         f"pipeline-{adding_parameters_pipeline.name}-"
     )
-    assert adding_parameters_pipeline.registered_namespace == "argo"
+    assert adding_parameters_pipeline.registered_namespace == test_namespace
 
     adding_parameters_flow = adding_parameters_pipeline.run(
         {"a": -100, "b": 100}, wait=True
@@ -101,13 +106,16 @@ def test_parameter_pipeline_decorator_and_register_and_run(test_output_dir):
     assert adding_parameters_flow.status.phase == "Succeeded"
 
 
-def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
+@pytest.mark.order(3)
+def test_torch_pipeline_decorator_and_register_and_run(
+    test_output_dir, test_namespace
+):
     """Defines, registers and runs a Pipeline containing a non-trivial TorchComponent."""
 
     torch_ddp_factory = torch_component(torch_ddp)
     show_parameter_factory = component(show_parameter)
 
-    @pipeline("test-torch-pipeline", "argo", True)
+    @pipeline("test-torch-pipeline", test_namespace, True)
     def torch_ddp_pipeline(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
@@ -137,7 +145,7 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     assert torch_ddp_pipeline.registered_name.startswith(
         f"pipeline-{torch_ddp_pipeline.name}-"
     )
-    assert torch_ddp_pipeline.registered_namespace == "argo"
+    assert torch_ddp_pipeline.registered_namespace == test_namespace
 
     torch_ddp_flow = torch_ddp_pipeline.run(
         {"n_iter": 12, "n_seconds_sleep": 5}, wait=True
@@ -146,51 +154,95 @@ def test_torch_pipeline_decorator_and_register_and_run(test_output_dir):
     assert torch_ddp_flow.status.phase == "Succeeded"
 
 
-def test_list():
+@pytest.mark.order(4)
+@pytest.mark.parametrize(
+    "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
+    [
+        ("test-artifact-pipeline-", 1),
+        ("test-parameter-pipeline-", 1),
+        ("test-torch-pipeline-", 1),
+        ("test-", 3),
+    ],
+)
+def test_list(
+    test_namespace,
+    test_registered_pipeline_name_pattern,
+    test_n_registered_pipelines,
+):
     """Test the pipeline.list function."""
     registered_pipelines = list(
-        registered_namespace="argo", registered_name_pattern="test-"
+        registered_namespace=test_namespace,
+        registered_name_pattern=test_registered_pipeline_name_pattern,
     )
+
+    assert len(registered_pipelines) == test_n_registered_pipelines
 
     for registered_pipeline in registered_pipelines:
         assert registered_pipeline.registered
         assert registered_pipeline.registered_id is not None
         assert registered_pipeline.registered_name.startswith(
-            f"pipeline-{registered_pipeline.name}-"
+            f"pipeline-{test_registered_pipeline_name_pattern}"
         )
-        assert registered_pipeline.registered_namespace == "argo"
+        assert registered_pipeline.registered_namespace == test_namespace
 
 
-# def test_get():
-#     """Test the pipeline.get function, implicitly using the
-#     Pipeline.from_workflow_template method."""
+@pytest.mark.order(5)
+@pytest.mark.parametrize(
+    "test_registered_pipeline_name_pattern,test_pipeline_inputs",
+    [
+        (
+            "test-artifact-pipeline-",
+            {
+                "a": "Second integration test value a",
+            },
+        ),
+        ("test-parameter-pipeline-", {"a": -10, "b": 20}),
+        ("test-torch-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+    ],
+)
+def test_get_and_run_from_registry(
+    test_namespace, test_registered_pipeline_name_pattern, test_pipeline_inputs
+):
+    """Test the pipeline.get function, and the Pipeline's constructor when
+    using the registered WorkflowTemplate on the Argo server as a source."""
 
-#     registered_pipelines = list(
-#         registered_namespace='argo',
-#         registered_name_pattern='test-')
+    # we use the `list` method to retrieve the pipeline and access its
+    # `registered_name` property to use as an input for the `get` method.
+    registered_pipeline_name = list(
+        registered_namespace=test_namespace,
+        registered_name_pattern=test_registered_pipeline_name_pattern,
+    )[0].registered_name
 
-#     parameters_to_artifact_pipeline = get(registered_pipelines[0].registered_name,registered_pipelines[0].registered_namespace)
-#     adding_parameters_pipeline = get(registered_pipelines[1].registered_name,registered_pipelines[1].registered_namespace)
+    registered_pipeline = get(registered_pipeline_name, test_namespace)
 
-#     # import pdb
-#     # pdb.set_trace()
+    assert registered_pipeline.registered
+    assert registered_pipeline.registered_id is not None
+    assert registered_pipeline.registered_name.startswith(
+        f"pipeline-{test_registered_pipeline_name_pattern}"
+    )
+    assert registered_pipeline.registered_namespace == test_namespace
 
-#     parameters_to_artifact_pipeline.run({'a':'Test value a','b':'Test value b'})
-#     adding_parameters_pipeline.run({'a':-100,'b':100})
+    flow = registered_pipeline.run(test_pipeline_inputs, wait=True)
+    assert flow.status.phase == "Succeeded"
 
-# def test_pipeline_run():
-#     """Test the Pipeline.run method."""
 
-# def test_delete():
-#     """Test the pipeline.delete function"""
+@pytest.mark.order(6)
+def test_delete(test_namespace):
+    """Test the pipeline.delete function"""
 
-#     registered_pipelines = list(
-#         registered_namespace='argo',
-#         registered_name_pattern='test-')
+    registered_pipelines = list(
+        registered_namespace=test_namespace, registered_name_pattern="test-"
+    )
 
-#     for registered_pipeline in registered_pipelines:
-#         delete(registered_name=registered_pipeline.registered_name,registered_namespace=registered_pipeline.registered_namespace)
+    for registered_pipeline in registered_pipelines:
+        delete(
+            registered_name=registered_pipeline.registered_name,
+            registered_namespace=test_namespace,
+        )
 
-#     assert list(
-#         registered_namespace='argo',
-#         registered_name_pattern='test-') == []
+    assert (
+        list(
+            registered_namespace=test_namespace, registered_name_pattern="test-"
+        )
+        == []
+    )
