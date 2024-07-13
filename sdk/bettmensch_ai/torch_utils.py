@@ -60,7 +60,7 @@ class LaunchConfigSettings(BaseSettings):
     max_restarts: int = 3
     monitor_interval: float = 30
     redirects: str = "0"
-    tee: str = "0"
+    tee: str = "3"
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
 
