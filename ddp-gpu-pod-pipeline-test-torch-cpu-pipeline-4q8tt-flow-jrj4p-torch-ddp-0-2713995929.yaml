@@ -1,0 +1,454 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubectl.kubernetes.io/default-container: main
+    workflows.argoproj.io/node-id: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p-2713995929
+    workflows.argoproj.io/node-name: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p.torch-ddp-0
+  creationTimestamp: "2024-07-13T10:38:25Z"
+  labels:
+    app: torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734
+    torch-node: "0"
+    workflows.argoproj.io/completed: "false"
+    workflows.argoproj.io/workflow: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p
+  name: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p-torch-ddp-0-2713995929
+  namespace: argo
+  ownerReferences:
+  - apiVersion: argoproj.io/v1alpha1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Workflow
+    name: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p
+    uid: d0ba906b-bc3d-4457-99f4-91d78d1dd96d
+  resourceVersion: "7658"
+  uid: 1cace2e8-77d7-4a0f-8078-5b422352a849
+spec:
+  containers:
+  - command:
+    - argoexec
+    - wait
+    - --loglevel
+    - info
+    - --log-format
+    - text
+    env:
+    - name: ARGO_POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: ARGO_POD_UID
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.uid
+    - name: GODEBUG
+      value: x509ignoreCN=0
+    - name: ARGO_WORKFLOW_NAME
+      value: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p
+    - name: ARGO_WORKFLOW_UID
+      value: d0ba906b-bc3d-4457-99f4-91d78d1dd96d
+    - name: ARGO_CONTAINER_NAME
+      value: wait
+    - name: ARGO_TEMPLATE
+      value: '{"name":"torch-ddp-0","inputs":{"parameters":[{"name":"n_iter","default":"100","value":"12"},{"name":"n_seconds_sleep","default":"10","value":"5"},{"name":"duration","default":"null","value":"null"}]},"outputs":{"parameters":[{"name":"duration","valueFrom":{"path":"duration"}}]},"metadata":{"labels":{"app":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734","torch-node":"0"}},"script":{"name":"","image":"bettmensch88/bettmensch.ai:3.11-latest","command":["python"],"ports":[{"name":"ddp","containerPort":29200,"protocol":"TCP"}],"env":[{"name":"bettmensch_ai_distributed_torch_min_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_max_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_node_rank","value":"0"},{"name":"bettmensch_ai_distributed_torch_nproc_per_node","value":"1"},{"name":"bettmensch_ai_distributed_torch_start_method","value":"fork"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_url","value":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734.argo.svc.cluster.local"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_port","value":"29200"},{"name":"bettmensch_ai_distributed_torch_run_id","value":"1"},{"name":"bettmensch_ai_distributed_torch_tee","value":"3"}],"resources":{"limits":{"cpu":"100m","memory":"300Mi"},"requests":{"cpu":"100m","memory":"300Mi"}},"imagePullPolicy":"Always","source":"import
+        os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport
+        json\ntry: n_iter = json.loads(r''''''12'''''')\nexcept: n_iter = r''''''12''''''\ntry:
+        n_seconds_sleep = json.loads(r''''''5'''''')\nexcept: n_seconds_sleep = r''''''5''''''\n\nfrom
+        bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration
+        = OutputParameter(\"duration\")\n\ndef torch_ddp(n_iter: InputParameter=100,
+        n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -\u003e
+        None:\n    \"\"\"When decorated with the torch_component decorator, implements
+        a bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes
+        in your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime
+        as dt\n    import torch\n    import torch.distributed as dist\n    has_gpu
+        = torch.cuda.is_available()\n    print(f''GPU present: {has_gpu}'')\n    if
+        has_gpu:\n        dist.init_process_group(backend=''nccl'')\n    else:\n        dist.init_process_group(backend=''gloo'')\n    for
+        i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        a
+        = torch.tensor([dist.get_rank()])\n        print(f''{i}/{n_iter}: @{dt.now()}'')\n        print(f''{i}/{n_iter}:
+        Backend {dist.get_backend()}'')\n        print(f''{i}/{n_iter}: World size
+        {dist.get_world_size()}'')\n        print(f''{i}/{n_iter}: Rank {dist.get_rank()}'')\n        print(f''{i}/{n_iter}:
+        This makes me worker process {dist.get_rank() + 1}/{dist.get_world_size()}
+        globally!'')\n        if has_gpu:\n            device = torch.device(''cuda:0'')\n            device_count
+        = torch.cuda.device_count()\n            print(f''{i}/{n_iter}: GPU count:
+        {device_count}'')\n            device_name = torch.cuda.get_device_name(0)\n            print(f''{i}/{n_iter}:
+        GPU name: {device_name}'')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f''{i}/{n_iter}:
+        GPU property: {device_property}'')\n        else:\n            device = torch.device(''cpu'')\n        a_placed
+        = a.to(device)\n        print(f''{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}'')\n        dist.all_reduce(a_placed)\n        print(f''{i}/{n_iter}:
+        Post-`all_reduce` tensor: {a_placed}'')\n        print(''==================================================='')\n    if
+        duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom
+        bettmensch_ai import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(torch_ddp)\n\ntorch_distributed_function(n_iter,n_seconds_sleep,duration)"}}'
+    - name: ARGO_NODE_ID
+      value: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p-2713995929
+    - name: ARGO_INCLUDE_SCRIPT_OUTPUT
+      value: "false"
+    - name: ARGO_DEADLINE
+      value: "0001-01-01T00:00:00Z"
+    - name: ARGO_PROGRESS_FILE
+      value: /var/run/argo/progress
+    - name: ARGO_PROGRESS_PATCH_TICK_DURATION
+      value: 1m0s
+    - name: ARGO_PROGRESS_FILE_TICK_DURATION
+      value: 3s
+    - name: AWS_STS_REGIONAL_ENDPOINTS
+      value: regional
+    - name: AWS_DEFAULT_REGION
+      value: us-east-2
+    - name: AWS_REGION
+      value: us-east-2
+    - name: AWS_ROLE_ARN
+      value: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+    - name: AWS_WEB_IDENTITY_TOKEN_FILE
+      value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+    image: quay.io/argoproj/argoexec:v3.5.6
+    imagePullPolicy: IfNotPresent
+    name: wait
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /mainctrfs/argo/staging
+      name: argo-staging
+    - mountPath: /tmp
+      name: tmp-dir-argo
+      subPath: "0"
+    - mountPath: /var/run/argo
+      name: var-run-argo
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-ndvbf
+      readOnly: true
+    - mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+      name: aws-iam-token
+      readOnly: true
+  - args:
+    - /argo/staging/script
+    command:
+    - /var/run/argo/argoexec
+    - emissary
+    - --loglevel
+    - info
+    - --log-format
+    - text
+    - --
+    - python
+    env:
+    - name: bettmensch_ai_distributed_torch_min_nodes
+      value: "3"
+    - name: bettmensch_ai_distributed_torch_max_nodes
+      value: "3"
+    - name: bettmensch_ai_distributed_torch_node_rank
+      value: "0"
+    - name: bettmensch_ai_distributed_torch_nproc_per_node
+      value: "1"
+    - name: bettmensch_ai_distributed_torch_start_method
+      value: fork
+    - name: bettmensch_ai_distributed_torch_rdzv_endpoint_url
+      value: torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734.argo.svc.cluster.local
+    - name: bettmensch_ai_distributed_torch_rdzv_endpoint_port
+      value: "29200"
+    - name: bettmensch_ai_distributed_torch_run_id
+      value: "1"
+    - name: bettmensch_ai_distributed_torch_tee
+      value: "3"
+    - name: ARGO_CONTAINER_NAME
+      value: main
+    - name: ARGO_TEMPLATE
+      value: '{"name":"torch-ddp-0","inputs":{"parameters":[{"name":"n_iter","default":"100","value":"12"},{"name":"n_seconds_sleep","default":"10","value":"5"},{"name":"duration","default":"null","value":"null"}]},"outputs":{"parameters":[{"name":"duration","valueFrom":{"path":"duration"}}]},"metadata":{"labels":{"app":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734","torch-node":"0"}},"script":{"name":"","image":"bettmensch88/bettmensch.ai:3.11-latest","command":["python"],"ports":[{"name":"ddp","containerPort":29200,"protocol":"TCP"}],"env":[{"name":"bettmensch_ai_distributed_torch_min_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_max_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_node_rank","value":"0"},{"name":"bettmensch_ai_distributed_torch_nproc_per_node","value":"1"},{"name":"bettmensch_ai_distributed_torch_start_method","value":"fork"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_url","value":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734.argo.svc.cluster.local"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_port","value":"29200"},{"name":"bettmensch_ai_distributed_torch_run_id","value":"1"},{"name":"bettmensch_ai_distributed_torch_tee","value":"3"}],"resources":{"limits":{"cpu":"100m","memory":"300Mi"},"requests":{"cpu":"100m","memory":"300Mi"}},"imagePullPolicy":"Always","source":"import
+        os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport
+        json\ntry: n_iter = json.loads(r''''''12'''''')\nexcept: n_iter = r''''''12''''''\ntry:
+        n_seconds_sleep = json.loads(r''''''5'''''')\nexcept: n_seconds_sleep = r''''''5''''''\n\nfrom
+        bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration
+        = OutputParameter(\"duration\")\n\ndef torch_ddp(n_iter: InputParameter=100,
+        n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -\u003e
+        None:\n    \"\"\"When decorated with the torch_component decorator, implements
+        a bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes
+        in your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime
+        as dt\n    import torch\n    import torch.distributed as dist\n    has_gpu
+        = torch.cuda.is_available()\n    print(f''GPU present: {has_gpu}'')\n    if
+        has_gpu:\n        dist.init_process_group(backend=''nccl'')\n    else:\n        dist.init_process_group(backend=''gloo'')\n    for
+        i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        a
+        = torch.tensor([dist.get_rank()])\n        print(f''{i}/{n_iter}: @{dt.now()}'')\n        print(f''{i}/{n_iter}:
+        Backend {dist.get_backend()}'')\n        print(f''{i}/{n_iter}: World size
+        {dist.get_world_size()}'')\n        print(f''{i}/{n_iter}: Rank {dist.get_rank()}'')\n        print(f''{i}/{n_iter}:
+        This makes me worker process {dist.get_rank() + 1}/{dist.get_world_size()}
+        globally!'')\n        if has_gpu:\n            device = torch.device(''cuda:0'')\n            device_count
+        = torch.cuda.device_count()\n            print(f''{i}/{n_iter}: GPU count:
+        {device_count}'')\n            device_name = torch.cuda.get_device_name(0)\n            print(f''{i}/{n_iter}:
+        GPU name: {device_name}'')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f''{i}/{n_iter}:
+        GPU property: {device_property}'')\n        else:\n            device = torch.device(''cpu'')\n        a_placed
+        = a.to(device)\n        print(f''{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}'')\n        dist.all_reduce(a_placed)\n        print(f''{i}/{n_iter}:
+        Post-`all_reduce` tensor: {a_placed}'')\n        print(''==================================================='')\n    if
+        duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom
+        bettmensch_ai import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(torch_ddp)\n\ntorch_distributed_function(n_iter,n_seconds_sleep,duration)"}}'
+    - name: ARGO_NODE_ID
+      value: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p-2713995929
+    - name: ARGO_INCLUDE_SCRIPT_OUTPUT
+      value: "false"
+    - name: ARGO_DEADLINE
+      value: "0001-01-01T00:00:00Z"
+    - name: ARGO_PROGRESS_FILE
+      value: /var/run/argo/progress
+    - name: ARGO_PROGRESS_PATCH_TICK_DURATION
+      value: 1m0s
+    - name: ARGO_PROGRESS_FILE_TICK_DURATION
+      value: 3s
+    - name: AWS_STS_REGIONAL_ENDPOINTS
+      value: regional
+    - name: AWS_DEFAULT_REGION
+      value: us-east-2
+    - name: AWS_REGION
+      value: us-east-2
+    - name: AWS_ROLE_ARN
+      value: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+    - name: AWS_WEB_IDENTITY_TOKEN_FILE
+      value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+    image: bettmensch88/bettmensch.ai:3.11-latest
+    imagePullPolicy: Always
+    name: main
+    ports:
+    - containerPort: 29200
+      name: ddp
+      protocol: TCP
+    resources:
+      limits:
+        cpu: 100m
+        memory: 300Mi
+      requests:
+        cpu: 100m
+        memory: 300Mi
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /argo/staging
+      name: argo-staging
+    - mountPath: /var/run/argo
+      name: var-run-argo
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-ndvbf
+      readOnly: true
+    - mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+      name: aws-iam-token
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  initContainers:
+  - command:
+    - argoexec
+    - init
+    - --loglevel
+    - info
+    - --log-format
+    - text
+    env:
+    - name: ARGO_POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: ARGO_POD_UID
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.uid
+    - name: GODEBUG
+      value: x509ignoreCN=0
+    - name: ARGO_WORKFLOW_NAME
+      value: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p
+    - name: ARGO_WORKFLOW_UID
+      value: d0ba906b-bc3d-4457-99f4-91d78d1dd96d
+    - name: ARGO_CONTAINER_NAME
+      value: init
+    - name: ARGO_TEMPLATE
+      value: '{"name":"torch-ddp-0","inputs":{"parameters":[{"name":"n_iter","default":"100","value":"12"},{"name":"n_seconds_sleep","default":"10","value":"5"},{"name":"duration","default":"null","value":"null"}]},"outputs":{"parameters":[{"name":"duration","valueFrom":{"path":"duration"}}]},"metadata":{"labels":{"app":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734","torch-node":"0"}},"script":{"name":"","image":"bettmensch88/bettmensch.ai:3.11-latest","command":["python"],"ports":[{"name":"ddp","containerPort":29200,"protocol":"TCP"}],"env":[{"name":"bettmensch_ai_distributed_torch_min_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_max_nodes","value":"3"},{"name":"bettmensch_ai_distributed_torch_node_rank","value":"0"},{"name":"bettmensch_ai_distributed_torch_nproc_per_node","value":"1"},{"name":"bettmensch_ai_distributed_torch_start_method","value":"fork"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_url","value":"torch-ddp-0-a0f082d0-6f0c-480f-af44-8866b94a9734.argo.svc.cluster.local"},{"name":"bettmensch_ai_distributed_torch_rdzv_endpoint_port","value":"29200"},{"name":"bettmensch_ai_distributed_torch_run_id","value":"1"},{"name":"bettmensch_ai_distributed_torch_tee","value":"3"}],"resources":{"limits":{"cpu":"100m","memory":"300Mi"},"requests":{"cpu":"100m","memory":"300Mi"}},"imagePullPolicy":"Always","source":"import
+        os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport
+        json\ntry: n_iter = json.loads(r''''''12'''''')\nexcept: n_iter = r''''''12''''''\ntry:
+        n_seconds_sleep = json.loads(r''''''5'''''')\nexcept: n_seconds_sleep = r''''''5''''''\n\nfrom
+        bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration
+        = OutputParameter(\"duration\")\n\ndef torch_ddp(n_iter: InputParameter=100,
+        n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -\u003e
+        None:\n    \"\"\"When decorated with the torch_component decorator, implements
+        a bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes
+        in your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime
+        as dt\n    import torch\n    import torch.distributed as dist\n    has_gpu
+        = torch.cuda.is_available()\n    print(f''GPU present: {has_gpu}'')\n    if
+        has_gpu:\n        dist.init_process_group(backend=''nccl'')\n    else:\n        dist.init_process_group(backend=''gloo'')\n    for
+        i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        a
+        = torch.tensor([dist.get_rank()])\n        print(f''{i}/{n_iter}: @{dt.now()}'')\n        print(f''{i}/{n_iter}:
+        Backend {dist.get_backend()}'')\n        print(f''{i}/{n_iter}: World size
+        {dist.get_world_size()}'')\n        print(f''{i}/{n_iter}: Rank {dist.get_rank()}'')\n        print(f''{i}/{n_iter}:
+        This makes me worker process {dist.get_rank() + 1}/{dist.get_world_size()}
+        globally!'')\n        if has_gpu:\n            device = torch.device(''cuda:0'')\n            device_count
+        = torch.cuda.device_count()\n            print(f''{i}/{n_iter}: GPU count:
+        {device_count}'')\n            device_name = torch.cuda.get_device_name(0)\n            print(f''{i}/{n_iter}:
+        GPU name: {device_name}'')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f''{i}/{n_iter}:
+        GPU property: {device_property}'')\n        else:\n            device = torch.device(''cpu'')\n        a_placed
+        = a.to(device)\n        print(f''{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}'')\n        dist.all_reduce(a_placed)\n        print(f''{i}/{n_iter}:
+        Post-`all_reduce` tensor: {a_placed}'')\n        print(''==================================================='')\n    if
+        duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom
+        bettmensch_ai import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(torch_ddp)\n\ntorch_distributed_function(n_iter,n_seconds_sleep,duration)"}}'
+    - name: ARGO_NODE_ID
+      value: pipeline-test-torch-cpu-pipeline-4q8tt-flow-jrj4p-2713995929
+    - name: ARGO_INCLUDE_SCRIPT_OUTPUT
+      value: "false"
+    - name: ARGO_DEADLINE
+      value: "0001-01-01T00:00:00Z"
+    - name: ARGO_PROGRESS_FILE
+      value: /var/run/argo/progress
+    - name: ARGO_PROGRESS_PATCH_TICK_DURATION
+      value: 1m0s
+    - name: ARGO_PROGRESS_FILE_TICK_DURATION
+      value: 3s
+    - name: AWS_STS_REGIONAL_ENDPOINTS
+      value: regional
+    - name: AWS_DEFAULT_REGION
+      value: us-east-2
+    - name: AWS_REGION
+      value: us-east-2
+    - name: AWS_ROLE_ARN
+      value: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+    - name: AWS_WEB_IDENTITY_TOKEN_FILE
+      value: /var/run/secrets/eks.amazonaws.com/serviceaccount/token
+    image: quay.io/argoproj/argoexec:v3.5.6
+    imagePullPolicy: IfNotPresent
+    name: init
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /argo/staging
+      name: argo-staging
+    - mountPath: /var/run/argo
+      name: var-run-argo
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-ndvbf
+      readOnly: true
+    - mountPath: /var/run/secrets/eks.amazonaws.com/serviceaccount
+      name: aws-iam-token
+      readOnly: true
+  nodeName: ip-10-0-50-97.us-east-2.compute.internal
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: argo-workflow
+  serviceAccountName: argo-workflow
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: aws-iam-token
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          audience: sts.amazonaws.com
+          expirationSeconds: 86400
+          path: token
+  - emptyDir: {}
+    name: var-run-argo
+  - emptyDir: {}
+    name: tmp-dir-argo
+  - emptyDir: {}
+    name: argo-staging
+  - name: kube-api-access-ndvbf
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2024-07-13T10:38:26Z"
+    status: "True"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2024-07-13T10:38:27Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2024-07-13T10:41:21Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2024-07-13T10:41:21Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2024-07-13T10:38:25Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://c3ec76cdcee30386a0b9bfa0a93c918f0c9d8a0bf83290e7f47ffa0728a36a04
+    image: docker.io/bettmensch88/bettmensch.ai:3.11-latest
+    imageID: docker.io/bettmensch88/bettmensch.ai@sha256:a4d7a39f997f6ab7be28524b766a11277bfc671b791dad2a71ea3b71899be0b9
+    lastState: {}
+    name: main
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2024-07-13T10:41:21Z"
+  - containerID: containerd://4d768924754796d0c0897302a029cd587db1d5abe4da3ac4390533ecf91be834
+    image: quay.io/argoproj/argoexec:v3.5.6
+    imageID: quay.io/argoproj/argoexec@sha256:c7405360797347aee20cf252c2c0cbed045077e58bf572042e118acefc74e94e
+    lastState: {}
+    name: wait
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2024-07-13T10:38:27Z"
+  hostIP: 10.0.50.97
+  hostIPs:
+  - ip: 10.0.50.97
+  initContainerStatuses:
+  - containerID: containerd://1a01d082a4c5035f1ee1a4d046be55763daaa1c89f4c66d3a456c5cacf726333
+    image: quay.io/argoproj/argoexec:v3.5.6
+    imageID: quay.io/argoproj/argoexec@sha256:c7405360797347aee20cf252c2c0cbed045077e58bf572042e118acefc74e94e
+    lastState: {}
+    name: init
+    ready: true
+    restartCount: 0
+    started: false
+    state:
+      terminated:
+        containerID: containerd://1a01d082a4c5035f1ee1a4d046be55763daaa1c89f4c66d3a456c5cacf726333
+        exitCode: 0
+        finishedAt: "2024-07-13T10:38:26Z"
+        reason: Completed
+        startedAt: "2024-07-13T10:38:25Z"
+  phase: Running
+  podIP: 10.0.50.119
+  podIPs:
+  - ip: 10.0.50.119
+  qosClass: Burstable
+  startTime: "2024-07-13T10:38:25Z"
