@@ -64,6 +64,9 @@ class Component(BaseComponent):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
+        if "resources" not in script_decorator_kwargs:
+            script_decorator_kwargs["resources"] = self.build_resources()
+
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood
         script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)

@@ -20,7 +20,7 @@ from bettmensch_ai.utils import (
     bettmensch_ai_script,
 )
 from hera.shared import global_config
-from hera.workflows import Env, Resources, Script, Task
+from hera.workflows import Env, Script, Task
 from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ContainerPort, ImagePullPolicy, Protocol
 
@@ -113,6 +113,11 @@ class TorchComponent(BaseComponent):
     k8s_namespace: str = "argo"
     k8s_service_name: str = ""
 
+    # if no resources are specified, set minimal requirements derived from
+    # testing the ddp example on K8s
+    cpu: Optional[Union[float, int, str]] = "100m"
+    memory: Optional[str] = "300Mi"
+
     def __init__(
         self,
         func: Callable,
@@ -195,15 +200,8 @@ class TorchComponent(BaseComponent):
                 "image_pull_policy"
             ] = ImagePullPolicy.always
 
-        # if no resources are specified, set minimal requirements derived from
-        # testing the ddp example on K8s
         if "resources" not in script_decorator_kwargs:
-            script_decorator_kwargs["resources"] = Resources(
-                cpu_request="100m",  # 100m works
-                cpu_limit="100m",
-                memory_request="300Mi",  # 300Mi works
-                memory_limit="300Mi",
-            )
+            script_decorator_kwargs["resources"] = self.build_resources()
 
         script_decorator_kwargs["ports"] = [
             ContainerPort(
@@ -243,7 +241,7 @@ class TorchComponent(BaseComponent):
                 Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
                     value=f"{self.k8s_service_name}.{self.k8s_namespace}"
-                    + "svc.cluster.local",
+                    + ".svc.cluster.local",
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_port",
