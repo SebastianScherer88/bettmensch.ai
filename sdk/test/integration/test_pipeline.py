@@ -14,7 +14,8 @@ from bettmensch_ai.scripts.example_components import (
 def test_artifact_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
 ):
-    """Defines, registers and runs a Pipeline passing artifacts across components."""
+    """Defines, registers and runs a Pipeline passing artifacts across
+    components."""
 
     convert_component_factory = component(convert_to_artifact)
     show_component_factory = component(show_artifact)
@@ -28,7 +29,7 @@ def test_artifact_pipeline_decorator_and_register_and_run(
             a=a,
         )
 
-        show = show_component_factory(
+        show_component_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
         )
@@ -47,7 +48,9 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     assert parameter_to_artifact_pipeline.registered_name.startswith(
         f"pipeline-{parameter_to_artifact_pipeline.name}-"
     )
-    assert parameter_to_artifact_pipeline.registered_namespace == test_namespace
+    assert (
+        parameter_to_artifact_pipeline.registered_namespace == test_namespace
+    )  # noqa: E501
 
     parameter_to_artifact_flow = parameter_to_artifact_pipeline.run(
         {
@@ -63,7 +66,8 @@ def test_artifact_pipeline_decorator_and_register_and_run(
 def test_parameter_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
 ):
-    """Defines, registers and runs a Pipeline passing parameters across components."""
+    """Defines, registers and runs a Pipeline passing parameters across
+    components."""
 
     add_component_factory = component(add)
 
@@ -77,7 +81,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
             b=b,
         )
 
-        a_plus_b_plus_2 = add_component_factory(
+        add_component_factory(
             "a-plus-b-plus-2",
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),
@@ -107,15 +111,23 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 
 
 @pytest.mark.order(3)
+@pytest.mark.parametrize(
+    "test_pipeline_name, test_gpus",
+    [
+        ("test-torch-gpu-pipeline", 1),
+        ("test-torch-cpu-pipeline", None),
+    ],
+)
 def test_torch_pipeline_decorator_and_register_and_run(
-    test_output_dir, test_namespace
+    test_pipeline_name, test_gpus, test_output_dir, test_namespace
 ):
-    """Defines, registers and runs a Pipeline containing a non-trivial TorchComponent."""
+    """Defines, registers and runs a Pipeline containing a non-trivial
+    TorchComponent."""
 
     torch_ddp_factory = torch_component(torch_ddp)
     show_parameter_factory = component(show_parameter)
 
-    @pipeline("test-torch-pipeline", test_namespace, True)
+    @pipeline(test_pipeline_name, test_namespace, True)
     def torch_ddp_pipeline(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
@@ -124,9 +136,9 @@ def test_torch_pipeline_decorator_and_register_and_run(
             n_nodes=3,
             n_iter=n_iter,
             n_seconds_sleep=n_seconds_sleep,
-        )
+        ).set_gpus(test_gpus)
 
-        torch_ddp_duration_1 = show_parameter_factory(
+        show_parameter_factory(
             "show-duration-param",
             a=torch_ddp_test.outputs["duration"],
         )
@@ -160,8 +172,9 @@ def test_torch_pipeline_decorator_and_register_and_run(
     [
         ("test-artifact-pipeline-", 1),
         ("test-parameter-pipeline-", 1),
-        ("test-torch-pipeline-", 1),
-        ("test-", 3),
+        ("test-torch-gpu-pipeline-", 1),
+        ("test-torch-cpu-pipeline-", 1),
+        ("test-", 4),
     ],
 )
 def test_list(
@@ -197,7 +210,8 @@ def test_list(
             },
         ),
         ("test-parameter-pipeline-", {"a": -10, "b": 20}),
-        ("test-torch-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+        ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+        ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
     ],
 )
 def test_get_and_run_from_registry(
@@ -242,7 +256,8 @@ def test_delete(test_namespace):
 
     assert (
         list(
-            registered_namespace=test_namespace, registered_name_pattern="test-"
+            registered_namespace=test_namespace,
+            registered_name_pattern="test-",  # noqa: E501
         )
         == []
     )

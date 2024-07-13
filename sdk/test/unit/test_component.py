@@ -42,8 +42,11 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
         _pipeline_context.clear()
 
         # add components to pipeline context
-        test_component = Component(
-            func=test_function, name="test_name", **task_inputs
+        test_component = (
+            Component(func=test_function, name="test_name", **task_inputs)
+            .set_cpu(0.5)
+            .set_memory("100Mi")
+            .set_gpus(1)
         )
 
     # validate addition of component to pipeline context
@@ -55,6 +58,11 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
     assert test_component.hera_template_kwargs == {}
+    assert test_component.cpu == 0.5
+    assert test_component.memory == "100Mi"
+    assert test_component.gpus == 1
+    assert test_component.ephemeral is None
+    assert test_component.custom_resources is None
     assert test_component.depends == "mock-component-0"
 
     # validate component task_inputs
@@ -124,9 +132,12 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
         _pipeline_context.clear()
 
         # add components to pipeline context
-        test_component = test_component_factory(
-            name="test_name", **task_inputs
-        )  # noqa: E501
+        test_component = (
+            test_component_factory(name="test_name", **task_inputs)
+            .set_cpu(0.5)
+            .set_memory("100Mi")
+            .set_gpus(1)
+        )
 
     # validate addition of component to pipeline context
     assert test_component == _pipeline_context.components[0]
@@ -137,6 +148,11 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
     assert test_component.hera_template_kwargs == {}
+    assert test_component.cpu == 0.5
+    assert test_component.memory == "100Mi"
+    assert test_component.gpus == 1
+    assert test_component.ephemeral is None
+    assert test_component.custom_resources is None
 
     # validate component task_inputs
     for task_input_name in ("a", "b", "c", "d"):
@@ -186,16 +202,24 @@ def test_parameter_component_to_hera(test_add_function, test_mock_pipeline):
         _pipeline_context.clear()
 
         # add components to pipeline context
-        a_plus_b = add_component_factory(
-            "a_plus_b",
-            a=pipeline_input_a,
-            b=pipeline_input_b,
+        a_plus_b = (
+            add_component_factory(
+                "a_plus_b",
+                a=pipeline_input_a,
+                b=pipeline_input_b,
+            )
+            .set_cpu(1)
+            .set_memory("1Gi")
         )
 
-        a_plus_b_plus_2 = add_component_factory(
-            "a_plus_b_plus_2",
-            a=a_plus_b.outputs["sum"],
-            b=InputParameter("two", 2),
+        a_plus_b_plus_2 = (
+            add_component_factory(
+                "a_plus_b_plus_2",
+                a=a_plus_b.outputs["sum"],
+                b=InputParameter("two", 2),
+            )
+            .set_gpus(1)
+            .set_ephemeral("1Ti")
         )
 
     a_plus_b.task_factory = a_plus_b.build_hera_task_factory()
@@ -241,16 +265,24 @@ def test_artifact_component_to_hera(
         _pipeline_context.clear()
 
         # add components to pipeline context
-        convert = convert_component_factory(
-            "convert_parameters",
-            a=pipeline_input_a,
-            b=pipeline_input_b,
+        convert = (
+            convert_component_factory(
+                "convert_parameters",
+                a=pipeline_input_a,
+                b=pipeline_input_b,
+            )
+            .set_cpu(0.8)
+            .set_memory("2Pi")
         )
 
-        show = show_component_factory(
-            "show_artifacts",
-            a=convert.outputs["a_art"],
-            b=convert.outputs["b_art"],
+        show = (
+            show_component_factory(
+                "show_artifacts",
+                a=convert.outputs["a_art"],
+                b=convert.outputs["b_art"],
+            )
+            .set_gpus(2)
+            .set_ephemeral("10Ki")
         )
 
     convert.task_factory = convert.build_hera_task_factory()

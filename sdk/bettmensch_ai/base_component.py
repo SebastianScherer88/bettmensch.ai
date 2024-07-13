@@ -1,7 +1,7 @@
 import inspect
-from typing import Callable, Dict, List, Union
+from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import COMPONENT_TYPE, PIPELINE_TYPE
+from bettmensch_ai.constants import COMPONENT_TYPE, GPU_FLAG, PIPELINE_TYPE
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -10,7 +10,7 @@ from bettmensch_ai.io import (
 )
 from bettmensch_ai.pipeline_context import _pipeline_context
 from bettmensch_ai.utils import get_func_args, validate_func_args
-from hera.workflows import Task
+from hera.workflows import Resources, Task
 
 
 class BaseComponent(object):
@@ -24,6 +24,11 @@ class BaseComponent(object):
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
+    cpu: Optional[Union[float, int, str]] = None
+    memory: Optional[str] = None
+    ephemeral: Optional[str] = None
+    gpus: Optional[Union[int, str]] = None
+    custom_resources: Optional[Dict] = None
     task_factory: Callable = None
 
     def __init__(
@@ -232,6 +237,43 @@ class BaseComponent(object):
             )
 
         return result
+
+    def set_cpu(
+        self, cpu: Optional[Union[float, int, str]]
+    ) -> "BaseComponent":  # noqa: E501
+        self.cpu = cpu
+        return self
+
+    def set_memory(self, memory: Optional[str]) -> "BaseComponent":
+        self.memory = memory
+        return self
+
+    def set_ephemeral(self, ephemeral: Optional[str]) -> "BaseComponent":
+        self.ephemeral = ephemeral
+        return self
+
+    def set_gpus(self, gpus: Optional[Union[int, str]]) -> "BaseComponent":
+        self.gpus = gpus
+        return self
+
+    def set_custom_resources(
+        self, custom_resources: Optional[Dict]
+    ) -> "BaseComponent":
+        self.custom_resources = custom_resources
+        return self
+
+    def build_resources(self) -> Resources:
+        return Resources(
+            cpu_request=self.cpu,
+            cpu_limit=self.cpu,
+            memory_request=self.memory,
+            memory_limit=self.memory,
+            ephemeral_request=self.ephemeral,
+            ephemeral_limit=self.ephemeral,
+            gpus=self.gpus,
+            gpu_flag=GPU_FLAG,
+            custom_resources=self.custom_resources,
+        )
 
     def build_hera_task_factory(self) -> Union[Callable, List[Callable]]:
         """Generates the task factory task_wrapper callable from the
