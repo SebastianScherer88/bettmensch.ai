@@ -67,6 +67,9 @@ class Component(BaseComponent):
         if "resources" not in script_decorator_kwargs:
             script_decorator_kwargs["resources"] = self.build_resources()
 
+        if "tolerations" not in script_decorator_kwargs:
+            script_decorator_kwargs["tolerations"] = self.build_tolerations()
+
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood
         script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)

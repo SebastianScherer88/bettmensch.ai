@@ -1,7 +1,12 @@
 import inspect
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import COMPONENT_TYPE, GPU_FLAG, PIPELINE_TYPE
+from bettmensch_ai.constants import (
+    COMPONENT_TYPE,
+    GPU_FLAG,
+    GPU_TOLERATION,
+    PIPELINE_TYPE,
+)
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -10,7 +15,7 @@ from bettmensch_ai.io import (
 )
 from bettmensch_ai.pipeline_context import _pipeline_context
 from bettmensch_ai.utils import get_func_args, validate_func_args
-from hera.workflows import Resources, Task
+from hera.workflows import Resources, Task, models
 
 
 class BaseComponent(object):
@@ -274,6 +279,12 @@ class BaseComponent(object):
             gpu_flag=GPU_FLAG,
             custom_resources=self.custom_resources,
         )
+
+    def build_tolerations(self) -> List[models.Toleration]:
+        if self.gpus is not None:
+            return [GPU_TOLERATION]
+        else:
+            return []
 
     def build_hera_task_factory(self) -> Union[Callable, List[Callable]]:
         """Generates the task factory task_wrapper callable from the

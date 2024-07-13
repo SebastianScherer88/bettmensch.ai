@@ -203,6 +203,9 @@ class TorchComponent(BaseComponent):
         if "resources" not in script_decorator_kwargs:
             script_decorator_kwargs["resources"] = self.build_resources()
 
+        if "tolerations" not in script_decorator_kwargs:
+            script_decorator_kwargs["tolerations"] = self.build_tolerations()
+
         script_decorator_kwargs["ports"] = [
             ContainerPort(
                 container_port=DDP_PORT_NUMBER,
