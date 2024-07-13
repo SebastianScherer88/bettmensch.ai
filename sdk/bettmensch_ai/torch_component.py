@@ -235,6 +235,10 @@ class TorchComponent(BaseComponent):
                     name="bettmensch_ai_distributed_torch_nproc_per_node",
                     value=self.nproc_per_node,
                 ),
+                Env(
+                    name="bettmensch_ai_distributed_torch_max_restarts",
+                    value=1,
+                ),
                 # torch's LaunchConfig's default of 'spawn' doesnt seem to work
                 # inside the argo emissary runtime context for some reason
                 Env(
