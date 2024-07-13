@@ -102,7 +102,7 @@ class Component(BaseComponent):
         return task
 
 
-def component(func: Callable) -> Callable:
+def component(func: Callable) -> Callable[..., Component]:
     """Takes a calleable and generates a configured Component factory that will
     generate a Component version of the callable if invoked inside an active
     PipelineContext.

@@ -347,7 +347,7 @@ class TorchComponent(BaseComponent):
         )
 
 
-def torch_component(func: Callable) -> Callable:
+def torch_component(func: Callable) -> Callable[..., TorchComponent]:
     """Takes a calleable and generates a configured TorchComponent factory that
     will generate a TorchComponent version of the callable if invoked inside an
     active PipelineContext.
