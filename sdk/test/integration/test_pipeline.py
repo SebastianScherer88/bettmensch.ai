@@ -114,8 +114,8 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_gpus",
     [
-        ("test-torch-gpu-pipeline", 1),
         ("test-torch-cpu-pipeline", None),
+        ("test-torch-gpu-pipeline", 1),
     ],
 )
 def test_torch_pipeline_decorator_and_register_and_run(
@@ -172,8 +172,8 @@ def test_torch_pipeline_decorator_and_register_and_run(
     [
         ("test-artifact-pipeline-", 1),
         ("test-parameter-pipeline-", 1),
-        ("test-torch-gpu-pipeline-", 1),
         ("test-torch-cpu-pipeline-", 1),
+        ("test-torch-gpu-pipeline-", 1),
         ("test-", 4),
     ],
 )

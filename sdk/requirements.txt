@@ -7,3 +7,4 @@ networkx
 torch==2.2.2
 pytest
 pytest-order
+numpy
