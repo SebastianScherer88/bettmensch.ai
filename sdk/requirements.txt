@@ -5,6 +5,5 @@ hera==5.15.1
 PyYAML==6.0.1
 networkx
 torch==2.2.2
-pytest
-pytest-order
-numpy
+pytest==8.2.2
+pytest-order==1.2.1

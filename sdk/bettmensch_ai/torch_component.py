@@ -220,6 +220,10 @@ class TorchComponent(BaseComponent):
         for torch_node_rank in range(self.n_nodes):
             script_decorator_kwargs["env"] = [
                 Env(
+                    name="NCCL_DEBUG",
+                    value="INFO",
+                ),
+                Env(
                     name="bettmensch_ai_distributed_torch_min_nodes",
                     value=self.min_nodes,
                 ),
