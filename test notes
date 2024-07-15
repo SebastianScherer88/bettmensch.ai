@@ -1,0 +1,5 @@
+CPU works across nodes up until 5, then we get the python hera exe format issue on nodes > 5 in rank
+
+GPU works if pods are on the same nodes (e.g. p3.8xlarge which ahs 4 gpus), not sure about cross node setup.
+
+cpu failure could be related to r8g nodes spinning up which use aws graviton processors
