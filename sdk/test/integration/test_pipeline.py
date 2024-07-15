@@ -112,14 +112,19 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 
 @pytest.mark.order(3)
 @pytest.mark.parametrize(
-    "test_pipeline_name, test_gpus",
+    "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-torch-cpu-pipeline", None),
-        ("test-torch-gpu-pipeline", 1),
+        ("test-torch-cpu-pipeline", 4, None, "300Mi"),
+        ("test-torch-gpu-pipeline", 2, 1, "700Mi"),
     ],
 )
 def test_torch_pipeline_decorator_and_register_and_run(
-    test_pipeline_name, test_gpus, test_output_dir, test_namespace
+    test_pipeline_name,
+    test_n_nodes,
+    test_gpus,
+    test_memory,
+    test_output_dir,
+    test_namespace,
 ):
     """Defines, registers and runs a Pipeline containing a non-trivial
     TorchComponent."""
@@ -131,12 +136,16 @@ def test_torch_pipeline_decorator_and_register_and_run(
     def torch_ddp_pipeline(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
-        torch_ddp_test = torch_ddp_factory(
-            "torch-ddp",
-            n_nodes=3,
-            n_iter=n_iter,
-            n_seconds_sleep=n_seconds_sleep,
-        ).set_gpus(test_gpus)
+        torch_ddp_test = (
+            torch_ddp_factory(
+                "torch-ddp",
+                n_nodes=test_n_nodes,
+                n_iter=n_iter,
+                n_seconds_sleep=n_seconds_sleep,
+            )
+            .set_gpus(test_gpus)
+            .set_memory(test_memory)
+        )
 
         show_parameter_factory(
             "show-duration-param",
