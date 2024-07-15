@@ -114,8 +114,8 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-torch-cpu-pipeline", 4, None, "300Mi"),
         ("test-torch-gpu-pipeline", 4, 1, "700Mi"),
+        ("test-torch-cpu-pipeline", 4, None, "300Mi"),
     ],
 )
 def test_torch_pipeline_decorator_and_register_and_run(
@@ -127,7 +127,8 @@ def test_torch_pipeline_decorator_and_register_and_run(
     test_namespace,
 ):
     """Defines, registers and runs a Pipeline containing a non-trivial
-    TorchComponent."""
+    TorchComponent. The pod spec patch ensures distributing replica pods of the
+    TorchComponent across different K8s nodes."""
 
     torch_ddp_factory = torch_component(torch_ddp)
     show_parameter_factory = component(show_parameter)
@@ -139,6 +140,15 @@ def test_torch_pipeline_decorator_and_register_and_run(
         torch_ddp_test = (
             torch_ddp_factory(
                 "torch-ddp",
+                hera_template_kwargs={
+                    "pod_spec_patch": """topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchExpressions:
+      - { key: torch-node, operator: In, values: ['0','1','2','3']}"""
+                },
                 n_nodes=test_n_nodes,
                 n_iter=n_iter,
                 n_seconds_sleep=n_seconds_sleep,

@@ -1,5 +1,4 @@
 from typing import Callable, Literal, Optional
-from uuid import uuid4
 
 from bettmensch_ai.constants import DDP_PORT_NAME, DDP_PORT_NUMBER
 from hera.workflows import Resource
@@ -26,22 +25,24 @@ class LaunchConfigSettings(BaseSettings):
                             defined function.
         rdzv_backend: rdzv_backend to use in the rendezvous (zeus-adapter,
             etcd). We use "static" as that was successfully tested on K8s.
-        rdzv_endpoint_url: The endpoint url of the rdzv sync. storage. This will
-            be the DNS of the service that we route to the master node pod in
-            K8s.
+        rdzv_endpoint_url: The endpoint url of the rdzv sync. storage. This
+            will be the DNS of the service that we route to the master node pod
+            in K8s.
         rdzv_endpoint_port: The port of the endpoint of the rdvz sync. storage.
             We use the default 29500.
-        run_id: The unique run id of the job (if not passed a unique one will be
-                deduced from run environment - flow workflow id in flow - or auto generated).
+        run_id: The unique run id of the job (if not passed a unique one will
+            be deduced from run environment - flow workflow id in flow - or
+            auto generated).
         role: User defined role of the worker (defaults to "trainer").
-        max_restarts: The maximum amount of restarts that elastic agent will conduct
-                    on workers before failure.
-        monitor_interval: The interval in seconds that is used by the elastic_agent
-                        as a period of monitoring workers.
+        max_restarts: The maximum amount of restarts that elastic agent will
+            conduct on workers before failure.
+        monitor_interval: The interval in seconds that is used by the
+            elastic_agent as a period of monitoring workers.
         log_dir: base log directory where log files are written. If not set,
                 one is created in a tmp dir but NOT removed on exit.
-        log_line_prefix_template: Not explained in torch docs, but passed to the
-            LocalElasticAgent instance during distributed run orchestration.
+        log_line_prefix_template: Not explained in torch docs, but passed to
+            the LocalElasticAgent instance during distributed run
+            orchestration.
         tee: configuration to "tee" stdout/stderr to console + log file.
     """
 
@@ -51,7 +52,8 @@ class LaunchConfigSettings(BaseSettings):
     nproc_per_node: int = 1
     start_method: Literal[
         "spawn", "fork", "forkserver"
-    ] = "fork"  # torch's LaunchConfig's default of 'spawn' doesnt seem to work inside the argo emissary runtime context for some reason
+    ] = "fork"  # torch's LaunchConfig's default of 'spawn' doesnt seem to work
+    # inside the argo emissary runtime context for some reason
     rdzv_backend: str = "static"
     rdzv_endpoint_url: str = "localhost"
     rdzv_endpoint_port: int = 29500
@@ -80,7 +82,9 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
     )
 
     print(
-        f"Torch distributed launch config settings: {launch_config_settings_from_env.model_dump()}"
+        f"""Torch distributed launch config settings: {
+            launch_config_settings_from_env.model_dump()
+        }"""
     )
 
     return LaunchConfig(
@@ -88,7 +92,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         max_nodes=launch_config_settings_from_env.max_nodes,
         nproc_per_node=launch_config_settings_from_env.nproc_per_node,
         start_method=launch_config_settings_from_env.start_method,
-        rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",
+        rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",  # noqa: E501
         rdzv_backend=launch_config_settings_from_env.rdzv_backend,
         run_id=launch_config_settings_from_env.run_id,
         role=launch_config_settings_from_env.role,
@@ -97,7 +101,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         tee=Std.from_str(launch_config_settings_from_env.tee),
         redirects=Std.from_str(launch_config_settings_from_env.redirects),
         log_dir=launch_config_settings_from_env.log_dir,
-        log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,
+        log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,  # noqa: E501
         rdzv_configs={"rank": launch_config_settings_from_env.node_rank},
     )
 
@@ -150,11 +154,11 @@ metadata:
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
   ports:
-  - name: {DDP_PORT_NAME}  # Port for torchrun master-worker node communication.
+  - name: {DDP_PORT_NAME}  # Port for torchrun master<->worker node coms.
     port: {DDP_PORT_NUMBER}
     targetPort: {DDP_PORT_NUMBER}
   selector:
-    app: {service_name}
+    torch-job: {service_name}
     torch-node: '0'  # Selector for pods associated with this service.
 """,
     )
@@ -169,5 +173,11 @@ def delete_torch_service_template(
     return Resource(
         name=f"{component_base_name}-delete-torch-service",
         action="delete",
-        flags=["service", "--selector", f"app={service_name}", "-n", namespace],
+        flags=[
+            "service",
+            "--selector",
+            f"torch-job={service_name}",
+            "-n",
+            namespace,
+        ],
     )
