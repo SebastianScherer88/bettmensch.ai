@@ -264,7 +264,7 @@ class TorchComponent(BaseComponent):
                 ),
                 Env(
                     name="bettmensch_ai_distributed_torch_tee",
-                    value=3,
+                    value=0,
                 ),
             ]
 
@@ -272,12 +272,14 @@ class TorchComponent(BaseComponent):
                 "name"
             ] = f"{self.base_name}-{torch_node_rank}"
 
-            script_decorator_kwargs["labels"] = {"torch-node": torch_node_rank}
-
-            if torch_node_rank == 0:
-                script_decorator_kwargs["labels"][
-                    "app"
-                ] = self.k8s_service_name  # noqa: E501
+            labels: Dict = script_decorator_kwargs.get("labels", {})
+            labels.update(
+                {
+                    "torch-node": torch_node_rank,
+                    "torch-job": self.k8s_service_name,
+                }
+            )
+            script_decorator_kwargs["labels"] = labels
 
             # this will invoke our custom TorchComponentInlineScriptRunner
             # under the hood
