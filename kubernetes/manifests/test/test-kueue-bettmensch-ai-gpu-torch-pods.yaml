@@ -1,0 +1,128 @@
+# Service configuration for multinode.
+apiVersion: v1
+kind: Service
+metadata:
+  name: multinode-bettmensch-ai-gpu-pod-driver-svc
+  labels:
+    app: multinode-bettmensch-ai-gpu
+spec:
+  clusterIP: None  # ClusterIP set to None for headless service.
+  ports:
+  - name: ddp  # Port for torchrun master-worker node communication.
+    port: 29500
+    targetPort: 29500
+  selector:
+    app: multinode-bettmensch-ai-gpu
+    torch-node: driver  # Selector for pods associated with this service.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode-bettmensch-ai-gpu
+    torch-node: driver
+  name: multinode-bettmensch-ai-gpu-pod-driver
+spec:
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  containers:
+    - command:
+      - python
+      - -c 
+      - "from bettmensch_ai.components.examples import torch_ddp;from bettmensch_ai.components import torch_distribute; torch_ddp_function = torch_distribute()(torch_ddp); torch_ddp_function(10,3)"
+      env:
+        - name: bettmensch_ai_distributed_torch_node_rank
+          value: "0"
+        - name: bettmensch_ai_distributed_torch_rdzv_endpoint_url
+          value: multinode-bettmensch-ai-gpu-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+        - name: bettmensch_ai_distributed_torch_rdzv_endpoint_port
+          value: '29500'
+        - name: bettmensch_ai_distributed_torch_min_nodes
+          value: '2'
+        - name: bettmensch_ai_distributed_torch_max_nodes
+          value: '2'
+        - name: bettmensch_ai_distributed_torch_start_method
+          value: fork
+        - name: bettmensch_ai_distributed_torch_max_restarts
+          value: '0'
+        - name: bettmensch_ai_distributed_torch_nproc_per_node
+          value: '1'
+        - name: bettmensch_ai_distributed_torch_run_id
+          value: '1'
+        - name: bettmensch_ai_distributed_torch_tee
+          value: '0'
+      image: bettmensch88/bettmensch.ai:3.11-latest
+      name: multinode-bettmensch-ai-driver
+      ports:
+      - containerPort: 29500
+        name: ddp
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 900m
+          memory: 700M
+          nvidia.com/gpu: 1
+        requests:
+          cpu: 900m
+          memory: 0M
+          nvidia.com/gpu: 1
+  restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    kueue.x-k8s.io/queue-name: user-queue
+  labels:
+    app: multinode-bettmensch-ai-gpu
+    torch-node: worker
+  name: multinode-bettmensch-ai-gpu-pod-worker-1
+spec:
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+  containers:
+    - command:
+      - python
+      - -c 
+      - "from bettmensch_ai.components.examples import torch_ddp;from bettmensch_ai.components import torch_distribute; torch_ddp_function = torch_distribute()(torch_ddp); torch_ddp_function(10,3)"
+      env:
+        - name: bettmensch_ai_distributed_torch_node_rank
+          value: "1"
+        - name: bettmensch_ai_distributed_torch_rdzv_endpoint_url
+          value: multinode-bettmensch-ai-pod-driver-svc.default.svc.cluster.local  # Node with rank 0 is chosen as the master node.
+        - name: bettmensch_ai_distributed_torch_rdzv_endpoint_port
+          value: '29500'
+        - name: bettmensch_ai_distributed_torch_min_nodes
+          value: '2'
+        - name: bettmensch_ai_distributed_torch_max_nodes
+          value: '2'
+        - name: bettmensch_ai_distributed_torch_nproc_per_node
+          value: '1'
+        - name: bettmensch_ai_distributed_torch_start_method
+          value: fork
+        - name: bettmensch_ai_distributed_torch_run_id
+          value: '1'
+        - name: bettmensch_ai_distributed_torch_tee
+          value: '0'
+      image: bettmensch88/bettmensch.ai:3.11-latest
+      name: multinode-bettmensch-ai-worker
+      ports:
+      - containerPort: 29500
+        name: ddp
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 900m
+          memory: 700M
+          nvidia.com/gpu: 1
+        requests:
+          cpu: 900m
+          memory: 0M
+          nvidia.com/gpu: 1
+  restartPolicy: OnFailure
