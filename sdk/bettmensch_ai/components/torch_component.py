@@ -81,7 +81,7 @@ class TorchComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
         # add function definition and decoration with `torch_distribute`
         torch_distribute_decoration = [
-            "\nfrom bettmensch_ai import torch_distribute\n",
+            "\nfrom bettmensch_ai.components import torch_distribute\n",
             "torch_distribute_decorator=torch_distribute()\n"
             f"""torch_distributed_function=torch_distribute_decorator({
                 instance.source.__name__
