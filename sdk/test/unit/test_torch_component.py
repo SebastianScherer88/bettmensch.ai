@@ -1,4 +1,9 @@
 from bettmensch_ai.components import TorchComponent, torch_component
+from bettmensch_ai.components.examples import (
+    add_parameters,
+    convert_to_artifact,
+    show_artifact,
+)
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -207,12 +212,10 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.task_factory is None
 
 
-def test_parameter_torch_component_to_hera(
-    test_add_function, test_mock_pipeline
-):
+def test_parameter_torch_component_to_hera(test_mock_pipeline):
     """Declaration of Component using InputParameter and OutputParameter"""
 
-    add_component_factory = torch_component(test_add_function)
+    add_component_factory = torch_component(add_parameters)
 
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
@@ -309,21 +312,15 @@ def test_parameter_torch_component_to_hera(
 
 
 def test_artifact_torch_component_to_hera(
-    test_convert_to_artifact_function,
-    test_show_artifact_function,
     test_mock_pipeline,
 ):
 
-    convert_component_factory = torch_component(
-        test_convert_to_artifact_function
-    )
-    show_component_factory = torch_component(test_show_artifact_function)
+    convert_component_factory = torch_component(convert_to_artifact)
+    show_component_factory = torch_component(show_artifact)
 
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
-    pipeline_input_b = InputParameter(name="b", value=2)
-    pipeline_input_b.set_owner(test_mock_pipeline)
 
     with _pipeline_context:
         _pipeline_context.clear()
@@ -336,7 +333,6 @@ def test_artifact_torch_component_to_hera(
                 min_nodes=1,
                 nproc_per_node=5,
                 a=pipeline_input_a,
-                b=pipeline_input_b,
             )
             .set_cpu(0.8)
             .set_memory("2Pi")
@@ -346,7 +342,6 @@ def test_artifact_torch_component_to_hera(
             show_component_factory(
                 "show_artifacts",
                 a=convert.outputs["a_art"],
-                b=convert.outputs["b_art"],
             )
             .set_gpus(2)
             .set_ephemeral("10Ki")
@@ -361,7 +356,6 @@ def test_artifact_torch_component_to_hera(
         namespace="argo",
         arguments=[
             Parameter(name="a", value=1),
-            Parameter(name="b", value=2),
         ],
     ) as wft:
 

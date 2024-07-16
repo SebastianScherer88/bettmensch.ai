@@ -1,37 +1,35 @@
 from bettmensch_ai.components import component, torch_component
+from bettmensch_ai.components.examples import (
+    add_parameters,
+    convert_to_artifact,
+    show_artifact,
+)
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import pipeline
 from hera.workflows import WorkflowTemplate
 
 
 def test_artifact_pipeline(
-    test_convert_to_artifact_function,
-    test_show_artifact_function,
     test_output_dir,
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    convert_torch_component_factory = torch_component(
-        test_convert_to_artifact_function
-    )
-    show_component_factory = component(test_show_artifact_function)
+    convert_torch_component_factory = torch_component(convert_to_artifact)
+    show_component_factory = component(show_artifact)
 
     @pipeline("test-artifact-pipeline", "argo", True)
     def parameter_to_artifact(
         a: InputParameter = "Param A",
-        b: InputParameter = "Param B",
     ) -> None:
         convert = convert_torch_component_factory(
             "convert-to-artifact",
             n_nodes=2,
             a=a,
-            b=b,
         )
 
         show_component_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
-            b=convert.outputs["b_art"],
         )
 
     assert parameter_to_artifact.built
@@ -39,11 +37,8 @@ def test_artifact_pipeline(
     assert parameter_to_artifact.registered_id is None
     assert parameter_to_artifact.registered_name is None
     assert parameter_to_artifact.registered_namespace is None
-    assert set(parameter_to_artifact.inputs.keys()) == {"a", "b"}
-    for pipeline_input_name, pipeline_input_default in (
-        ("a", "Param A"),
-        ("b", "Param B"),
-    ):
+    assert set(parameter_to_artifact.inputs.keys()) == {"a"}
+    for pipeline_input_name, pipeline_input_default in (("a", "Param A"),):
         assert (
             parameter_to_artifact.inputs[pipeline_input_name].name
             == pipeline_input_name
@@ -92,11 +87,11 @@ def test_artifact_pipeline(
     parameter_to_artifact.export(test_output_dir)
 
 
-def test_parameter_pipeline(test_add_function, test_output_dir):
+def test_parameter_pipeline(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    add_component_factory = component(test_add_function)
-    add_torch_component_factory = torch_component(test_add_function)
+    add_component_factory = component(add_parameters)
+    add_torch_component_factory = torch_component(add_parameters)
 
     @pipeline("test-parameter-pipeline", "argo", True)
     def adding_parameters(
