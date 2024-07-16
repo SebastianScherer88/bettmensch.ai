@@ -1,13 +1,6 @@
-from bettmensch_ai import (
-    PIPELINE_TYPE,
-    InputArtifact,
-    InputParameter,
-    OutputArtifact,
-    OutputParameter,
-    component,
-    pipeline,
-    torch_component,
-)
+from bettmensch_ai.components import component, torch_component
+from bettmensch_ai.io import InputParameter
+from bettmensch_ai.pipelines import pipeline
 from hera.workflows import WorkflowTemplate
 
 
@@ -35,7 +28,7 @@ def test_artifact_pipeline(
             b=b,
         )
 
-        show = show_component_factory(
+        show_component_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
             b=convert.outputs["b_art"],
@@ -89,7 +82,11 @@ def test_artifact_pipeline(
     ]
 
     assert wft.templates[3].labels["torch-node"] == "0"
-    assert wft.templates[3].labels["app"].startswith("convert-to-artifact-0-")
+    assert (
+        wft.templates[3]
+        .labels["torch-job"]
+        .startswith("convert-to-artifact-0-")
+    )
     assert wft.templates[4].labels["torch-node"] == "1"
 
     parameter_to_artifact.export(test_output_dir)
@@ -102,7 +99,9 @@ def test_parameter_pipeline(test_add_function, test_output_dir):
     add_torch_component_factory = torch_component(test_add_function)
 
     @pipeline("test-parameter-pipeline", "argo", True)
-    def adding_parameters(a: InputParameter = 1, b: InputParameter = 2) -> None:
+    def adding_parameters(
+        a: InputParameter = 1, b: InputParameter = 2
+    ) -> None:  # noqa: E501
         a_plus_b = add_torch_component_factory(
             "a-plus-b",
             n_nodes=2,
@@ -110,7 +109,7 @@ def test_parameter_pipeline(test_add_function, test_output_dir):
             b=b,
         )
 
-        a_plus_b_plus_2 = add_component_factory(
+        add_component_factory(
             "a-plus-b-plus-2",
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),
@@ -158,7 +157,7 @@ def test_parameter_pipeline(test_add_function, test_output_dir):
     ]
 
     assert wft.templates[3].labels["torch-node"] == "0"
-    assert wft.templates[3].labels["app"].startswith("a-plus-b-0-")
+    assert wft.templates[3].labels["torch-job"].startswith("a-plus-b-0-")
     assert wft.templates[4].labels["torch-node"] == "1"
 
     adding_parameters.export(test_output_dir)

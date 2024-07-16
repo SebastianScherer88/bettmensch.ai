@@ -1,4 +1,8 @@
+from enum import Enum
+
 from hera.workflows.models import Toleration
+
+COMPONENT_BASE_IMAGE = "bettmensch88/bettmensch.ai:3.11-latest"
 
 INPUT_TYPE = "inputs"
 OUTPUT_TYPE = "outputs"
@@ -14,3 +18,9 @@ DDP_PORT_NUMBER = 29200
 GPU_TOLERATION = Toleration(
     effect="NoSchedule", key=GPU_FLAG, operator="Exists"
 )
+
+
+class COMPONENT_IMPLEMENTATION(Enum):
+    base: str = "base"
+    standard: str = "standard"
+    torch: str = "torch"

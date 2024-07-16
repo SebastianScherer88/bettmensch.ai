@@ -2,6 +2,7 @@ import inspect
 from typing import Callable, Dict, List, Optional, Union
 
 from bettmensch_ai.constants import (
+    COMPONENT_IMPLEMENTATION,
     COMPONENT_TYPE,
     GPU_FLAG,
     GPU_TOLERATION,
@@ -13,14 +14,15 @@ from bettmensch_ai.io import (
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipeline_context import _pipeline_context
+from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.workflows import Resources, Task, models
 
 
 class BaseComponent(object):
 
-    type = COMPONENT_TYPE
+    type: str = COMPONENT_TYPE
+    implementation: str = COMPONENT_IMPLEMENTATION.base.value
     name: str = None
     func: Callable = None
     base_name: str = None

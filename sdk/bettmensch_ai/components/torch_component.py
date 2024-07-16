@@ -4,21 +4,22 @@ import textwrap
 from typing import Callable, Dict, List, Optional, Union
 from uuid import uuid4
 
-from bettmensch_ai.base_component import BaseComponent
-from bettmensch_ai.base_inline_script_runner import (
+from bettmensch_ai.components.base_component import BaseComponent
+from bettmensch_ai.components.base_inline_script_runner import (
     BaseComponentInlineScriptRunner,
 )
-from bettmensch_ai.constants import DDP_PORT_NAME, DDP_PORT_NUMBER
-from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
-from bettmensch_ai.torch_utils import (
+from bettmensch_ai.components.torch_utils import (
     create_torch_service_template,
     delete_torch_service_template,
 )
-from bettmensch_ai.utils import (
+from bettmensch_ai.constants import (
     COMPONENT_BASE_IMAGE,
-    BettmenschAITorchScript,
-    bettmensch_ai_script,
+    COMPONENT_IMPLEMENTATION,
+    DDP_PORT_NAME,
+    DDP_PORT_NUMBER,
 )
+from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
+from bettmensch_ai.utils import BettmenschAITorchScript, bettmensch_ai_script
 from hera.shared import global_config
 from hera.workflows import Env, Script, Task
 from hera.workflows._unparse import roundtrip
@@ -80,7 +81,7 @@ class TorchComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
         # add function definition and decoration with `torch_distribute`
         torch_distribute_decoration = [
-            "\nfrom bettmensch_ai import torch_distribute\n",
+            "\nfrom bettmensch_ai.components import torch_distribute\n",
             "torch_distribute_decorator=torch_distribute()\n"
             f"""torch_distributed_function=torch_distribute_decorator({
                 instance.source.__name__
@@ -106,6 +107,7 @@ global_config.set_class_defaults(
 
 class TorchComponent(BaseComponent):
 
+    implementation: str = COMPONENT_IMPLEMENTATION.torch.value
     n_nodes: int
     min_nodes: int
     nproc_per_node: int

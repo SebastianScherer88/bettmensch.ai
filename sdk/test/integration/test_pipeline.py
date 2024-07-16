@@ -1,12 +1,18 @@
 import pytest
-from bettmensch_ai import InputParameter, component, pipeline, torch_component
-from bettmensch_ai.pipeline import delete, get, list
-from bettmensch_ai.scripts.example_components import (
-    add,
+from bettmensch_ai.components import component, torch_component
+from bettmensch_ai.components.examples import (
+    add_parameters,
     convert_to_artifact,
     show_artifact,
     show_parameter,
     torch_ddp,
+)
+from bettmensch_ai.io import InputParameter
+from bettmensch_ai.pipelines import (
+    delete_registered_pipeline,
+    get_registered_pipeline,
+    list_registered_pipelines,
+    pipeline,
 )
 
 
@@ -69,7 +75,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
     """Defines, registers and runs a Pipeline passing parameters across
     components."""
 
-    add_component_factory = component(add)
+    add_component_factory = component(add_parameters)
 
     @pipeline("test-parameter-pipeline", test_namespace, True)
     def adding_parameters_pipeline(
@@ -202,7 +208,7 @@ def test_list(
     test_n_registered_pipelines,
 ):
     """Test the pipeline.list function."""
-    registered_pipelines = list(
+    registered_pipelines = list_registered_pipelines(
         registered_namespace=test_namespace,
         registered_name_pattern=test_registered_pipeline_name_pattern,
     )
@@ -246,7 +252,9 @@ def test_get_and_run_from_registry(
         registered_name_pattern=test_registered_pipeline_name_pattern,
     )[0].registered_name
 
-    registered_pipeline = get(registered_pipeline_name, test_namespace)
+    registered_pipeline = get_registered_pipeline(
+        registered_pipeline_name, test_namespace
+    )
 
     assert registered_pipeline.registered
     assert registered_pipeline.registered_id is not None
@@ -268,7 +276,7 @@ def test_delete(test_namespace):
     )
 
     for registered_pipeline in registered_pipelines:
-        delete(
+        delete_registered_pipeline(
             registered_name=registered_pipeline.registered_name,
             registered_namespace=test_namespace,
         )

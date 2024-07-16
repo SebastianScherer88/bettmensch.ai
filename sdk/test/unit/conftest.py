@@ -1,9 +1,8 @@
 import os
 
 import pytest
-from bettmensch_ai import (
-    COMPONENT_TYPE,
-    PIPELINE_TYPE,
+from bettmensch_ai.constants import COMPONENT_TYPE, PIPELINE_TYPE
+from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,

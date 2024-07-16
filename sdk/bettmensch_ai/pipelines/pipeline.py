@@ -2,10 +2,12 @@ import inspect
 from typing import Any, Callable, Dict, List, Optional
 
 from bettmensch_ai.client import client as pipeline_client
-from bettmensch_ai.constants import PIPELINE_TYPE
+from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION, PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
-from bettmensch_ai.pipeline_context import PipelineContext, _pipeline_context
-from bettmensch_ai.torch_component import TorchComponent
+from bettmensch_ai.pipelines.pipeline_context import (
+    PipelineContext,
+    _pipeline_context,
+)
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
@@ -256,7 +258,10 @@ class Pipeline(object):
 
             # add non-script template
             for component in self.context.components:
-                if isinstance(component, TorchComponent):
+                if (
+                    component.implementation
+                    == COMPONENT_IMPLEMENTATION.torch.value
+                ):
                     component.service_templates = (
                         component.build_service_templates()
                     )
@@ -399,14 +404,14 @@ class Pipeline(object):
             Pipeline: The (registered) Pipeline instance.
         """
 
-        return get(
+        return get_registered_pipeline(
             registered_name=registered_name,
             registered_namespace=registered_namespace,
             **kwargs,
         )
 
 
-def get(
+def get_registered_pipeline(
     registered_name: str,
     registered_namespace: Optional[str] = None,
     **kwargs,
@@ -435,7 +440,7 @@ def get(
     return pipeline
 
 
-def list(
+def list_registered_pipelines(
     registered_namespace: Optional[str] = None,
     registered_name_pattern: Optional[str] = None,
     label_selector: Optional[str] = None,
@@ -473,7 +478,7 @@ def list(
     return pipelines
 
 
-def delete(
+def delete_registered_pipeline(
     registered_name: str, registered_namespace: Optional[str] = None, **kwargs
 ) -> WorkflowTemplateDeleteResponseModel:
     """Deletes the specified registered Pipeline from the server.
