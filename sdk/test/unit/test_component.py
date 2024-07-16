@@ -1,8 +1,8 @@
 from bettmensch_ai.components import Component, component
 from bettmensch_ai.components.examples import (
-    add_parameters,
-    convert_to_artifact,
-    show_artifact,
+    add_parameters_factory,
+    convert_to_artifact_factory,
+    show_artifact_factory,
 )
 from bettmensch_ai.io import (
     InputArtifact,
@@ -196,8 +196,6 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
 def test_parameter_component_to_hera(test_mock_pipeline):
     """Declaration of Component using InputParameter and OutputParameter"""
 
-    add_component_factory = component(add_parameters)
-
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
@@ -209,7 +207,7 @@ def test_parameter_component_to_hera(test_mock_pipeline):
 
         # add components to pipeline context
         a_plus_b = (
-            add_component_factory(
+            add_parameters_factory(
                 "a_plus_b",
                 a=pipeline_input_a,
                 b=pipeline_input_b,
@@ -219,7 +217,7 @@ def test_parameter_component_to_hera(test_mock_pipeline):
         )
 
         a_plus_b_plus_2 = (
-            add_component_factory(
+            add_parameters_factory(
                 "a_plus_b_plus_2",
                 a=a_plus_b.outputs["sum"],
                 b=InputParameter("two", 2),
@@ -256,9 +254,6 @@ def test_artifact_component_to_hera(
     test_mock_pipeline,
 ):
 
-    convert_component_factory = component(convert_to_artifact)
-    show_component_factory = component(show_artifact)
-
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
@@ -268,7 +263,7 @@ def test_artifact_component_to_hera(
 
         # add components to pipeline context
         convert = (
-            convert_component_factory(
+            convert_to_artifact_factory(
                 "convert_parameters",
                 a=pipeline_input_a,
             )
@@ -277,7 +272,7 @@ def test_artifact_component_to_hera(
         )
 
         show = (
-            show_component_factory(
+            show_artifact_factory(
                 "show_artifacts",
                 a=convert.outputs["a_art"],
             )
