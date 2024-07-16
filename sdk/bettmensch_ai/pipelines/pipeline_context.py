@@ -51,6 +51,7 @@ class PipelineContext(object):
             Exception: Raised if this method was not called within an active
                 PipelineContext.
         """
+
         if self.active:
             component_counter = self.get_component_name_counter(
                 component.base_name

@@ -1,44 +1,4 @@
-from bettmensch_ai.io import (
-    InputArtifact,
-    InputParameter,
-    OutputArtifact,
-    OutputParameter,
-)
-
-
-def convert_to_artifact(
-    a: InputParameter,
-    a_art: OutputArtifact = None,
-) -> None:
-    """When decorated with the bettmensch_ai.component decorator, implements a bettmensch_ai.Component that converts its InputParameter into
-    an OutputArtifact."""
-    with open(a_art.path, "w") as a_art_file:
-        a_art_file.write(str(a))
-
-
-def show_artifact(a: InputArtifact) -> None:
-    """When decorated with the bettmensch_ai.component decorator, implements a bettmensch_ai.Component that prints the values of its InputArtifact."""
-
-    with open(a.path, "r") as a_art_file:
-        a_content = a_art_file.read()
-
-    print(f"Content of input artifact a: {a_content}")
-
-
-def add(
-    a: InputParameter = 1,
-    b: InputParameter = 2,
-    sum: OutputParameter = None,
-) -> None:
-    """When decorated with the bettmensch_ai.component decorator, implements a simple addition bettmensch_ai.Component."""
-
-    sum.assign(a + b)
-
-
-def show_parameter(a: InputParameter) -> None:
-    """When decorated with the bettmensch_ai.component decorator, implements a bettmensch_ai.Component that prints the values of its InputParamter."""
-
-    print(f"Content of input parameter a is: {a}")
+from bettmensch_ai.io import InputParameter, OutputParameter
 
 
 def torch_ddp(
@@ -46,7 +6,9 @@ def torch_ddp(
     n_seconds_sleep: InputParameter = 10,
     duration: OutputParameter = None,
 ) -> None:
-    """When decorated with the torch_component decorator, implements a bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in your K8s cluster."""
+    """When decorated with the torch_component decorator, implements a
+    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in
+    your K8s cluster."""
 
     import time
     from datetime import datetime as dt
