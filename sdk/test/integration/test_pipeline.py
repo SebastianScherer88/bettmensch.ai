@@ -114,7 +114,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-torch-cpu-pipeline", 4, None, "300Mi"),
+        ("test-torch-cpu-pipeline", 6, None, "300Mi"),
         ("test-torch-gpu-pipeline", 4, 1, "700Mi"),
     ],
 )
@@ -147,7 +147,7 @@ def test_torch_pipeline_decorator_and_register_and_run(
   whenUnsatisfiable: DoNotSchedule
   labelSelector:
     matchExpressions:
-      - { key: torch-node, operator: In, values: ['0','1','2','3']}"""
+      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"""
                 },
                 n_nodes=test_n_nodes,
                 n_iter=n_iter,
