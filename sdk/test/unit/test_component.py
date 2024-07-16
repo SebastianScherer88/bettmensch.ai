@@ -1,12 +1,11 @@
-from bettmensch_ai import (
-    Component,
+from bettmensch_ai.components import Component, component
+from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
-    _pipeline_context,
-    component,
 )
+from bettmensch_ai.pipelines import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
@@ -54,6 +53,7 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
 
     # validate component attributes
     assert isinstance(test_component, Component)
+    assert test_component.implementation == "standard"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
@@ -144,6 +144,7 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
 
     # validate component attributes
     assert isinstance(test_component, Component)
+    assert test_component.implementation == "standard"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function

@@ -1,10 +1,10 @@
 import os
 
 import pytest
-from bettmensch_ai.scripts.example_components import (
+from bettmensch_ai.components import torch_distribute
+from bettmensch_ai.components.examples import (
     torch_ddp as distributed_test_ddp_function,
 )
-from bettmensch_ai.torch_utils import torch_distribute
 
 
 def distributed_test_function_1():

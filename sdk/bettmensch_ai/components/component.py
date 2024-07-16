@@ -1,9 +1,10 @@
 from typing import Callable, Dict
 
-from bettmensch_ai.base_component import BaseComponent
-from bettmensch_ai.base_inline_script_runner import (
+from bettmensch_ai.components.base_component import BaseComponent
+from bettmensch_ai.components.base_inline_script_runner import (
     BaseComponentInlineScriptRunner,
 )
+from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION
 from bettmensch_ai.utils import (
     COMPONENT_BASE_IMAGE,
     BettmenschAIScript,
@@ -31,6 +32,9 @@ global_config.set_class_defaults(
 
 
 class Component(BaseComponent):
+
+    implementation: str = COMPONENT_IMPLEMENTATION.standard.value
+
     def build_hera_task_factory(self) -> Callable:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide

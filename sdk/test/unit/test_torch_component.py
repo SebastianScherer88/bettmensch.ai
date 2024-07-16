@@ -1,12 +1,11 @@
-from bettmensch_ai import (
+from bettmensch_ai.components import TorchComponent, torch_component
+from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
-    TorchComponent,
-    _pipeline_context,
-    torch_component,
 )
+from bettmensch_ai.pipelines import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
@@ -61,6 +60,7 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
 
     # validate component attributes
     assert isinstance(test_component, TorchComponent)
+    assert test_component.implementation == "torch"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
@@ -160,6 +160,7 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
 
     # validate component attributes
     assert isinstance(test_component, TorchComponent)
+    assert test_component.implementation == "torch"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
@@ -297,11 +298,13 @@ def test_parameter_torch_component_to_hera(
     ]
 
     assert wft.templates[5].labels["torch-node"] == "0"
-    assert wft.templates[5].labels["app"].startswith("a-plus-b-0-")
+    assert wft.templates[5].labels["torch-job"].startswith("a-plus-b-0-")
     assert wft.templates[6].labels["torch-node"] == "1"
 
     assert wft.templates[7].labels["torch-node"] == "0"
-    assert wft.templates[7].labels["app"].startswith("a-plus-b-plus-2-0-")
+    assert (
+        wft.templates[7].labels["torch-job"].startswith("a-plus-b-plus-2-0-")
+    )  # noqa: E501
     assert wft.templates[8].labels["torch-node"] == "1"
 
 
@@ -393,8 +396,12 @@ def test_artifact_torch_component_to_hera(
     ]
 
     assert wft.templates[5].labels["torch-node"] == "0"
-    assert wft.templates[5].labels["app"].startswith("convert-parameters-0-")
+    assert (
+        wft.templates[5]
+        .labels["torch-job"]
+        .startswith("convert-parameters-0-")  # noqa: E501
+    )
     assert wft.templates[6].labels["torch-node"] == "1"
 
     assert wft.templates[7].labels["torch-node"] == "0"
-    assert wft.templates[7].labels["app"].startswith("show-artifacts-0-")
+    assert wft.templates[7].labels["torch-job"].startswith("show-artifacts-0-")
