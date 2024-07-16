@@ -1,8 +1,8 @@
-from bettmensch_ai.components import component, torch_component
 from bettmensch_ai.components.examples import (
-    add_parameters,
-    convert_to_artifact,
-    show_artifact,
+    add_parameters_factory,
+    add_parameters_torch_factory,
+    convert_to_artifact_torch_factory,
+    show_parameter_factory,
 )
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import pipeline
@@ -14,20 +14,17 @@ def test_artifact_pipeline(
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    convert_torch_component_factory = torch_component(convert_to_artifact)
-    show_component_factory = component(show_artifact)
-
     @pipeline("test-artifact-pipeline", "argo", True)
     def parameter_to_artifact(
         a: InputParameter = "Param A",
     ) -> None:
-        convert = convert_torch_component_factory(
+        convert = convert_to_artifact_torch_factory(
             "convert-to-artifact",
             n_nodes=2,
             a=a,
         )
 
-        show_component_factory(
+        show_parameter_factory(
             "show-artifact",
             a=convert.outputs["a_art"],
         )
@@ -90,21 +87,18 @@ def test_artifact_pipeline(
 def test_parameter_pipeline(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    add_component_factory = component(add_parameters)
-    add_torch_component_factory = torch_component(add_parameters)
-
     @pipeline("test-parameter-pipeline", "argo", True)
     def adding_parameters(
         a: InputParameter = 1, b: InputParameter = 2
     ) -> None:  # noqa: E501
-        a_plus_b = add_torch_component_factory(
+        a_plus_b = add_parameters_torch_factory(
             "a-plus-b",
             n_nodes=2,
             a=a,
             b=b,
         )
 
-        add_component_factory(
+        add_parameters_factory(
             "a-plus-b-plus-2",
             a=a_plus_b.outputs["sum"],
             b=InputParameter("two", 2),

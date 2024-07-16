@@ -1,3 +1,4 @@
+from bettmensch_ai.components import component, torch_component
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -45,3 +46,13 @@ def show_parameter(a: InputParameter) -> None:
     InputParameter."""
 
     print(f"Content of input parameter a is: {a}")
+
+
+convert_to_artifact_factory = component(convert_to_artifact)
+convert_to_artifact_torch_factory = torch_component(convert_to_artifact)
+show_artifact_factory = component(show_artifact)
+show_artifact_torch_factory = torch_component(show_artifact)
+add_parameters_factory = component(add_parameters)
+add_parameters_torch_factory = torch_component(add_parameters)
+show_parameter_factory = component(show_parameter)
+show_parameter_torch_factory = torch_component(show_parameter)

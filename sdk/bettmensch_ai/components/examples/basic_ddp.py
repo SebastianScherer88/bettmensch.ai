@@ -1,3 +1,4 @@
+from bettmensch_ai.components import torch_component
 from bettmensch_ai.io import InputParameter, OutputParameter
 
 
@@ -64,6 +65,8 @@ def torch_ddp(
         duration_seconds = n_iter * n_seconds_sleep
         duration.assign(duration_seconds)
 
+
+torch_ddp_torch_factory = torch_component(torch_ddp)
 
 if __name__ == "__main__":
     torch_ddp()

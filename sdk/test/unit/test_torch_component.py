@@ -1,8 +1,8 @@
 from bettmensch_ai.components import TorchComponent, torch_component
 from bettmensch_ai.components.examples import (
-    add_parameters,
-    convert_to_artifact,
-    show_artifact,
+    add_parameters_torch_factory,
+    convert_to_artifact_torch_factory,
+    show_parameter_torch_factory,
 )
 from bettmensch_ai.io import (
     InputArtifact,
@@ -215,8 +215,6 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
 def test_parameter_torch_component_to_hera(test_mock_pipeline):
     """Declaration of Component using InputParameter and OutputParameter"""
 
-    add_component_factory = torch_component(add_parameters)
-
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
@@ -228,7 +226,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
 
         # add components to pipeline context
         a_plus_b = (
-            add_component_factory(
+            add_parameters_torch_factory(
                 "a_plus_b",
                 n_nodes=2,
                 min_nodes=1,
@@ -241,7 +239,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
         )
 
         a_plus_b_plus_2 = (
-            add_component_factory(
+            add_parameters_torch_factory(
                 "a_plus_b_plus_2",
                 n_nodes=2,
                 min_nodes=2,
@@ -315,9 +313,6 @@ def test_artifact_torch_component_to_hera(
     test_mock_pipeline,
 ):
 
-    convert_component_factory = torch_component(convert_to_artifact)
-    show_component_factory = torch_component(show_artifact)
-
     # mock active pipeline with 2 inputs
     pipeline_input_a = InputParameter(name="a", value=1)
     pipeline_input_a.set_owner(test_mock_pipeline)
@@ -327,7 +322,7 @@ def test_artifact_torch_component_to_hera(
 
         # add components to pipeline context
         convert = (
-            convert_component_factory(
+            convert_to_artifact_torch_factory(
                 "convert_parameters",
                 n_nodes=2,
                 min_nodes=1,
@@ -339,7 +334,7 @@ def test_artifact_torch_component_to_hera(
         )
 
         show = (
-            show_component_factory(
+            show_parameter_torch_factory(
                 "show_artifacts",
                 a=convert.outputs["a_art"],
             )
