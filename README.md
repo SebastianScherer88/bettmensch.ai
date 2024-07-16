@@ -61,7 +61,9 @@ The `io` module implements the classes implementing the transfer of inputs and o
 Using `InputParameter` and `OutputParameter` for `int`, `float` or `str` type data:
 
 ```python
-from bettmensch_ai import InputParameter, OutputParameter, component, pipeline
+from bettmensch_ai.io import InputParameter, OutputParameter
+from bettmensch_ai.components import component
+from bettmensch_ai.pipelines import pipeline
 
 @component
 def add(
@@ -95,54 +97,44 @@ Using `InputArtifact` and `OutputArtifact` for all other types of data,
 leveraging AWS's `S3` storage service:
 
 ```python
-from bettmensch_ai import InputArtifact, OutputArtifact, component, pipeline
+from bettmensch_ai.io import InputArtifact, OutputArtifact
+from bettmensch_ai.components import component
+from bettmensch_ai.pipelines import pipeline
 
 @component
 def convert_to_artifact(
     a_param: InputParameter,
-    b_param: InputParameter,
     a_art: OutputArtifact = None,
-    b_art: OutputArtifact = None,
 ) -> None:
 
     with open(a_art.path, "w") as a_art_file:
         a_art_file.write(str(a_param))
 
-    with open(b_art.path, "w") as b_art_file:
-        b_art_file.write(str(b_param))
-
 @component
-def show_artifact(a: InputArtifact, b: InputArtifact) -> None:
+def show_artifact(a: InputArtifact) -> None:
 
     with open(a.path, "r") as a_art_file:
         a_content = a_art_file.read()
 
-    with open(b.path, "r") as b_art_file:
-        b_content = b_art_file.read()
-
     print(f"Content of input artifact a: {a_content}")
-    print(f"Content of input artifact b: {b_content}")
 
 @pipeline("test-artifact-pipeline", "argo", True)
 def parameter_to_artifact(
     a: InputParameter = "Param A",
-    b: InputParameter = "Param B",
 ) -> None:
     convert = convert_to_artifact(
         "convert-to-artifact",
         a_param=a,
-        b_param=b,
     )
 
     show = show_artifact(
         "show-artifact",
         a=convert.outputs["a_art"],
-        b=convert.outputs["b_art"],
     )
 
 parameter_to_artifact.export(test_output_dir)
 parameter_to_artifact.register()
-parameter_to_artifact.run(a="Test value A", b="Test value b")
+parameter_to_artifact.run(a="Test value A")
 ```
 
 The submitted pipelines can be viewed on the dashboard's `Pipelines` section:
