@@ -14,7 +14,7 @@ def lightning_ddp(
     import os
     from datetime import datetime as dt
 
-    import lightning as L
+    import pytorch_lightning as pl
     import torch
     import torch.nn.functional as F
     from bettmensch_ai.components.torch_utils import LaunchConfigSettings
@@ -47,7 +47,7 @@ def lightning_ddp(
         def forward(self, x):
             return self.l1(x)
 
-    class LitAutoEncoder(L.LightningModule):
+    class LitAutoEncoder(pl.LightningModule):
         def __init__(self, encoder, decoder):
             super().__init__()
             self.encoder = encoder
@@ -84,7 +84,7 @@ def lightning_ddp(
 
     # Configure the strategy on the Trainer & train model
     launch_settings = LaunchConfigSettings()
-    trainer = L.Trainer(
+    trainer = pl.Trainer(
         strategy=ddp,
         accelerator=accelerator,
         num_nodes=launch_settings.max_nodes,
