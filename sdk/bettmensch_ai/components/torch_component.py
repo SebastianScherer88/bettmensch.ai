@@ -13,7 +13,7 @@ from bettmensch_ai.components.torch_utils import (
     delete_torch_service_template,
 )
 from bettmensch_ai.constants import (
-    COMPONENT_BASE_IMAGE,
+    COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
     DDP_PORT_NAME,
     DDP_PORT_NUMBER,
@@ -108,6 +108,7 @@ global_config.set_class_defaults(
 class TorchComponent(BaseComponent):
 
     implementation: str = COMPONENT_IMPLEMENTATION.torch.value
+    default_image: str = COMPONENT_IMAGE.torch.value
     n_nodes: int
     min_nodes: int
     nproc_per_node: int
@@ -195,7 +196,7 @@ class TorchComponent(BaseComponent):
         )
 
         if "image" not in script_decorator_kwargs:
-            script_decorator_kwargs["image"] = COMPONENT_BASE_IMAGE
+            script_decorator_kwargs["image"] = self.default_image
 
         if "image_pull_policy" not in script_decorator_kwargs:
             script_decorator_kwargs[

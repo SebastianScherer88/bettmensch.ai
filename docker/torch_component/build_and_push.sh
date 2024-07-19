@@ -1,4 +1,4 @@
-DOCKERTAG=bettmensch88/bettmensch.ai-base:3.11
+DOCKERTAG=bettmensch88/bettmensch.ai-torch:3.11
 BETTMENSCH_AI_VERSION=$(git rev-parse --short HEAD)
 
 echo "Docker base tag: ${DOCKERTAG}"
