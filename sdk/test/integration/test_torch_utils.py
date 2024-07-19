@@ -2,9 +2,7 @@ import os
 
 import pytest
 from bettmensch_ai.components import torch_distribute
-from bettmensch_ai.components.examples import (
-    torch_ddp as distributed_test_ddp_function,
-)
+from bettmensch_ai.components.examples import lightning_ddp, torch_ddp
 
 
 def distributed_test_function_1():
@@ -28,10 +26,11 @@ def distributed_test_function_2(a: int, b: str = "test"):
     [
         (distributed_test_function_1, []),
         (distributed_test_function_2, [1, "test_value"]),
-        (distributed_test_ddp_function, [5, 2]),
+        (torch_ddp, [5, 2]),
+        (lightning_ddp, []),
     ],
 )
-def test_torch_distribute_decorator_2(
+def test_torch_distribute_decorator(
     test_output_dir, test_function, test_function_args
 ):
     """Test the torch_distribute decorator with 3 test functions."""
