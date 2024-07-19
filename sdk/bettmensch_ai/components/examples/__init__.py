@@ -12,7 +12,10 @@ from bettmensch_ai.components.examples.basic import (  # noqa: F401; functions
     show_parameter_factory,
     show_parameter_torch_factory,
 )
-from bettmensch_ai.components.examples.basic_ddp import torch_ddp  # noqa: F401
 from bettmensch_ai.components.examples.basic_ddp import (  # noqa: F401
+    torch_ddp,
     torch_ddp_torch_factory,
+)
+from bettmensch_ai.components.examples.lightning_ddp import (  # noqa: F401
+    lightning_ddp,
 )

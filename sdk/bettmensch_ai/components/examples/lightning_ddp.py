@@ -1,11 +1,10 @@
 from bettmensch_ai.components import torch_component
-from bettmensch_ai.io import InputParameter
+from bettmensch_ai.io import InputParameter, OutputParameter
 
 
 def lightning_ddp(
-    process_group_backend: InputParameter = "gloo",  # gloo / nccl
-    max_epochs: InputParameter = 1,
-    accelerator: InputParameter = "cpu",  # cpu / gpu
+    max_time: InputParameter = "00:00:01:30",
+    duration: OutputParameter = None,
 ) -> None:
     """When decorated with the torch_component decorator, implements a
     bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in
@@ -13,6 +12,7 @@ def lightning_ddp(
 
     # imports
     import os
+    from datetime import datetime as dt
 
     import lightning as L
     import torch
@@ -23,6 +23,8 @@ def lightning_ddp(
     from torch.utils.data import DataLoader
     from torchvision import transforms
     from torchvision.datasets import MNIST
+
+    start = dt.now()
 
     # pytorch modules
     class Encoder(nn.Module):
@@ -73,18 +75,29 @@ def lightning_ddp(
     autoencoder = LitAutoEncoder(Encoder(), Decoder())
 
     # Explicitly specify the process group backend if you choose to
+    has_gpu = torch.cuda.is_available()
+    print(f"GPU present: {has_gpu}")
+    process_group_backend = "nccl" if has_gpu else "gloo"
+    accelerator = "gpu" if has_gpu else None
+
     ddp = DDPStrategy(process_group_backend=process_group_backend)
 
     # Configure the strategy on the Trainer & train model
     launch_settings = LaunchConfigSettings()
     trainer = L.Trainer(
         strategy=ddp,
-        max_epochs=max_epochs,
         accelerator=accelerator,
         num_nodes=launch_settings.max_nodes,
         devices=launch_settings.nproc_per_node,
+        max_time=max_time,
     )
     trainer.fit(model=autoencoder, train_dataloaders=train_loader)
 
+    if duration is not None:
+        duration.assign(dt.now() - start)
+
 
 lightning_ddp_torch_factory = torch_component(lightning_ddp)
+
+if __name__ == "__main__":
+    lightning_ddp()
