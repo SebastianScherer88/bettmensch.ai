@@ -17,6 +17,7 @@ def lightning_ddp(
     import lightning as L
     import torch
     import torch.nn.functional as F
+    from bettmensch_ai.components.torch_utils import LaunchConfigSettings
     from lightning.pytorch.strategies import DDPStrategy
     from torch import nn
     from torch.utils.data import DataLoader
@@ -75,8 +76,13 @@ def lightning_ddp(
     ddp = DDPStrategy(process_group_backend=process_group_backend)
 
     # Configure the strategy on the Trainer & train model
+    launch_settings = LaunchConfigSettings()
     trainer = L.Trainer(
-        strategy=ddp, max_epochs=max_epochs, accelerator=accelerator, devices=8
+        strategy=ddp,
+        max_epochs=max_epochs,
+        accelerator=accelerator,
+        num_nodes=launch_settings.max_nodes,
+        devices=launch_settings.nproc_per_node,
     )
     trainer.fit(model=autoencoder, train_dataloaders=train_loader)
 
