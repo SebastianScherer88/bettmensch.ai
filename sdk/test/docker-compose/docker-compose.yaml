@@ -1,0 +1,48 @@
+services:
+  driver:
+    image: bettmensch88/bettmensch.ai:3.11-latest
+    environment:
+      - NCCL_DEBUG="INFO"
+      - bettmensch_ai_distributed_torch_min_nodes=2
+      - bettmensch_ai_distributed_torch_max_nodes=2
+      - bettmensch_ai_distributed_torch_node_rank=0
+      - bettmensch_ai_distributed_torch_nproc_per_node=1
+      - bettmensch_ai_distributed_torch_max_restarts=1
+      - bettmensch_ai_distributed_torch_start_method=fork
+      - bettmensch_ai_distributed_torch_rdzv_backend=static
+      - bettmensch_ai_distributed_torch_rdzv_endpoint_url=driver
+      - bettmensch_ai_distributed_torch_rdzv_endpoint_port=29500
+      - bettmensch_ai_distributed_torch_run_id=docker
+      - bettmensch_ai_distributed_torch_tee=0
+      - docker_test_function="torch_ddp" # the name of the function to be tested
+    hostname: bettmensch-ai
+    networks: [pytorch-net]
+    command: 
+      - python
+      - -c 
+      - from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+  worker:
+    image: bettmensch88/bettmensch.ai:3.11-latest
+    environment:
+      - NCCL_DEBUG="INFO"
+      - bettmensch_ai_distributed_torch_min_nodes=2
+      - bettmensch_ai_distributed_torch_max_nodes=2
+      - bettmensch_ai_distributed_torch_node_rank=1
+      - bettmensch_ai_distributed_torch_nproc_per_node=1
+      - bettmensch_ai_distributed_torch_max_restarts=1
+      - bettmensch_ai_distributed_torch_start_method=fork
+      - bettmensch_ai_distributed_torch_rdzv_backend=static
+      - bettmensch_ai_distributed_torch_rdzv_endpoint_url=driver
+      - bettmensch_ai_distributed_torch_rdzv_endpoint_port=29500
+      - bettmensch_ai_distributed_torch_run_id=docker
+      - bettmensch_ai_distributed_torch_tee=0
+      - docker_test_function="torch_ddp" # the name of the function to be tested
+    hostname: bettmensch-ai
+    networks: [pytorch-net]
+    command: 
+      - python
+      - -c 
+      - from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+
+networks:
+  pytorch-net:
