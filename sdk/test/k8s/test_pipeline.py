@@ -2,6 +2,7 @@ import pytest
 from bettmensch_ai.components.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
+    lightning_ddp_torch_factory,
     show_artifact_factory,
     show_parameter_factory,
     torch_ddp_torch_factory,
@@ -182,6 +183,77 @@ def test_torch_pipeline_decorator_and_register_and_run(
     assert torch_ddp_flow.status.phase == "Succeeded"
 
 
+@pytest.mark.order(3)
+@pytest.mark.parametrize(
+    "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
+    [
+        ("test-lightning-cpu-pipeline", 6, None, "1Gi"),
+        ("test-lightning-gpu-pipeline", 4, 1, "1Gi"),
+    ],
+)
+def test_lightning_pipeline_decorator_and_register_and_run(
+    test_pipeline_name,
+    test_n_nodes,
+    test_gpus,
+    test_memory,
+    test_output_dir,
+    test_namespace,
+):
+    """Defines, registers and runs a Pipeline containing a non-trivial
+    TorchComponent. The pod spec patch ensures distributing replica pods of the
+    TorchComponent across different K8s nodes."""
+
+    @pipeline(test_pipeline_name, test_namespace, True)
+    def lightning_ddp_pipeline(
+        max_time: InputParameter,
+    ) -> None:
+        lightning_ddp_test = (
+            lightning_ddp_torch_factory(
+                "lightning-ddp",
+                hera_template_kwargs={
+                    "pod_spec_patch": """topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchExpressions:
+      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"""
+                },
+                n_nodes=test_n_nodes,
+                max_time=max_time,
+            )
+            .set_gpus(test_gpus)
+            .set_memory(test_memory)
+        )
+
+        show_parameter_factory(
+            "show-duration-param",
+            a=lightning_ddp_test.outputs["duration"],
+        )
+
+    lightning_ddp_pipeline.export(test_output_dir)
+
+    assert not lightning_ddp_pipeline.registered
+    assert lightning_ddp_pipeline.registered_id is None
+    assert lightning_ddp_pipeline.registered_name is None
+    assert lightning_ddp_pipeline.registered_namespace is None
+
+    lightning_ddp_pipeline.register()
+
+    assert lightning_ddp_pipeline.registered
+    assert lightning_ddp_pipeline.registered_id is not None
+    assert lightning_ddp_pipeline.registered_name.startswith(
+        f"pipeline-{lightning_ddp_pipeline.name}-"
+    )
+    assert lightning_ddp_pipeline.registered_namespace == test_namespace
+
+    lightning_ddp_flow = lightning_ddp_pipeline.run(
+        {"max_time": "00:00:01:00"}, wait=True
+    )
+
+    assert lightning_ddp_flow.status.phase == "Succeeded"
+
+
 @pytest.mark.order(4)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
@@ -190,7 +262,9 @@ def test_torch_pipeline_decorator_and_register_and_run(
         ("test-parameter-pipeline-", 1),
         ("test-torch-cpu-pipeline-", 1),
         ("test-torch-gpu-pipeline-", 1),
-        ("test-", 4),
+        ("test-lightning-cpu-pipeline-", 1),
+        ("test-lightning-gpu-pipeline-", 1),
+        ("test-", 6),
     ],
 )
 def test_list(
@@ -228,6 +302,18 @@ def test_list(
         ("test-parameter-pipeline-", {"a": -10, "b": 20}),
         ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
         ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+        (
+            "test-lightning-gpu-pipeline-",
+            {
+                "max_time": "00:00:30",
+            },
+        ),
+        (
+            "test-lightning-cpu-pipeline-",
+            {
+                "max_time": "00:00:30",
+            },
+        ),
     ],
 )
 def test_get_and_run_from_registry(
