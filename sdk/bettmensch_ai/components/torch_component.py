@@ -252,6 +252,10 @@ class TorchComponent(BaseComponent):
                     value="fork",
                 ),
                 Env(
+                    name="bettmensch_ai_distributed_torch_rdzv_backend",
+                    value="static",
+                ),
+                Env(
                     name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
                     value=f"{self.k8s_service_name}.{self.k8s_namespace}"
                     + ".svc.cluster.local",
