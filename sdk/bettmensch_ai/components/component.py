@@ -4,12 +4,8 @@ from bettmensch_ai.components.base_component import BaseComponent
 from bettmensch_ai.components.base_inline_script_runner import (
     BaseComponentInlineScriptRunner,
 )
-from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION
-from bettmensch_ai.utils import (
-    COMPONENT_BASE_IMAGE,
-    BettmenschAIScript,
-    bettmensch_ai_script,
-)
+from bettmensch_ai.constants import COMPONENT_IMAGE, COMPONENT_IMPLEMENTATION
+from bettmensch_ai.utils import BettmenschAIScript, bettmensch_ai_script
 from hera.shared import global_config
 from hera.workflows import Task
 from hera.workflows.models import ImagePullPolicy
@@ -34,6 +30,7 @@ global_config.set_class_defaults(
 class Component(BaseComponent):
 
     implementation: str = COMPONENT_IMPLEMENTATION.standard.value
+    default_image: str = COMPONENT_IMAGE.standard.value
 
     def build_hera_task_factory(self) -> Callable:
         """Generates the task factory task_wrapper callable from the
@@ -61,7 +58,7 @@ class Component(BaseComponent):
         )
 
         if "image" not in script_decorator_kwargs:
-            script_decorator_kwargs["image"] = COMPONENT_BASE_IMAGE
+            script_decorator_kwargs["image"] = self.default_image
 
         if "image_pull_policy" not in script_decorator_kwargs:
             script_decorator_kwargs[

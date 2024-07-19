@@ -18,5 +18,5 @@ from bettmensch_ai.components.examples.basic_ddp import (  # noqa: F401
 )
 from bettmensch_ai.components.examples.lightning_ddp import (  # noqa: F401
     lightning_ddp,
-    lightning_ddp_torch_factory,
+    lightning_ddp_lightning_factory,
 )

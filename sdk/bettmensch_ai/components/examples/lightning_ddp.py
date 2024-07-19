@@ -1,4 +1,4 @@
-from bettmensch_ai.components import torch_component
+from bettmensch_ai.components import lightning_component
 from bettmensch_ai.io import InputParameter, OutputParameter
 
 
@@ -97,7 +97,7 @@ def lightning_ddp(
         duration.assign(dt.now() - start)
 
 
-lightning_ddp_torch_factory = torch_component(lightning_ddp)
+lightning_ddp_lightning_factory = lightning_component(lightning_ddp)
 
 if __name__ == "__main__":
     lightning_ddp()

@@ -2,7 +2,7 @@ import pytest
 from bettmensch_ai.components.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
-    lightning_ddp_torch_factory,
+    lightning_ddp_lightning_factory,
     show_artifact_factory,
     show_parameter_factory,
     torch_ddp_torch_factory,
@@ -208,7 +208,7 @@ def test_lightning_pipeline_decorator_and_register_and_run(
         max_time: InputParameter,
     ) -> None:
         lightning_ddp_test = (
-            lightning_ddp_torch_factory(
+            lightning_ddp_lightning_factory(
                 "lightning-ddp",
                 hera_template_kwargs={
                     "pod_spec_patch": """topologySpreadConstraints:
