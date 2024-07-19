@@ -7,10 +7,9 @@ ENV SUBDIR_IN_REPO=sdk
 
 RUN echo "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
 
+RUN apt update 
+RUN apt-get install pip git -y
 RUN pip install -e "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
-
-RUN wget https://github.com/SebastianScherer88/bettmensch.ai/archive/refs/heads/master.zip
-RUN unzip master.zip
 
 # set cwd back to root so the artifact setup done in the init container resolves correctly
 WORKDIR / 
