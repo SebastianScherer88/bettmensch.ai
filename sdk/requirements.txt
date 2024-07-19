@@ -9,4 +9,4 @@ torchvision
 pytest==8.2.2
 pytest-order==1.2.1
 lightning
-numpy
+numpy==1.24.1
