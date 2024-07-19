@@ -258,9 +258,9 @@ class Pipeline(object):
 
             # add non-script template
             for component in self.context.components:
-                if (
-                    component.implementation
-                    == COMPONENT_IMPLEMENTATION.torch.value
+                if component.implementation in (
+                    COMPONENT_IMPLEMENTATION.torch.value,
+                    COMPONENT_IMPLEMENTATION.lightning.value,
                 ):
                     component.service_templates = (
                         component.build_service_templates()
