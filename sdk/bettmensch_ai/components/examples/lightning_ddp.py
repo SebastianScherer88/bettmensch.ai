@@ -78,7 +78,7 @@ def lightning_ddp(
     has_gpu = torch.cuda.is_available()
     print(f"GPU present: {has_gpu}")
     process_group_backend = "nccl" if has_gpu else "gloo"
-    accelerator = "gpu" if has_gpu else None
+    accelerator = "gpu" if has_gpu else "cpu"
 
     ddp = DDPStrategy(process_group_backend=process_group_backend)
 
