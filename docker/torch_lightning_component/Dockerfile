@@ -9,7 +9,7 @@ RUN echo "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENS
 
 RUN apt update 
 RUN apt-get install pip git -y
-RUN pip install lightning
+RUN pip install lightning torchvision
 RUN pip install -e "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
 
 # set cwd back to root so the artifact setup done in the init container resolves correctly
