@@ -20,7 +20,8 @@ services:
     command: 
       - python
       - -c 
-      - from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+      #- from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+      - from bettmensch_ai.components.examples.lightning import lightning_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(lightning_ddp); torch_dist_function()
   worker:
     image: bettmensch88/bettmensch.ai:3.11-latest
     environment:
@@ -42,7 +43,8 @@ services:
     command: 
       - python
       - -c 
-      - from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+      #- from bettmensch_ai.components.examples import torch_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(torch_ddp); torch_dist_function(10,2)
+      - from bettmensch_ai.components.examples.lightning import lightning_ddp; from bettmensch_ai.components import torch_distribute; torch_dist_function = torch_distribute()(lightning_ddp); torch_dist_function()
 
 networks:
   pytorch-net:

@@ -7,4 +7,4 @@ networkx
 torch==2.2.2
 pytest==8.2.2
 pytest-order==1.2.1
-python-etcd
+lightning
