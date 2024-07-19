@@ -12,6 +12,9 @@ COMPONENT_TYPE = "tasks"
 
 GPU_FLAG = "nvidia.com/gpu"
 
+ETCD_SERVICE_NAME = "pytorch-etcd-store-service"
+ETCD_PORT_NUMBER = 2379
+
 DDP_PORT_NAME = "ddp"
 DDP_PORT_NUMBER = 29200
 
