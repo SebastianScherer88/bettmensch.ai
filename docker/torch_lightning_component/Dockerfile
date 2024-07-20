@@ -1,4 +1,4 @@
-from pytorchlightning/pytorch_lightning:base-cuda-py3.11-torch2.2-cuda12.1.0 as base
+from pytorchlightning/pytorch_lightning:2.3.3-py3.11-torch2.2-cuda12.1.0 as base
 
 ARG BETTMENSCH_AI_VERSION
 
