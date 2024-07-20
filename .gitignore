@@ -7,6 +7,11 @@ __pycache__
 # test outputs
 sdk/test/unit/outputs
 sdk/test/integration/outputs
+sdk/test/docker/outputs
+sdk/test/k8s/outputs
+
+# pytorch lightning outputs
+lightning_logs/*
 
 # terraform
 infrastructure/terraform/.terraform*
