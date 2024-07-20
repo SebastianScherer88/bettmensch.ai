@@ -8,7 +8,6 @@ from bettmensch_ai.constants import COMPONENT_IMAGE, COMPONENT_IMPLEMENTATION
 from bettmensch_ai.utils import BettmenschAIScript, bettmensch_ai_script
 from hera.shared import global_config
 from hera.workflows import Task
-from hera.workflows.models import ImagePullPolicy
 
 
 class ComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
@@ -42,34 +41,35 @@ class Component(BaseComponent):
                 context, generate the hera Task.
         """
 
-        script_decorator_kwargs = self.hera_template_kwargs.copy()
-        script_decorator_kwargs.update(
-            {
-                "inputs": [
-                    template_input.to_hera(template=True)
-                    for template_input in self.template_inputs.values()
-                ],
-                "outputs": [
-                    template_output.to_hera()
-                    for template_output in self.template_outputs.values()
-                ],
-                "name": self.base_name,
-            }
-        )
+        # script_decorator_kwargs = self.hera_template_kwargs.copy()
+        # script_decorator_kwargs.update(
+        #     {
+        #         "inputs": [
+        #             template_input.to_hera(template=True)
+        #             for template_input in self.template_inputs.values()
+        #         ],
+        #         "outputs": [
+        #             template_output.to_hera()
+        #             for template_output in self.template_outputs.values()
+        #         ],
+        #         "name": self.base_name,
+        #     }
+        # )
 
-        if "image" not in script_decorator_kwargs:
-            script_decorator_kwargs["image"] = self.default_image
+        # if "image" not in script_decorator_kwargs:
+        #     script_decorator_kwargs["image"] = self.default_image
 
-        if "image_pull_policy" not in script_decorator_kwargs:
-            script_decorator_kwargs[
-                "image_pull_policy"
-            ] = ImagePullPolicy.always
+        # if "image_pull_policy" not in script_decorator_kwargs:
+        #     script_decorator_kwargs[
+        #         "image_pull_policy"
+        #     ] = ImagePullPolicy.always
 
-        if "resources" not in script_decorator_kwargs:
-            script_decorator_kwargs["resources"] = self.build_resources()
+        # if "resources" not in script_decorator_kwargs:
+        #     script_decorator_kwargs["resources"] = self.build_resources()
 
-        if "tolerations" not in script_decorator_kwargs:
-            script_decorator_kwargs["tolerations"] = self.build_tolerations()
+        # if "tolerations" not in script_decorator_kwargs:
+        #     script_decorator_kwargs["tolerations"] = self.build_tolerations()
+        script_decorator_kwargs = super().build_script_decorator_kwargs()
 
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood

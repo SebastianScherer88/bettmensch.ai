@@ -1,6 +1,6 @@
 from enum import Enum
 
-from hera.workflows.models import Toleration
+from hera.workflows.models import RetryStrategy, Toleration
 
 
 class COMPONENT_IMAGE(Enum):
@@ -18,11 +18,14 @@ COMPONENT_TYPE = "tasks"
 
 GPU_FLAG = "nvidia.com/gpu"
 
-ETCD_SERVICE_NAME = "pytorch-etcd-store-service"
-ETCD_PORT_NUMBER = 2379
-
 DDP_PORT_NAME = "ddp"
 DDP_PORT_NUMBER = 29200
+
+POD_RETRY_STRATEGY = RetryStrategy(
+    limit=1,
+    retry_policy="OnError",  # this covers the karpenter node consolidation
+    # based evictions of dag task node pods
+)
 
 GPU_TOLERATION = Toleration(
     effect="NoSchedule", key=GPU_FLAG, operator="Exists"
