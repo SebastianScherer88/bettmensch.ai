@@ -14,7 +14,7 @@ def lightning_ddp(
     # import os
     from datetime import datetime as dt
 
-    import pytorch_lightning as pl
+    import lightning as pl
 
     # train.py
     import torch
