@@ -5,7 +5,7 @@ import pytest
 
 @pytest.fixture
 def test_output_dir():
-    return os.path.join(".", "sdk", "test", "integration", "outputs")
+    return os.path.join(".", "sdk", "test", "k8s", "outputs")
 
 
 @pytest.fixture

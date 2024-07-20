@@ -193,7 +193,7 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.task_factory is None
 
 
-def test_parameter_component_to_hera(test_mock_pipeline):
+def test_parameter_component_to_hera(test_output_dir, test_mock_pipeline):
     """Declaration of Component using InputParameter and OutputParameter"""
 
     # mock active pipeline with 2 inputs
@@ -243,6 +243,8 @@ def test_parameter_component_to_hera(test_mock_pipeline):
             a_plus_b.to_hera()
             a_plus_b_plus_2.to_hera()
 
+    wft.to_file(test_output_dir)
+
     task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == ["a-plus-b-0", "a-plus-b-plus-2-0"]
 
@@ -251,6 +253,7 @@ def test_parameter_component_to_hera(test_mock_pipeline):
 
 
 def test_artifact_component_to_hera(
+    test_output_dir,
     test_mock_pipeline,
 ):
 
@@ -295,6 +298,8 @@ def test_artifact_component_to_hera(
         with DAG(name="test_dag"):
             convert.to_hera()
             show.to_hera()
+
+    wft.to_file(test_output_dir)
 
     task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == ["convert-parameters-0", "show-artifacts-0"]

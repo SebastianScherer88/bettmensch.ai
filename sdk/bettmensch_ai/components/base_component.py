@@ -331,7 +331,7 @@ class BaseComponent(object):
             script_decorator_kwargs["tolerations"] = self.build_tolerations()
 
         if "retry_strategy" not in script_decorator_kwargs:
-            script_decorator_kwargs["resources"] = POD_RETRY_STRATEGY
+            script_decorator_kwargs["retry_strategy"] = POD_RETRY_STRATEGY
 
         return script_decorator_kwargs
 
