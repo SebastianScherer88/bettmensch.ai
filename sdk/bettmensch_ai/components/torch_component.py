@@ -269,113 +269,11 @@ class TorchComponent(BaseComponent):
 
         self.k8s_service_name = f"{self.name}-{uuid4()}"
 
-        # script_decorator_kwargs = self.hera_template_kwargs.copy()
-        # script_decorator_kwargs.update(
-        #     {
-        #         "inputs": [
-        #             template_input.to_hera(template=True)
-        #             for template_input in self.template_inputs.values()
-        #         ],
-        #         "outputs": [
-        #             template_output.to_hera()
-        #             for template_output in self.template_outputs.values()
-        #         ],
-        #         "name": self.base_name,
-        #     }
-        # )
-
-        # if "image" not in script_decorator_kwargs:
-        #     script_decorator_kwargs["image"] = self.default_image
-
-        # if "image_pull_policy" not in script_decorator_kwargs:
-        #     script_decorator_kwargs[
-        #         "image_pull_policy"
-        #     ] = ImagePullPolicy.always
-
-        # if "resources" not in script_decorator_kwargs:
-        #     script_decorator_kwargs["resources"] = self.build_resources()
-
-        # if "tolerations" not in script_decorator_kwargs:
-        #     script_decorator_kwargs["tolerations"] = self.build_tolerations()
-
-        # script_decorator_kwargs["ports"] = [
-        #     ContainerPort(
-        #         container_port=DDP_PORT_NUMBER,
-        #         protocol=Protocol.tcp,
-        #         name=DDP_PORT_NAME,
-        #     )
-        # ]
-
         # add torch run environment variables to script kwargs
         task_factory = []
 
         for torch_node_rank in range(self.n_nodes):
-            # script_decorator_kwargs["env"] = [
-            #     Env(
-            #         name="NCCL_DEBUG",
-            #         value="INFO",
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_min_nodes",
-            #         value=self.min_nodes,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_max_nodes",
-            #         value=self.n_nodes,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_node_rank",
-            #         value=torch_node_rank,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_nproc_per_node",
-            #         value=self.nproc_per_node,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_max_restarts",
-            #         value=1,
-            #     ),
-            #     # torch's LaunchConfig's default of 'spawn' doesnt seem to
-            #     # inside the argo emissary runtime context for some reason
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_start_method",
-            #         value="fork",
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_rdzv_backend",
-            #         value="static",
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
-            #         value=f"{self.k8s_service_name}.{self.k8s_namespace}"
-            #         + ".svc.cluster.local",
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_rdzv_endpoint_port",
-            #         value=DDP_PORT_NUMBER,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_run_id",
-            #         value=1,
-            #     ),
-            #     Env(
-            #         name="bettmensch_ai_distributed_torch_tee",
-            #         value=0,
-            #     ),
-            # ]
 
-            # script_decorator_kwargs[
-            #     "name"
-            # ] = f"{self.base_name}-{torch_node_rank}"
-
-            # labels: Dict = script_decorator_kwargs.get("labels", {})
-            # labels.update(
-            #     {
-            #         "torch-node": torch_node_rank,
-            #         "torch-job": self.k8s_service_name,
-            #     }
-            # )
-            # script_decorator_kwargs["labels"] = labels
             script_decorator_kwargs = self.build_script_decorator_kwargs(
                 torch_node_rank
             )
