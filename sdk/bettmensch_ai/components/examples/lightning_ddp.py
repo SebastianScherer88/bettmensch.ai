@@ -3,7 +3,7 @@ from bettmensch_ai.io import InputParameter, OutputParameter
 
 
 def lightning_ddp(
-    max_time: InputParameter = "00:00:01:30",
+    max_time: InputParameter = "00:00:00:30",
     duration: OutputParameter = None,
 ) -> None:
     """When decorated with the torch_component decorator, implements a

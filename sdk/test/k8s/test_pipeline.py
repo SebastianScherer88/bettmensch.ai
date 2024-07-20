@@ -248,7 +248,7 @@ def test_lightning_pipeline_decorator_and_register_and_run(
     assert lightning_ddp_pipeline.registered_namespace == test_namespace
 
     lightning_ddp_flow = lightning_ddp_pipeline.run(
-        {"max_time": "00:00:01:00"}, wait=True
+        {"max_time": "00:00:00:20"}, wait=True
     )
 
     assert lightning_ddp_flow.status.phase == "Succeeded"
