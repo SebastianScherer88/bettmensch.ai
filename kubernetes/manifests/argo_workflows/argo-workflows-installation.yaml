@@ -1485,6 +1485,9 @@ data:
     failed: 3
     errored: 3
   workflowDefaults: |
+    metadata:
+      annotations:
+        karpenter.sh/do-not-disrupt: "true" # try to minimise karpenter-based evictions of workflow tasks
     spec:
       serviceAccountName: argo-workflow
 kind: ConfigMap
