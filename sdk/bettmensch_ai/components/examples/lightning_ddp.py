@@ -13,7 +13,7 @@ def lightning_ddp(
     # imports
     from datetime import datetime as dt
 
-    import lightning as pl
+    import lightning as L
     import torch
     from bettmensch_ai.components.torch_utils import LaunchConfigSettings
     from lightning.pytorch.strategies import DDPStrategy
@@ -21,7 +21,7 @@ def lightning_ddp(
     start = dt.now()
 
     # STEP 1: DEFINE YOUR LIGHTNING MODULE
-    class ToyExample(pl.LightningModule):
+    class ToyExample(L.LightningModule):
         def __init__(self, model):
             super().__init__()
             self.model = model
@@ -54,7 +54,7 @@ def lightning_ddp(
 
     # Configure the strategy on the Trainer & train model
     launch_settings = LaunchConfigSettings()
-    trainer = pl.Trainer(
+    trainer = L.Trainer(
         strategy=ddp,
         accelerator=accelerator,
         num_nodes=launch_settings.max_nodes,
