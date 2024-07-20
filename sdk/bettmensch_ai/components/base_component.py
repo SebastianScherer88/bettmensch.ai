@@ -2,11 +2,13 @@ import inspect
 from typing import Callable, Dict, List, Optional, Union
 
 from bettmensch_ai.constants import (
+    COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
     COMPONENT_TYPE,
     GPU_FLAG,
     GPU_TOLERATION,
     PIPELINE_TYPE,
+    POD_RETRY_STRATEGY,
 )
 from bettmensch_ai.io import (
     InputArtifact,
@@ -17,12 +19,14 @@ from bettmensch_ai.io import (
 from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
 from bettmensch_ai.utils import get_func_args, validate_func_args
 from hera.workflows import Resources, Task, models
+from hera.workflows.models import ImagePullPolicy
 
 
 class BaseComponent(object):
 
     type: str = COMPONENT_TYPE
     implementation: str = COMPONENT_IMPLEMENTATION.base.value
+    default_image: str = COMPONENT_IMAGE.base.value
     name: str = None
     func: Callable = None
     base_name: str = None
@@ -287,6 +291,49 @@ class BaseComponent(object):
             return [GPU_TOLERATION]
         else:
             return []
+
+    def build_script_decorator_kwargs(self) -> Dict:
+        """Builds the bettmensch_ai.utils.bettmensch_ai_script kwargs.
+
+        Returns:
+            Dict: The keyword arguments to be unravelled into the
+                bettmensch_ai.utils.bettmensch_ai_script decorator when
+                building components.
+        """
+
+        script_decorator_kwargs = self.hera_template_kwargs.copy()
+        script_decorator_kwargs.update(
+            {
+                "inputs": [
+                    template_input.to_hera(template=True)
+                    for template_input in self.template_inputs.values()
+                ],
+                "outputs": [
+                    template_output.to_hera()
+                    for template_output in self.template_outputs.values()
+                ],
+                "name": self.base_name,
+            }
+        )
+
+        if "image" not in script_decorator_kwargs:
+            script_decorator_kwargs["image"] = self.default_image
+
+        if "image_pull_policy" not in script_decorator_kwargs:
+            script_decorator_kwargs[
+                "image_pull_policy"
+            ] = ImagePullPolicy.always
+
+        if "resources" not in script_decorator_kwargs:
+            script_decorator_kwargs["resources"] = self.build_resources()
+
+        if "tolerations" not in script_decorator_kwargs:
+            script_decorator_kwargs["tolerations"] = self.build_tolerations()
+
+        if "retry_strategy" not in script_decorator_kwargs:
+            script_decorator_kwargs["resources"] = POD_RETRY_STRATEGY
+
+        return script_decorator_kwargs
 
     def build_hera_task_factory(self) -> Union[Callable, List[Callable]]:
         """Generates the task factory task_wrapper callable from the
