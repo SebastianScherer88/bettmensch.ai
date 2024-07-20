@@ -10,10 +10,11 @@ def lightning_ddp(
     bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in
     your K8s cluster."""
 
-    # imports
+    # imports - as per
+    # https://github.com/Lightning-AI/pytorch-lightning/issues/17445
     from datetime import datetime as dt
 
-    import lightning as L
+    import lightning.pytorch as pl
     import torch
     from bettmensch_ai.components.torch_utils import LaunchConfigSettings
     from lightning.pytorch.strategies import DDPStrategy
@@ -21,7 +22,7 @@ def lightning_ddp(
     start = dt.now()
 
     # STEP 1: DEFINE YOUR LIGHTNING MODULE
-    class ToyExample(L.LightningModule):
+    class ToyExample(pl.LightningModule):
         def __init__(self, model):
             super().__init__()
             self.model = model
@@ -54,7 +55,7 @@ def lightning_ddp(
 
     # Configure the strategy on the Trainer & train model
     launch_settings = LaunchConfigSettings()
-    trainer = L.Trainer(
+    trainer = pl.Trainer(
         strategy=ddp,
         accelerator=accelerator,
         num_nodes=launch_settings.max_nodes,
