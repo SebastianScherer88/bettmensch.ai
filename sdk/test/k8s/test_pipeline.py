@@ -267,7 +267,7 @@ def test_lightning_pipeline_decorator_and_register_and_run(
         ("test-", 6),
     ],
 )
-def test_list(
+def test_list_registered_pipelines(
     test_namespace,
     test_registered_pipeline_name_pattern,
     test_n_registered_pipelines,
@@ -324,7 +324,7 @@ def test_get_and_run_from_registry(
 
     # we use the `list` method to retrieve the pipeline and access its
     # `registered_name` property to use as an input for the `get` method.
-    registered_pipeline_name = list(
+    registered_pipeline_name = list_registered_pipelines(
         registered_namespace=test_namespace,
         registered_name_pattern=test_registered_pipeline_name_pattern,
     )[0].registered_name
@@ -348,7 +348,7 @@ def test_get_and_run_from_registry(
 def test_delete(test_namespace):
     """Test the pipeline.delete function"""
 
-    registered_pipelines = list(
+    registered_pipelines = list_registered_pipelines(
         registered_namespace=test_namespace, registered_name_pattern="test-"
     )
 
