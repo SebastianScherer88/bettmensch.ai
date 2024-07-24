@@ -145,6 +145,9 @@ The executed flows can be viewed on the dashboard's `Flows` section:
 
 ![bettmensch.ai flows](image/dashboard_2_flows.JPG)
 
+The following sequence illustrates how the creation, registration and running of `Pipeline`'s is supported by the infrastructure stack initiated in the `Setup` section:
+![BettmenschAI - Sequence diagram](https://github.com/user-attachments/assets/fb930dcc-d856-4224-8a7d-790a85269c73)
+
 ## :books: `Models`
 
 ![bettmensch.ai models](image/dashboard_3_models.JPG)
