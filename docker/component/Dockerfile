@@ -2,15 +2,14 @@ from python:3.11 as base
 
 ARG BETTMENSCH_AI_VERSION
 
-ENV NAME_OF_PACKAGE=bettmensch_ai
-ENV SUBDIR_IN_REPO=sdk
+ENV PACKAGE_NAME=bettmensch_ai
+ENV PACKAGE_EXTRA=pipelines
+ENV REPO_SUBDIRECTORY=sdk
+ENV PIP_INSTALL_LOCATION="git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${PACKAGE_NAME}[${PACKAGE_EXTRA}]&subdirectory=${REPO_SUBDIRECTORY}"
 
-RUN echo "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
+RUN echo "${PIP_INSTALL_LOCATION}"
 
-RUN pip install -e "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
-
-RUN wget https://github.com/SebastianScherer88/bettmensch.ai/archive/refs/heads/master.zip
-RUN unzip master.zip
+RUN pip install -e "${PIP_INSTALL_LOCATION}"
 
 # set cwd back to root so the artifact setup done in the init container resolves correctly
-WORKDIR / 
+WORKDIR /
