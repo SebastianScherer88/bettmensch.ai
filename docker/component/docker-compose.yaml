@@ -1,0 +1,28 @@
+services:
+  base:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        BASE_IMAGE: python
+        BASE_IMAGE_VERSION: 3.11
+        PACKAGE_EXTRA: pipelines
+    image: bettmensch88/bettmensch.ai-base:local
+  torch:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        BASE_IMAGE: pytorch/pytorch
+        BASE_IMAGE_VERSION: 2.2.2-cuda12.1-cudnn8-runtime
+        PACKAGE_EXTRA: pipelines
+    image: bettmensch88/bettmensch.ai-torch:local
+  lightning:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        BASE_IMAGE: pytorchlightning/pytorch_lightning
+        BASE_IMAGE_VERSION: 2.3.3-py3.11-torch2.2-cuda12.1.0
+        PACKAGE_EXTRA: pipelines
+    image: bettmensch88/bettmensch.ai-lightning:local

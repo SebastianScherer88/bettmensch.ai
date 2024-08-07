@@ -4,10 +4,9 @@ from datetime import datetime
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import argo_workflows
-import networkx as nx
 import yaml
 from argo_workflows.api import workflow_template_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (  # noqa: E501
     IoArgoprojWorkflowV1alpha1WorkflowTemplate,
 )
 from bettmensch_ai.server.dag import (
@@ -173,8 +172,8 @@ class Pipeline(BaseModel):
 
         Args:
             expression (str): A node argument value expression, e.g.
-            - '{{workflow.parameters.coin}}' # references the workflow parameter
-                type argument "coin"
+            - '{{workflow.parameters.coin}}' # references the workflow
+                parameter type argument "coin"
             - '{{tasks.Set-a-coin.outputs.parameters.coin}}' # references the
                 "Set-a-coin" node's parameter type argument "coin"
 
@@ -185,11 +184,13 @@ class Pipeline(BaseModel):
                 - ('Set-a-coin','parameters','coin')
         """
         # '{{workflow.parameters.coin}}' -> 'workflow.parameters.coin'
-        # '{{tasks.Set-a-coin.outputs.parameters.coin}}' -> 'tasks.Set-a-coin.outputs.parameters.coin'
+        # '{{tasks.Set-a-coin.outputs.parameters.coin}}' ->
+        #   'tasks.Set-a-coin.outputs.parameters.coin'
         expression_content = expression.replace("{{", "").replace("}}", "")
 
         # 'workflow.parameters.coin' -> ['workflow','parameters','coin']
-        # 'tasks.Set-a-coin.outputs.parameters.coin' -> ['tasks','Set-a-coin','outputs','parameters','coin']
+        # 'tasks.Set-a-coin.outputs.parameters.coin' ->
+        #   ['tasks','Set-a-coin','outputs','parameters','coin']
         tokens = expression_content.split(".")
 
         if tokens[0] == "workflow":
@@ -206,10 +207,12 @@ class Pipeline(BaseModel):
         """Utility to build the Pipeline class' dag attribute.
 
         Args:
-            workflow_template_spec (Dict): The spec field of a dict-ified IoArgoprojWorkflowV1alpha1WorkflowTemplate class instance
+            workflow_template_spec (Dict): The spec field of a dict-ified
+                IoArgoprojWorkflowV1alpha1WorkflowTemplate class instance
 
         Returns:
-            List[PipelineNode]: The constructed dag attribute of a Pipeline instance.
+            List[PipelineNode]: The constructed dag attribute of a Pipeline
+                instance.
         """
         dag = []
         templates_dict = dict(
@@ -308,10 +311,13 @@ class Pipeline(BaseModel):
         IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
 
         To be used to easily convert the API response data structure
-        to the bettmensch.ai pipeline data structure optimized for visualizing the DAG.
+        to the bettmensch.ai pipeline data structure optimized for visualizing
+        the DAG.
 
         Args:
-            workflow_template_resource (IoArgoprojWorkflowV1alpha1WorkflowTemplate): The return of ArgoWorkflow's
+            workflow_template_resource
+            (IoArgoprojWorkflowV1alpha1WorkflowTemplate): The return of
+                ArgoWorkflow's
                 api/v1/workflow-templates/{namespace}/{name} endpoint.
 
         Returns:
@@ -384,7 +390,7 @@ class Pipeline(BaseModel):
                 DagTaskNode(
                     id=task_node_name,
                     data={
-                        "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"
+                        "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"  # noqa: E501
                     },
                 )
             )
@@ -420,12 +426,12 @@ class Pipeline(BaseModel):
 
                         for argument in arguments:
                             # add the task io node
-                            task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"
+                            task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"  # noqa: E501
                             nodes.append(
                                 DagTaskIONode(
                                     id=task_io_node_name,
                                     data={
-                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",
+                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",  # noqa: E501
                                         "value": getattr(
                                             argument, "value", None
                                         ),
@@ -452,17 +458,18 @@ class Pipeline(BaseModel):
                             )
 
                             # connect the input type task io node with the
-                            # upstream output type task io node - where appropriate
+                            # upstream output type task io node - where
+                            # appropriate
                             if (
                                 interface_type == "inputs"
                                 and getattr(argument, "source", None)
                                 is not None
                             ):
                                 task_io_source = argument.source
-                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"
+                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"  # noqa: E501
                                 connections.append(
                                     DagConnection(
-                                        id=f"{upstream_node_name}->{task_io_node_name}",
+                                        id=f"{upstream_node_name}->{task_io_node_name}",  # noqa: E501
                                         source=upstream_node_name,
                                         target=task_io_node_name,
                                         animated=True,
@@ -477,7 +484,7 @@ class Pipeline(BaseModel):
                     DagPipelineIONode(
                         id=node_name,
                         data={
-                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",
+                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",  # noqa: E501
                             "value": input.value,
                         },
                         node_type="input",
@@ -499,11 +506,13 @@ def main_test():
         api_client
     )
 
-    workflow_templates = api_instance.list_workflow_templates(namespace="argo")[
+    workflow_templates = api_instance.list_workflow_templates(
+        namespace="argo"
+    )[  # noqa: E501
         "items"
     ]
     print(
-        f"Registered pipelines: {[workflow_template['metadata']['name'] for workflow_template in workflow_templates]}"
+        f"Registered pipelines: {[workflow_template['metadata']['name'] for workflow_template in workflow_templates]}"  # noqa: E501
     )
     workflow_template = workflow_templates[0]
     print(f"Workflow template: {workflow_template.to_dict()}")
