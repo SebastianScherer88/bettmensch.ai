@@ -1,18 +1,49 @@
-import os
-from typing import List
+from enum import Enum
+from typing import Dict, List
 
 from setuptools import find_packages, setup
 
 
-def get_requirements(requirements_file: str) -> List[str]:
-    """Read requirements from requirements.in."""
+class SDKExtras(Enum):
+    dashboard: str = "DASHBOARD"
+    pipelines: str = "PIPELINES"
+    torch_pipelines: str = "TORCH-PIPELINES"
+    serving: str = "SERVING"
+    test: str = "TEST"
 
-    file_path = os.path.join(os.path.dirname(__file__), requirements_file)
-    with open(file_path, "r") as f:
-        lines = f.readlines()
-    lines = [line.strip() for line in lines]
-    lines = [line for line in lines if not line.startswith("#") and line]
-    return lines
+
+def get_extra_requirements() -> Dict[str, List[str]]:
+    """Produces the requirements dictionary for the sdk's extras."""
+
+    extra_requirements = {
+        SDKExtras.dashboard.value: [
+            "streamlit",
+            "streamlit-option-menu",
+            "st-pages",
+            "streamlit-extras",
+            "streamlit-flow-component<1.0.0",
+            "opencv-python",
+            "argo-workflows==6.5.6",
+        ],
+        SDKExtras.pipelines.value: [
+            "hera==5.15.1",
+        ],
+        SDKExtras.serving.value: ["fastapi==0.112.0"],
+        SDKExtras.test.value: [
+            "pytest==8.2.2",
+            "pytest-order==1.2.1",
+        ],
+    }
+
+    extra_requirements[SDKExtras.torch_pipelines.value] = extra_requirements[
+        SDKExtras.pipelines.value
+    ] + [
+        "torch==2.2.2",
+        "lightning==2.4.0",
+        "numpy==1.24.1",
+    ]
+
+    return extra_requirements
 
 
 setup(
@@ -22,9 +53,14 @@ setup(
     author_email="scherersebastian@yahoo.de",
     packages=find_packages(),
     license="LICENSE.txt",
-    description="A python SDK for creating and managing bettmensch.ai Pipelines & Flows.",
+    description="A python SDK for creating and managing bettmensch.ai Pipelines & Flows.",  # noqa: E501
     long_description=open("README.md").read(),
-    install_requires=get_requirements("requirements.txt"),
+    install_requires=[
+        "pydantic==2.6.4",
+        "pydantic-settings==2.2.1",
+        "PyYAML==6.0.1",
+    ],
+    extras_require=get_extra_requirements(),
     python_requires=">=3.8.0,<3.13.0",
     include_package_data=True,
 )
