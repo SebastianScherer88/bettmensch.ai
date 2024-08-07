@@ -3,7 +3,7 @@ from pytorchlightning/pytorch_lightning:2.3.3-py3.11-torch2.2-cuda12.1.0 as base
 ARG BETTMENSCH_AI_VERSION
 
 ENV PACKAGE_NAME=bettmensch_ai
-ENV PACKAGE_EXTRA=torch-pipelines
+ENV PACKAGE_EXTRA=pipelines
 ENV REPO_SUBDIRECTORY=sdk
 ENV PIP_INSTALL_SPEC="git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${PACKAGE_NAME}[${PACKAGE_EXTRA}]&subdirectory=${REPO_SUBDIRECTORY}"
 
