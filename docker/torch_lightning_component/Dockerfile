@@ -2,14 +2,16 @@ from pytorchlightning/pytorch_lightning:2.3.3-py3.11-torch2.2-cuda12.1.0 as base
 
 ARG BETTMENSCH_AI_VERSION
 
-ENV NAME_OF_PACKAGE=bettmensch_ai
-ENV SUBDIR_IN_REPO=sdk
-
-RUN echo "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
+ENV PACKAGE_NAME=bettmensch_ai
+ENV PACKAGE_EXTRA=pipelines
+ENV REPO_SUBDIRECTORY=sdk
+ENV PIP_INSTALL_SPEC="git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${PACKAGE_NAME}[${PACKAGE_EXTRA}]&subdirectory=${REPO_SUBDIRECTORY}"
 
 RUN apt update 
 RUN apt-get install pip git -y
-RUN pip install -e "git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${NAME_OF_PACKAGE}&subdirectory=${SUBDIR_IN_REPO}"
+
+RUN echo "Installing bettmensch_ai with the following pip -e spec: ${PIP_INSTALL_SPEC}"
+RUN pip install -e "${PIP_INSTALL_SPEC}"
 
 # set cwd back to root so the artifact setup done in the init container resolves correctly
 WORKDIR / 
