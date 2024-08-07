@@ -1,11 +1,15 @@
-from python:3.11 as base
+ARG BASE_IMAGE=python
+ARG BASE_IMAGE_VERSION=3:11
 
-ARG BETTMENSCH_AI_VERSION
+from ${BASE_IMAGE}:${BASE_IMAGE_VERSION} as base
 
-ENV PACKAGE_NAME=bettmensch_ai
-ENV PACKAGE_EXTRA=pipelines
-ENV REPO_SUBDIRECTORY=sdk
-ENV PIP_INSTALL_SPEC="git+https://github.com/SebastianScherer88/bettmensch.ai.git@${BETTMENSCH_AI_VERSION}#egg=${PACKAGE_NAME}[${PACKAGE_EXTRA}]&subdirectory=${REPO_SUBDIRECTORY}"
+ARG COMMIT
+ARG PACKAGE_EXTRA=pipelines
+
+ENV PIP_INSTALL_SPEC="git+https://github.com/SebastianScherer88/bettmensch.ai.git@${COMMIT}#egg=bettmensch_ai[${PACKAGE_EXTRA}]&subdirectory=sdk"
+
+RUN apt update 
+RUN apt-get install pip git -y
 
 RUN echo "Installing bettmensch_ai with the following pip -e spec: ${PIP_INSTALL_SPEC}"
 
