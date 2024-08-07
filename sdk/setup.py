@@ -5,11 +5,11 @@ from setuptools import find_packages, setup
 
 
 class SDKExtras(Enum):
-    dashboard: str = "DASHBOARD"
-    pipelines: str = "PIPELINES"
-    torch_pipelines: str = "TORCH-PIPELINES"
-    serving: str = "SERVING"
-    test: str = "TEST"
+    dashboard: str = "dashboard"
+    pipelines: str = "pipelines"
+    torch_pipelines: str = "torch-pipelines"
+    serving: str = "serving"
+    test: str = "test"
 
 
 def get_extra_requirements() -> Dict[str, List[str]]:
