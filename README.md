@@ -28,19 +28,34 @@ To configure your kubectl to point towards the EKS cluster, run:
 aws eks --region us-east-2 update-kubeconfig --name bettmensch-ai
 ```
 
-To port forward the argo server to your local port `2746` so you can access the argo dashboard and start
-submitting & running pipelines, change back into the top level directory and run
+To port forward the argo server to your local port `2746` so you can access the
+ argo dashboard and start submitting & running pipelines, change back into the
+ top level directory and run
 
 ```bash
 bash kubernetes/port_forward_argo_server.sh
 ```
 
+## :computer: Dashboard
+
+To build the `bettmensch.ai`'s custom dashboard's docker image, run:
+
+`make dashboard.build`
+
+To run the dashboard, run:
+
+`make dashboard.run`
+
+See the `docker` section for more details.
+
 ## :books: Python SDK installation
 
-To install the python library `bettmensch_ai`, run `pip install ./sdk/` from the
-repository's top directory.
+To install the python library `bettmensch_ai` with `torch-pipelines` support,
+ run `pip install ./sdk[torch-pipelines]` from the repository's top directory.
 
-You can now start authoring `Pipeline`s and start submitting `Flow`s.
+You can now start authoring `Pipeline`s and start submitting `Flow`s and 
+start monitoring them on both the `ArgoWorkflow` as well as the `bettmensch.ai`
+dashboards.
 
 # Features (under active development )
 
@@ -50,15 +65,21 @@ You can now start authoring `Pipeline`s and start submitting `Flow`s.
 
 :eyes: A dashboard for *monitoring* all workloads running on the platform.
 
-:open_hands: To actively *manage* `Pipeline`s, `Flow`s, please see the respective documentation of `bettmensch.ai` SDK.
+:open_hands: To actively *manage* `Pipeline`s, `Flow`s, please see the 
+respective documentation of `bettmensch.ai` SDK.
 
 ## :twisted_rightwards_arrows: `Pipelines & Flows`
 
-`bettmensch.ai` comes with a python SDK for defining and executing distributed (ML) workloads by leveraging the [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the official [`hera`](https://github.com/argoproj-labs/hera) library.
+`bettmensch.ai` comes with a python SDK for defining and executing distributed
+ (ML) workloads by leveraging the 
+ [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the
+  official [`hera`](https://github.com/argoproj-labs/hera) library.
 
-The `io` module implements the classes implementing the transfer of inputs and outputs between a workfload's components.
+The `io` module implements the classes implementing the transfer of inputs and
+ outputs between a workfload's components.
 
-Using `InputParameter` and `OutputParameter` for `int`, `float` or `str` type data:
+Using `InputParameter` and `OutputParameter` for `int`, `float` or `str` type 
+data:
 
 ```python
 from bettmensch_ai.io import InputParameter, OutputParameter
@@ -137,6 +158,10 @@ parameter_to_artifact.register()
 parameter_to_artifact.run(a="Test value A")
 ```
 
+**NOTE**: For more examples (including cross K8s node CPU and GPU `torch.distributed` 
+processes), see this repository's [integration `test`](./sdk/test/integration/)
+ and [k8s `test`](./sdk/test/k8s/) sections.
+
 The submitted pipelines can be viewed on the dashboard's `Pipelines` section:
 
 ![bettmensch.ai pipelines](image/dashboard_1_pipelines.JPG)
@@ -145,7 +170,9 @@ The executed flows can be viewed on the dashboard's `Flows` section:
 
 ![bettmensch.ai flows](image/dashboard_2_flows.JPG)
 
-The following sequence diagram illustrates how the creation, registration and running of `Pipeline`'s is supported by the infrastructure stack initiated in the `Setup` section:
+The following sequence diagram illustrates how the creation, registration and
+ running of `Pipeline`'s is supported by the infrastructure stack initiated in
+ the `Setup` section:
 ![BettmenschAI - Sequence diagram](https://github.com/user-attachments/assets/fb930dcc-d856-4224-8a7d-790a85269c73)
 
 ## :books: `Models`
@@ -163,8 +190,15 @@ Coming soon.
 # Credits
 
 This platform makes liberal use of various great open source projects:
-- [ArgoWorkflows](https://argoproj.github.io/workflows/): Kubernetes native workload orchestration. Also powers the popular [Kubeflow Pipelines](https://github.com/kubeflow/pipelines), which inspired the `Pipelines` & `Flows` of this project.
-- [hera](https://github.com/argoproj-labs/hera): Official Argo Python SDK for defining Workflow(Template)s
-- [streamlit](https://streamlit.io/): A python library for designing interactive dashboards
-  - [streamlit-flow-component](https://github.com/dkapur17/streamlit-flow): A [react-flow](https://reactflow.dev/) integration for streamlit
-  - [st-pages](https://st-pages.streamlit.app/): A nice streamlit plugin for multi-page dashboards
+- [ArgoWorkflows](https://argoproj.github.io/workflows/): Kubernetes native 
+workload orchestration. Also powers the popular
+ [Kubeflow Pipelines](https://github.com/kubeflow/pipelines), which inspired 
+ the `Pipelines` & `Flows` of this project.
+- [hera](https://github.com/argoproj-labs/hera): Official Argo Python SDK for
+ defining Workflow(Template)s
+- [streamlit](https://streamlit.io/): A python library for designing 
+interactive dashboards
+  - [streamlit-flow-component](https://github.com/dkapur17/streamlit-flow): A
+   [react-flow](https://reactflow.dev/) integration for streamlit
+  - [st-pages](https://st-pages.streamlit.app/): A nice streamlit plugin for
+   multi-page dashboards
