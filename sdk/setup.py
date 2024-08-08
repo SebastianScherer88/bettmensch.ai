@@ -27,6 +27,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         ],
         SDKExtras.pipelines.value: [
             "hera==5.15.1",
+            "argo-workflows==6.5.6",
         ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
         SDKExtras.test.value: [
