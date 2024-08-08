@@ -90,6 +90,8 @@
 
           with open('./product.txt', 'w') as output:
               output.write(str(a * b))
+          import time
+          time.sleep(100000)
     - inputs:
         parameters:
         - name: a
