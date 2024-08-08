@@ -53,10 +53,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build component image
-        run: make component.build
+        run: make component.build COMPONENT=${{ matrix.component }}
       - name: Tag and push component image
-        if: ${{ github.event_name == 'pull_request' }}
-        run: make component.push
+        if: ${{ github.event_name == 'push' }}
+        run: make component.push COMPONENT=${{ matrix.component }}
 
   docker-dashboard:
     runs-on: ubuntu-latest
@@ -72,5 +72,5 @@ jobs:
       - name: Build component image
         run: make dashboard.build
       - name: Tag and push component image
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'push' }}
         run: make dashboard.push
