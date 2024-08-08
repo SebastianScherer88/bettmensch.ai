@@ -25,6 +25,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Installation setup
+        run: pip install distutils
       - name: Install sdk
         run: make sdk.install EXTRAS=torch-pipelines
       - name: Unit test sdk
