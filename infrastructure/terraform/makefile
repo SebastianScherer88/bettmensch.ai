@@ -10,3 +10,8 @@ infrastructure.build:
 	terraform -chdir=$(DIR) apply -auto-approve
 	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
 	@echo "::endgroup::"
+
+infrastructure.destroy:
+		@echo "::group::Tearing down infrastructure"
+		terraform -chdir=$(DIR) destroy -auto-approve
+		@echo "::endgroup::"
