@@ -24,6 +24,12 @@ To port forward to the `ArgoWorkflow` server running on EKS, run:
 make kubernetes.connect
 ```
 
+When you're done, you can tear down the stack by running
+
+```bash
+make infrastructure.destroy
+```
+
 ## :computer: Dashboard
 
 To build the `bettmensch.ai`'s custom dashboard's docker image, run:
