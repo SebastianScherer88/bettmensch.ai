@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 import argo_workflows
 import cv2
@@ -11,7 +11,7 @@ from argo_workflows.api import (
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
     IoArgoprojWorkflowV1alpha1Workflow,
 )
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (  # noqa: E501
     IoArgoprojWorkflowV1alpha1WorkflowTemplate,
 )
 from pydantic import BaseModel
@@ -26,7 +26,7 @@ PIPELINE_NODE_EMOJI_MAP = {
 }
 
 # --- Colouring
-LOGO_IMAGE = cv2.imread("../image/logo_transparent.png")
+LOGO_IMAGE = cv2.imread("./image/logo_transparent.png")
 
 
 class CustomTheme(BaseModel):
@@ -61,7 +61,7 @@ class LightTheme(CustomTheme):
 
 def hex_to_rgb(hex: str):
     h = hex.lstrip("#")
-    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa: E203
 
 
 def hex_to_bgr(hex: str):

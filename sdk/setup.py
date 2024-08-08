@@ -17,10 +17,10 @@ def get_extra_requirements() -> Dict[str, List[str]]:
 
     extra_requirements = {
         SDKExtras.dashboard.value: [
-            "streamlit",
-            "streamlit-option-menu",
-            "st-pages",
-            "streamlit-extras",
+            "streamlit==1.37.1",
+            "streamlit-option-menu==0.3.13",
+            "st-pages==0.5.0",
+            "streamlit-extras==0.4.6",
             "streamlit-flow-component<1.0.0",
             "opencv-python",
             "argo-workflows==6.5.6",

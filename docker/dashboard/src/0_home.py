@@ -3,8 +3,8 @@ import streamlit as st
 st.set_page_config(
     page_title="Bettmensch AI", page_icon=":hotel:", layout="wide"
 )
-from st_pages import Page, show_pages
-from utils import add_logo
+from st_pages import Page, show_pages  # noqa: E402
+from utils import add_logo  # noqa: E402
 
 show_pages(
     [
@@ -23,15 +23,17 @@ show_pages(
 st.markdown(
     """
     # :hotel: Welcome to Bettmensch.AI
-    
-    :factory: Bettmensch.AI is a Kubernetes native open source ML Ops framework that allows for tight CI and CD integrations.
-    
-    :eyes: This dashboard is *exclusively for querying* purposes. 
-    
-    :open_hands: To actively manage `Pipeline`s, `Flow`s, `Run`s, `Model`s and `Server`s, please see the respective documentation of `bettmensch.ai` SDK.
-    
+
+    :factory: Bettmensch.AI is a Kubernetes native open source ML Ops framework
+     that allows for tight CI and CD integrations.
+
+    :eyes: This dashboard is *exclusively for querying* purposes.
+
+    :open_hands: To actively manage `Pipeline`s, `Flow`s, `Run`s, `Model`s and
+    `Server`s, please see the respective documentation of `bettmensch.ai` SDK.
+
     :computer: This dashboard contains 3 main sections:
-    
+
     - :twisted_rightwards_arrows: `Pipelines & Flows`
       - :twisted_rightwards_arrows: [Pipelines page](./Pipelines)
       - :arrow_forward: [Flows page](./Flows)
