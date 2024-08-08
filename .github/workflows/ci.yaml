@@ -55,7 +55,7 @@ jobs:
       - name: Build component image
         run: make component.build COMPONENT=${{ matrix.component }}
       - name: Tag and push component image
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'push' }}
         run: make component.push COMPONENT=${{ matrix.component }}
 
   docker-dashboard:
@@ -72,5 +72,5 @@ jobs:
       - name: Build component image
         run: make dashboard.build
       - name: Tag and push component image
-        if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'push' }}
         run: make dashboard.push
