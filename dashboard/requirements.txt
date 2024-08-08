@@ -1,7 +1,1 @@
-streamlit
-streamlit-option-menu
-st-pages
-streamlit-extras
-streamlit-flow-component<1.0.0
-opencv-python
-bettmensch_ai
+bettmensch_ai[dashboard]
