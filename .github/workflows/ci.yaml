@@ -23,7 +23,7 @@ jobs:
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 15
+          swap-size-gb: 10
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -32,7 +32,7 @@ jobs:
       - name: Installation setup
         run: pip install setuptools
       - name: Install sdk
-        run: make sdk.install EXTRAS=torch-pipelines
+        run: make sdk.install EXTRAS=test
       - name: Unit test sdk
         run: make sdk.test SUITE=unit
       - name: Integration test sdk
