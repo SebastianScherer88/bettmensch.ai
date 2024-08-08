@@ -43,7 +43,13 @@ See the `docker` section for more details.
 ## :books: Python SDK installation
 
 To install the python library `bettmensch_ai` with `torch-pipelines` support,
- run `pip install ./sdk[torch-pipelines]` from the repository's top directory.
+ run 
+ 
+```bash
+make sdk.install EXTRAS=torch-pipelines
+```
+
+from the repository's top directory.
 
 You can now start authoring `Pipeline`s and start submitting `Flow`s and 
 start monitoring them on both the `ArgoWorkflow` as well as the `bettmensch.ai`
