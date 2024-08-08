@@ -55,6 +55,7 @@ jobs:
       - name: Build component image
         run: make component.build
       - name: Tag and push component image
+        if: ${{ github.event_name == 'pull_request' }}
         run: make component.push
 
   docker-dashboard:
@@ -71,4 +72,5 @@ jobs:
       - name: Build component image
         run: make dashboard.build
       - name: Tag and push component image
+        if: ${{ github.event_name == 'pull_request' }}
         run: make dashboard.push
