@@ -13,5 +13,6 @@ infrastructure.build:
 
 infrastructure.destroy:
 		@echo "::group::Tearing down infrastructure"
+		aws s3 rm s3://bettmensch-ai-artifact-repository --recursive
 		terraform -chdir=$(DIR) destroy -auto-approve
 		@echo "::endgroup::"
