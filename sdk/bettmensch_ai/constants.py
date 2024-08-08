@@ -22,7 +22,7 @@ DDP_PORT_NAME = "ddp"
 DDP_PORT_NUMBER = 29200
 
 POD_RETRY_STRATEGY = RetryStrategy(
-    limit=1,
+    limit="1",
     retry_policy="OnError",  # this covers the karpenter node consolidation
     # based evictions of dag task node pods
 )
