@@ -14,37 +14,29 @@ To provision
 - the configured Karpenter, Argo Workflows & Volcano kubernetes installations 
     on the cluster,
 
-change into the `infrastructure/terraform` directory and run:
-
 ```bash
-terraform init
-terraform plan
-terraform apply -auto-approve
+make infrastructure.build
 ```
 
-To configure your kubectl to point towards the EKS cluster, run:
+To port forward to the `ArgoWorkflow` server running on EKS, run:
 
 ```bash
-aws eks --region us-east-2 update-kubeconfig --name bettmensch-ai
-```
-
-To port forward the argo server to your local port `2746` so you can access the
- argo dashboard and start submitting & running pipelines, change back into the
- top level directory and run
-
-```bash
-bash kubernetes/port_forward_argo_server.sh
+make kubernetes.connect
 ```
 
 ## :computer: Dashboard
 
 To build the `bettmensch.ai`'s custom dashboard's docker image, run:
 
-`make dashboard.build`
+```bash
+make dashboard.build
+```
 
 To run the dashboard, run:
 
-`make dashboard.run`
+```bash
+make dashboard.run
+```
 
 See the `docker` section for more details.
 
