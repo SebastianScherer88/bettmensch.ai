@@ -30,10 +30,6 @@ def get_extra_requirements() -> Dict[str, List[str]]:
             "argo-workflows==6.5.6",
         ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
-        SDKExtras.test.value: [
-            "pytest==8.2.2",
-            "pytest-order==1.2.1",
-        ],
     }
 
     extra_requirements[SDKExtras.torch_pipelines.value] = extra_requirements[
@@ -43,6 +39,14 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         "lightning==2.4.0",
         "numpy==1.24.1",
     ]
+
+    extra_requirements[SDKExtras.test.value] = (
+        extra_requirements[SDKExtras.torch_pipelines.value]
+        + [
+            "pytest==8.2.2",
+            "pytest-order==1.2.1",
+        ],
+    )
 
     return extra_requirements
 
