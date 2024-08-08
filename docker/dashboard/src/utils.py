@@ -15,6 +15,7 @@ from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import
     IoArgoprojWorkflowV1alpha1WorkflowTemplate,
 )
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PIPELINE_NODE_EMOJI_MAP = {
     "task": "🔵",  # :large_blue_circle:
@@ -144,10 +145,18 @@ def add_logo(sidebar: bool = False):
 
 
 # --- ArgoWorkflow server config
+class ArgoWorkflowsBackendConfiguration(BaseSettings):
+    host: str = "https://127.0.0.1:2746"
+    verify_ssl: bool = False
+
+    model_config = SettingsConfigDict(env_prefix="argo_workflows_backend_")
+
+
 def configure_argo_server():
+    backend_settings = ArgoWorkflowsBackendConfiguration()
     # get a sample pipeline from the ArgoWorkflow server
-    configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")
-    configuration.verify_ssl = False
+    configuration = argo_workflows.Configuration(host=backend_settings.host)
+    configuration.verify_ssl = backend_settings.verify_ssl
 
     return configuration
 
