@@ -1,5 +1,4 @@
 import streamlit as st
-from streamlit_option_menu import option_menu
 from utils import add_logo
 
 st.set_page_config(
@@ -13,7 +12,8 @@ with st.sidebar:
 st.markdown(
     """
     # :rocket: Servers
-    
-    This section displays definition and state meta data of registered model `Server`s.
+
+    This section displays definition and state meta data of registered model
+    `Server`s.
     """
 )

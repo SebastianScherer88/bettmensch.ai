@@ -1,4 +1,4 @@
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import List, Literal, Optional, Tuple
 
 import argo_workflows
 import cv2
@@ -11,10 +11,11 @@ from argo_workflows.api import (
 from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
     IoArgoprojWorkflowV1alpha1Workflow,
 )
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (
+from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (  # noqa: E501
     IoArgoprojWorkflowV1alpha1WorkflowTemplate,
 )
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PIPELINE_NODE_EMOJI_MAP = {
     "task": "🔵",  # :large_blue_circle:
@@ -26,7 +27,7 @@ PIPELINE_NODE_EMOJI_MAP = {
 }
 
 # --- Colouring
-LOGO_IMAGE = cv2.imread("../image/logo_transparent.png")
+LOGO_IMAGE = cv2.imread("./image/logo_transparent.png")
 
 
 class CustomTheme(BaseModel):
@@ -61,7 +62,7 @@ class LightTheme(CustomTheme):
 
 def hex_to_rgb(hex: str):
     h = hex.lstrip("#")
-    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa: E203
 
 
 def hex_to_bgr(hex: str):
@@ -144,10 +145,18 @@ def add_logo(sidebar: bool = False):
 
 
 # --- ArgoWorkflow server config
+class ArgoWorkflowsBackendConfiguration(BaseSettings):
+    host: str = "https://127.0.0.1:2746"
+    verify_ssl: bool = False
+
+    model_config = SettingsConfigDict(env_prefix="argo_workflows_backend_")
+
+
 def configure_argo_server():
+    backend_settings = ArgoWorkflowsBackendConfiguration()
     # get a sample pipeline from the ArgoWorkflow server
-    configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")
-    configuration.verify_ssl = False
+    configuration = argo_workflows.Configuration(host=backend_settings.host)
+    configuration.verify_ssl = backend_settings.verify_ssl
 
     return configuration
 

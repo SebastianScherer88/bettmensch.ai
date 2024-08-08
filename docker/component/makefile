@@ -8,10 +8,8 @@ LATEST_TAG=3.11-latest
 
 component.build:
 	@echo "::group::Building $(COMPONENT) component docker image"
-	@echo "::group:: Working dir: $(PWD)"
 	@echo "::group:: Commit: $(COMMIT)"
-	@echo "::group:: Bettmensch AI version: $(BETTMENSCH_AI_VERSION)"
-	docker compose -f docker/component/docker-compose.yaml build $(COMPONENT) --build-arg="COMMIT=${COMMIT}"
+	docker compose -f docker/component/docker-compose.yaml build $(COMPONENT)
 	@echo "::endgroup::"
 
 component.push:
