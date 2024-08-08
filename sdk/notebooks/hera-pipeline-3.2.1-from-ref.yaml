@@ -2,7 +2,7 @@
   apiVersion: argoproj.io/v1alpha1
   kind: Workflow
   metadata:
-    generateName: 2ab-minus-bcd-7vt8p-expect-20-
+    generateName: 2ab-minus-bcd-7pt4k-expect-20-
     namespace: argo
   spec:
     arguments:
@@ -16,4 +16,4 @@
       - name: d
         value: '4'
     workflowTemplateRef:
-      name: 2ab-minus-bcd-7vt8p
+      name: 2ab-minus-bcd-7pt4k
