@@ -3,12 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
-import argo_workflows
-import yaml
-from argo_workflows.api import workflow_template_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (  # noqa: E501
-    IoArgoprojWorkflowV1alpha1WorkflowTemplate,
-)
 from bettmensch_ai.server.dag import (
     DagConnection,
     DagPipelineIONode,
@@ -17,6 +11,7 @@ from bettmensch_ai.server.dag import (
     DagVisualizationItems,
 )
 from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
+from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
 
 
@@ -208,7 +203,7 @@ class Pipeline(BaseModel):
 
         Args:
             workflow_template_spec (Dict): The spec field of a dict-ified
-                IoArgoprojWorkflowV1alpha1WorkflowTemplate class instance
+                hera.workflows.WorkflowTemplate class instance
 
         Returns:
             List[PipelineNode]: The constructed dag attribute of a Pipeline
@@ -305,10 +300,10 @@ class Pipeline(BaseModel):
     @classmethod
     def from_argo_workflow_cr(
         cls,
-        workflow_template_resource: IoArgoprojWorkflowV1alpha1WorkflowTemplate,
+        workflow_template_resource: WorkflowTemplateModel,
     ) -> Pipeline:
         """Utility to generate a Pipeline instance from a
-        IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
+        hera.workflows.WorkflowTemplate instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing
@@ -316,9 +311,8 @@ class Pipeline(BaseModel):
 
         Args:
             workflow_template_resource
-            (IoArgoprojWorkflowV1alpha1WorkflowTemplate): The return of
-                ArgoWorkflow's
-                api/v1/workflow-templates/{namespace}/{name} endpoint.
+            (hera.workflows.WorkflowTemplate): Instance of hera's
+                WorkflowTemplateService response model.
 
         Returns:
             Pipeline: A Pipeline class instance.
@@ -492,49 +486,3 @@ class Pipeline(BaseModel):
                 )
 
         return DagVisualizationItems(connections=connections, nodes=nodes)
-
-
-def main_test():
-    """Unit test the Pipeline class."""
-
-    # get a sample pipeline from the ArgoWorkflow server
-    configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")
-    configuration.verify_ssl = False
-
-    api_client = argo_workflows.ApiClient(configuration)
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
-        api_client
-    )
-
-    workflow_templates = api_instance.list_workflow_templates(
-        namespace="argo"
-    )[  # noqa: E501
-        "items"
-    ]
-    print(
-        f"Registered pipelines: {[workflow_template['metadata']['name'] for workflow_template in workflow_templates]}"  # noqa: E501
-    )
-    workflow_template = workflow_templates[0]
-    print(f"Workflow template: {workflow_template.to_dict()}")
-
-    with open("pipeline_test_workflow_template.yaml", "w") as file:
-        yaml.dump(workflow_template.to_dict(), file)
-
-    # convert to pipeline and show results
-    pipeline = Pipeline.from_argo_workflow_cr(workflow_template)
-    print(f"Pipeline: {pipeline.model_dump()}")
-
-    with open("pipeline_test_pipeline.yaml", "w") as file:
-        yaml.dump(pipeline.model_dump(), file)
-
-    # create dag frontend visuzliation schema and show results
-    render_schema, render_blocks = pipeline.create_dag_visualization_assets()
-
-    print(f"Pipeline visualization schema: {render_schema}")
-
-    with open("pipeline_test_visualization_schema.yaml", "w") as file:
-        yaml.dump(render_schema, file)
-
-
-if __name__ == "__main__":
-    main_test()

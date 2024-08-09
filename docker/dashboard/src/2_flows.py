@@ -11,21 +11,31 @@ from bettmensch_ai.server import (  # noqa: E402,E501
     DagVisualizationSettings,
 )
 from bettmensch_ai.server import RegisteredFlow as Flow  # noqa: E402
+from hera.workflows.models import Workflow as WorkflowModel  # noqa: E402
 from streamlit_flow import streamlit_flow  # noqa: E402
 from streamlit_flow.interfaces import (  # noqa: E402
     StreamlitFlowEdge,
     StreamlitFlowNode,
 )
-from utils import add_logo  # , FLOW_NODE_EMOJI_MAP # noqa: E402
 from utils import (  # noqa: E402
     PIPELINE_NODE_EMOJI_MAP,
-    configuration,
+    add_logo,
     get_colors,
-    get_workflows,
+    hera_workflow_service,
 )
 
 
-def get_flow_meta_data(submitted_flows) -> List[Dict]:
+def get_workflows() -> List[WorkflowModel]:
+
+    workflow_models = hera_workflow_service.list_workflows().items
+
+    if workflow_models:
+        return workflow_models
+    else:
+        return []
+
+
+def get_flow_meta_data(submitted_flows: List[WorkflowModel]) -> List[Dict]:
     """Retrieves the metadata field from all the ArgoWorkflow CRs obtained by
     `get_workflows`.
 
@@ -86,7 +96,7 @@ def display_flow_summary_table(formatted_flow_data: Dict) -> pd.DataFrame:
     st.dataframe(flow_summary_df, hide_index=True)
 
 
-def get_flow_names(flow_meta_data) -> List[str]:
+def get_flow_names(flow_meta_data: List[Dict]) -> List[str]:
     """Generates a list of names of all submitted flows.
 
     Args:
@@ -100,7 +110,9 @@ def get_flow_names(flow_meta_data) -> List[str]:
     return [resource_meta["name"] for resource_meta in flow_meta_data]
 
 
-def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
+def get_formatted_flow_data(
+    submitted_flows: List[WorkflowModel], flow_names: List[str]
+) -> Dict:
     """Generates structured flow data for easier frontend useage.
 
     Args:
@@ -126,10 +138,12 @@ def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
         zip(flow_names, submitted_flows)
     ):
         try:
-            flow_dict = Flow.from_argo_workflow_cr(submitted_flow).model_dump()
+            flow_dict = Flow.from_hera_workflow_model(
+                submitted_flow
+            ).model_dump()
             formatted_flow_data["object"][
                 resource_name
-            ] = Flow.from_argo_workflow_cr(submitted_flow)
+            ] = Flow.from_hera_workflow_model(submitted_flow)
             formatted_flow_data["metadata"][resource_name] = flow_dict[
                 "metadata"
             ]
@@ -140,7 +154,6 @@ def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
                 "templates"
             ]
         except Exception as e:
-            raise (e)
             st.write(
                 f"Oops! Could not collect data for Flow {resource_name}: {e}"
                 "Please make sure the Argo Workflow was created with the "
@@ -150,7 +163,7 @@ def get_formatted_flow_data(submitted_flows, flow_names) -> Dict:
     return formatted_flow_data
 
 
-def display_flow_dropdown(flow_names) -> str:
+def display_flow_dropdown(flow_names: List[str]) -> str:
     """Display the flow selection dropdown.
 
     Args:
@@ -433,8 +446,8 @@ def display_flow_dag_selection(
 
 
 def display_selected_flow(
-    formatted_flow_data,
-    selected_flow,
+    formatted_flow_data: Dict,
+    selected_flow: str,
     tab_container_height: int = 420,
     dag_image_height: int = 1100,
 ):
@@ -529,7 +542,7 @@ def main():
         """
     )
 
-    workflows = get_workflows(configuration)
+    workflows = get_workflows()
 
     meta_data = get_flow_meta_data(workflows)
 

@@ -3,12 +3,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
-import argo_workflows
-import yaml
-from argo_workflows.api import workflow_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow import (
-    IoArgoprojWorkflowV1alpha1Workflow,
-)
 from bettmensch_ai.server.pipeline import (
     NodeInput,
     NodeOutput,
@@ -16,7 +10,7 @@ from bettmensch_ai.server.pipeline import (
     PipelineInputParameter,
     ScriptTemplate,
 )
-from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
+from hera.workflows.models import Workflow as WorkflowModel
 from pydantic import BaseModel
 
 
@@ -203,25 +197,23 @@ class Flow(Pipeline):
         return flow_dag
 
     @classmethod
-    def from_argo_workflow_cr(
-        cls, workflow_resource: IoArgoprojWorkflowV1alpha1Workflow
-    ) -> Flow:
+    def from_hera_workflow_model(cls, workflow_model: WorkflowModel) -> Flow:
         """Utility to generate a Flow instance from a
-        IoArgoprojWorkflowV1alpha1Workflow instance.
+        hera.models.Workflow instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing
         the DAG.
 
         Args:
-            workflow_resource (IoArgoprojWorkflowV1alpha1Workflow): The return
-                of ArgoWorkflow's api/v1/workflow/{namespace}/{name} endpoint.
+            workflow_model (hera.models.Workflow): Instance of hera's
+                WorkflowService response model.
 
         Returns:
             Flow: A Flow class instance.
         """
 
-        workflow_dict = workflow_resource.to_dict()
+        workflow_dict = workflow_model.to_dict()
         workflow_spec = workflow_dict["spec"].copy()
         workflow_status = workflow_dict["status"].copy()
         workflow_template_spec = workflow_status[
@@ -265,35 +257,3 @@ class Flow(Pipeline):
             inputs=inputs,
             dag=dag,
         )
-
-
-def main_test():
-    """Unit test the Pipeline class."""
-
-    # get a sample pipeline from the ArgoWorkflow server
-    configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")
-    configuration.verify_ssl = False
-
-    api_client = argo_workflows.ApiClient(configuration)
-    api_instance = workflow_service_api.WorkflowServiceApi(api_client)
-
-    workflows = api_instance.list_workflows(namespace="argo")["items"]
-    print(
-        f"Registered flows: {[workflow['metadata']['name'] for workflow in workflows]}"
-    )
-    workflow = workflows[0]
-    print(f"Workflow: {workflow.to_dict()}")
-
-    with open("flow_test_workflow.yaml", "w") as file:
-        yaml.dump(workflow.to_dict(), file)
-
-    # convert to pipeline and show results
-    flow = Flow.from_argo_workflow_cr(workflow)
-    print(f"Flow: {flow.model_dump()}")
-
-    with open("flow_test_flow.yaml", "w") as file:
-        yaml.dump(flow.model_dump(), file)
-
-
-if __name__ == "__main__":
-    main_test()

@@ -1,9 +1,9 @@
 import inspect
 from typing import Any, Callable, Dict, List, Optional
 
-from bettmensch_ai.client import client as pipeline_client
 from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION, PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
+from bettmensch_ai.pipelines.client import hera_client
 from bettmensch_ai.pipelines.pipeline_context import (
     PipelineContext,
     _pipeline_context,
@@ -13,6 +13,7 @@ from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
 from hera.workflows import DAG, Workflow, WorkflowsService, WorkflowTemplate
 from hera.workflows.models import Workflow as WorkflowModel
+from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from hera.workflows.models import (
     WorkflowTemplateDeleteResponse as WorkflowTemplateDeleteResponseModel,
 )
@@ -35,7 +36,7 @@ class Pipeline(object):
     inputs: Dict[str, InputParameter] = None
     user_built_workflow_template: WorkflowTemplate = None
     registered_workflow_template: WorkflowTemplate = None
-    _client: WorkflowsService = pipeline_client
+    _client: WorkflowsService = hera_client
 
     def __init__(
         self,
@@ -378,9 +379,8 @@ class Pipeline(object):
         WorkflowTemplate instance.
 
         Args:
-            workflow_template (WorkflowTemplate): The WorkflowTemplate
-                pipeline instance retrieved from the bettmensch.ai server,
-                .e.g using pipeline.get()
+            workflow_template (WorkflowTemplate): An instance of hera's
+                WorkflowTemplate class
 
         Returns:
             Pipeline: The (registered) Pipeline instance.
@@ -427,15 +427,17 @@ def get_registered_pipeline(
         Pipeline: The registered Pipeline instance.
     """
 
-    registered_workflow_template = pipeline_client.get_workflow_template(
-        namespace=registered_namespace, name=registered_name
+    workflow_template_model: WorkflowTemplateModel = (
+        hera_client.get_workflow_template(
+            namespace=registered_namespace, name=registered_name
+        )
     )
 
-    workflow_template = WorkflowTemplate.from_dict(
-        registered_workflow_template.dict()
+    workflow_template: WorkflowTemplate = WorkflowTemplate.from_dict(
+        workflow_template_model.dict()
     )
 
-    pipeline = Pipeline.from_workflow_template(workflow_template)
+    pipeline: Pipeline = Pipeline.from_workflow_template(workflow_template)
 
     return pipeline
 
@@ -454,7 +456,7 @@ def list_registered_pipelines(
             scope.
     """
 
-    response = pipeline_client.list_workflow_templates(
+    response = hera_client.list_workflow_templates(
         namespace=registered_namespace,
         name_pattern=registered_name_pattern,
         label_selector=label_selector,
@@ -463,12 +465,12 @@ def list_registered_pipelines(
     )
 
     if response.items is not None:
-        workflow_templates = [
-            WorkflowTemplate.from_dict(registered_workflow_template.dict())
-            for registered_workflow_template in response.items
+        workflow_templates: List[WorkflowTemplate] = [
+            WorkflowTemplate.from_dict(workflow_template_model.dict())
+            for workflow_template_model in response.items
         ]
 
-        pipelines = [
+        pipelines: List[Pipeline] = [
             Pipeline.from_workflow_template(workflow_template)
             for workflow_template in workflow_templates
         ]
@@ -489,7 +491,7 @@ def delete_registered_pipeline(
             registered Pipeline to delete. Defaults to None.
     """
 
-    delete_response = pipeline_client.delete_workflow_template(
+    delete_response = hera_client.delete_workflow_template(
         name=registered_name, namespace=registered_namespace, **kwargs
     )
 
