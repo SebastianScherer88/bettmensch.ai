@@ -3,9 +3,7 @@ from typing import Literal, Optional, Tuple
 import cv2
 import numpy as np
 import streamlit as st
-from hera.workflows import WorkflowsService
 from pydantic import BaseModel
-from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PIPELINE_NODE_EMOJI_MAP = {
     "task": "🔵",  # :large_blue_circle:
@@ -132,21 +130,3 @@ def add_logo(sidebar: bool = False):
         color_background(LOGO_IMAGE, hex_to_channel(background_color, "BGR")),
         channels="BGR",
     )
-
-
-# --- ArgoWorkflow server config
-class ArgoWorkflowsBackendConfiguration(BaseSettings):
-    host: str = "https://127.0.0.1:2746"
-    verify_ssl: bool = False
-    namespace: str = "argo"
-
-    model_config = SettingsConfigDict(env_prefix="argo_workflows_backend_")
-
-
-hera_workflow_service_configuration = ArgoWorkflowsBackendConfiguration()
-
-hera_workflow_service = WorkflowsService(
-    host=hera_workflow_service_configuration.host,
-    verify_ssl=hera_workflow_service_configuration.verify_ssl,
-    namespace=hera_workflow_service_configuration.namespace,
-)

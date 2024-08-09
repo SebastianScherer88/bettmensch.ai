@@ -1,13 +1,20 @@
 from hera.workflows import WorkflowsService
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def client() -> WorkflowsService:
+# --- ArgoWorkflow server config
+class ArgoWorkflowsBackendConfiguration(BaseSettings):
+    host: str = "https://127.0.0.1:2746"
+    verify_ssl: bool = False
+    namespace: str = "argo"
 
-    workflow_service = WorkflowsService(
-        host="https://127.0.0.1:2746", verify_ssl=False, namespace="argo"
-    )
-
-    return workflow_service
+    model_config = SettingsConfigDict(env_prefix="argo_workflows_backend_")
 
 
-hera_client = client()
+hera_workflow_service_configuration = ArgoWorkflowsBackendConfiguration()
+
+hera_client = WorkflowsService(
+    host=hera_workflow_service_configuration.host,
+    verify_ssl=hera_workflow_service_configuration.verify_ssl,
+    namespace=hera_workflow_service_configuration.namespace,
+)

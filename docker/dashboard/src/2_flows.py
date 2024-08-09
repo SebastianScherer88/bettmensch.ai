@@ -6,6 +6,7 @@ st.set_page_config(
 from typing import Dict, List, Tuple  # noqa: E402
 
 import pandas as pd  # noqa: E402
+from bettmensch_ai.pipelines import hera_client  # noqa: E402
 from bettmensch_ai.server import (  # noqa: E402,E501
     DagVisualizationItems,
     DagVisualizationSettings,
@@ -17,17 +18,12 @@ from streamlit_flow.interfaces import (  # noqa: E402
     StreamlitFlowEdge,
     StreamlitFlowNode,
 )
-from utils import (  # noqa: E402
-    PIPELINE_NODE_EMOJI_MAP,
-    add_logo,
-    get_colors,
-    hera_workflow_service,
-)
+from utils import PIPELINE_NODE_EMOJI_MAP, add_logo, get_colors  # noqa: E402
 
 
 def get_workflows() -> List[WorkflowModel]:
 
-    workflow_models = hera_workflow_service.list_workflows().items
+    workflow_models = hera_client.list_workflows().items
 
     if workflow_models:
         return workflow_models
