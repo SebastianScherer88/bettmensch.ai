@@ -5,15 +5,6 @@ import numpy as np
 import streamlit as st
 from pydantic import BaseModel
 
-PIPELINE_NODE_EMOJI_MAP = {
-    "task": "🔵",  # :large_blue_circle:
-    "inputs": {
-        "task": "⤵️",  # :arrow_heading_down:
-        "pipeline": "⏬",  # :arrow_double_down:
-    },
-    "outputs": {"task": "↪️"},  # :arrow_right_hook:
-}
-
 # --- Colouring
 LOGO_IMAGE = cv2.imread("./image/logo_transparent.png")
 

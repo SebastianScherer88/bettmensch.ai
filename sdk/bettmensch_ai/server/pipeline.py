@@ -10,9 +10,19 @@ from bettmensch_ai.server.dag import (
     DagTaskNode,
     DagVisualizationItems,
 )
-from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
 from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
+
+PIPELINE_NODE_EMOJI_MAP = {
+    "task": "🔵",  # :large_blue_circle:
+    "inputs": {
+        "task": "⤵️",  # :arrow_heading_down:
+        "pipeline": "⏬",  # :arrow_double_down:
+    },
+    "outputs": {"task": "↪️"},  # :arrow_right_hook:
+    "parameters": "📃",  # :page_with_curl
+    "artifacts": "📂",  # :open_file_folder:
+}
 
 
 # --- PipelineMetadata

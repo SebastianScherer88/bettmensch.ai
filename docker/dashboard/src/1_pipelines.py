@@ -10,6 +10,7 @@ from typing import Dict, List, Tuple  # noqa: E402
 import pandas as pd  # noqa: E402
 from bettmensch_ai.pipelines import hera_client  # noqa: E402
 from bettmensch_ai.server import (  # noqa: E402
+    PIPELINE_NODE_EMOJI_MAP,
     DagVisualizationItems,
     DagVisualizationSettings,
 )
@@ -22,7 +23,7 @@ from streamlit_flow.interfaces import (  # noqa: E402
     StreamlitFlowEdge,
     StreamlitFlowNode,
 )
-from utils import PIPELINE_NODE_EMOJI_MAP, add_logo, get_colors  # noqa: E402
+from utils import add_logo, get_colors  # noqa: E402
 
 
 def get_workflow_templates() -> List[WorkflowTemplateModel]:
