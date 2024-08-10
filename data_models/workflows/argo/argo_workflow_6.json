@@ -1,1 +1,670 @@
-{"metadata": {"name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "generate_name": "pipeline-test-parameter-pipeline-mhwgd-flow-", "namespace": "argo", "uid": "8ba8d28a-5dd1-4234-a5e4-364ba12ab24b", "resource_version": "10156", "generation": 7, "creation_timestamp": "test-datetime-value", "labels": {"workflows.argoproj.io/completed": "true", "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server", "workflows.argoproj.io/phase": "Succeeded"}, "annotations": {"karpenter.sh/do-not-disrupt": "true", "workflows.argoproj.io/pod-name-format": "v2"}, "managed_fields": [{"manager": "argo", "operation": "Update", "api_version": "argoproj.io/v1alpha1", "time": "test-datetime-value", "fields_type": "FieldsV1", "fields_v1": {"f:metadata": {"f:generateName": {}, "f:labels": {".": {}, "f:workflows.argoproj.io/creator": {}}}, "f:spec": {}}}, {"manager": "workflow-controller", "operation": "Update", "api_version": "argoproj.io/v1alpha1", "time": "test-datetime-value", "fields_type": "FieldsV1", "fields_v1": {"f:metadata": {"f:annotations": {".": {}, "f:karpenter.sh/do-not-disrupt": {}, "f:workflows.argoproj.io/pod-name-format": {}}, "f:labels": {"f:workflows.argoproj.io/completed": {}, "f:workflows.argoproj.io/phase": {}}}, "f:status": {}}}]}, "spec": {"arguments": {"parameters": [{"name": "a", "value": "-100"}, {"name": "b", "value": "100"}]}, "workflow_template_ref": {"name": "pipeline-test-parameter-pipeline-mhwgd"}}, "status": {"phase": "Succeeded", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "nodes": {"pipeline-test-parameter-pipeline-mhwgd-flow-khxzq": {"id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "type": "DAG", "display_name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "template_name": "bettmensch-ai-dag", "template_scope": "local/", "phase": "Succeeded", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "resources_duration": {"cpu": 2, "memory": 46}, "children": ["pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557"], "outbound_nodes": ["pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140"]}, "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309": {"id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309", "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-plus-2-0", "type": "Retry", "display_name": "a-plus-b-plus-2-0", "template_name": "a-plus-b-plus-2", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 1, "memory": 23}, "inputs": {"parameters": [{"name": "a", "default": "1", "value": "0"}, {"name": "b", "default": "2", "value": "2"}, {"name": "sum", "default": "null", "value": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value": "2", "value_from": {"path": "sum"}}], "exit_code": "0"}, "children": ["pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140"]}, "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908": {"id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908", "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-0(0)", "type": "Pod", "display_name": "a-plus-b-0(0)", "template_name": "a-plus-b", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 1, "memory": 23}, "node_flag": {"retried": true}, "inputs": {"parameters": [{"name": "a", "default": "1", "value": "-100"}, {"name": "b", "default": "2", "value": "100"}, {"name": "sum", "default": "null", "value": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value": "0", "value_from": {"path": "sum"}}], "exit_code": "0"}, "children": ["pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309"], "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"}, "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140": {"id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140", "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-plus-2-0(0)", "type": "Pod", "display_name": "a-plus-b-plus-2-0(0)", "template_name": "a-plus-b-plus-2", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 1, "memory": 23}, "node_flag": {"retried": true}, "inputs": {"parameters": [{"name": "a", "default": "1", "value": "0"}, {"name": "b", "default": "2", "value": "2"}, {"name": "sum", "default": "null", "value": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value": "2", "value_from": {"path": "sum"}}], "exit_code": "0"}, "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"}, "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557": {"id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557", "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-0", "type": "Retry", "display_name": "a-plus-b-0", "template_name": "a-plus-b", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "resources_duration": {"cpu": 2, "memory": 46}, "inputs": {"parameters": [{"name": "a", "default": "1", "value": "-100"}, {"name": "b", "default": "2", "value": "100"}, {"name": "sum", "default": "null", "value": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value": "0", "value_from": {"path": "sum"}}], "exit_code": "0"}, "children": ["pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908"]}}, "stored_templates": {"namespaced/pipeline-test-parameter-pipeline-mhwgd/a-plus-b": {"name": "a-plus-b", "inputs": {"parameters": [{"name": "a", "default": "1"}, {"name": "b", "default": "2"}, {"name": "sum", "default": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value_from": {"path": "sum"}}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}, "namespaced/pipeline-test-parameter-pipeline-mhwgd/a-plus-b-plus-2": {"name": "a-plus-b-plus-2", "inputs": {"parameters": [{"name": "a", "default": "1"}, {"name": "b", "default": "2"}, {"name": "sum", "default": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value_from": {"path": "sum"}}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}, "namespaced/pipeline-test-parameter-pipeline-mhwgd/bettmensch-ai-dag": {"name": "bettmensch-ai-dag", "inputs": {}, "outputs": {}, "metadata": {}, "dag": {"tasks": [{"name": "a-plus-b-0", "template": "a-plus-b", "arguments": {"parameters": [{"name": "a", "value": "{{workflow.parameters.a}}"}, {"name": "b", "value": "{{workflow.parameters.b}}"}]}}, {"name": "a-plus-b-plus-2-0", "template": "a-plus-b-plus-2", "arguments": {"parameters": [{"name": "a", "value": "{{tasks.a-plus-b-0.outputs.parameters.sum}}"}, {"name": "b", "value": "2"}]}, "depends": "a-plus-b-0"}]}}}, "conditions": [{"type": "PodRunning", "status": "False"}, {"type": "Completed", "status": "True"}], "resources_duration": {"cpu": 2, "memory": 46}, "stored_workflow_template_spec": {"templates": [{"name": "bettmensch-ai-dag", "inputs": {}, "outputs": {}, "metadata": {}, "dag": {"tasks": [{"name": "a-plus-b-0", "template": "a-plus-b", "arguments": {"parameters": [{"name": "a", "value": "{{workflow.parameters.a}}"}, {"name": "b", "value": "{{workflow.parameters.b}}"}]}}, {"name": "a-plus-b-plus-2-0", "template": "a-plus-b-plus-2", "arguments": {"parameters": [{"name": "a", "value": "{{tasks.a-plus-b-0.outputs.parameters.sum}}"}, {"name": "b", "value": "2"}]}, "depends": "a-plus-b-0"}]}}, {"name": "a-plus-b", "inputs": {"parameters": [{"name": "a", "default": "1"}, {"name": "b", "default": "2"}, {"name": "sum", "default": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value_from": {"path": "sum"}}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}, {"name": "a-plus-b-plus-2", "inputs": {"parameters": [{"name": "a", "default": "1"}, {"name": "b", "default": "2"}, {"name": "sum", "default": "null"}]}, "outputs": {"parameters": [{"name": "sum", "value_from": {"path": "sum"}}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}], "entrypoint": "bettmensch-ai-dag", "arguments": {"parameters": [{"name": "a", "value": "-100"}, {"name": "b", "value": "100"}]}, "service_account_name": "argo-workflow", "workflow_template_ref": {"name": "pipeline-test-parameter-pipeline-mhwgd"}}, "artifact_repository_ref": {"config_map": "artifact-repositories", "key": "bettmensch-ai-artifact-repository", "namespace": "argo", "artifact_repository": {"s3": {"endpoint": "s3.us-east-2.amazonaws.com", "bucket": "bettmensch-ai-artifact-repository", "insecure": true}}}, "artifact_gc_status": {"not_specified": true}, "task_results_completion_status": {"pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908": true, "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140": true}}}
+{
+    "metadata": {
+        "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+        "generate_name": "pipeline-test-parameter-pipeline-mhwgd-flow-",
+        "namespace": "argo",
+        "uid": "8ba8d28a-5dd1-4234-a5e4-364ba12ab24b",
+        "resource_version": "10156",
+        "generation": 7,
+        "creation_timestamp": "test-datetime-value",
+        "labels": {
+            "workflows.argoproj.io/completed": "true",
+            "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server",
+            "workflows.argoproj.io/phase": "Succeeded"
+        },
+        "annotations": {
+            "karpenter.sh/do-not-disrupt": "true",
+            "workflows.argoproj.io/pod-name-format": "v2"
+        },
+        "managed_fields": [
+            {
+                "manager": "argo",
+                "operation": "Update",
+                "api_version": "argoproj.io/v1alpha1",
+                "time": "test-datetime-value",
+                "fields_type": "FieldsV1",
+                "fields_v1": {
+                    "f:metadata": {
+                        "f:generateName": {},
+                        "f:labels": {
+                            ".": {},
+                            "f:workflows.argoproj.io/creator": {}
+                        }
+                    },
+                    "f:spec": {}
+                }
+            },
+            {
+                "manager": "workflow-controller",
+                "operation": "Update",
+                "api_version": "argoproj.io/v1alpha1",
+                "time": "test-datetime-value",
+                "fields_type": "FieldsV1",
+                "fields_v1": {
+                    "f:metadata": {
+                        "f:annotations": {
+                            ".": {},
+                            "f:karpenter.sh/do-not-disrupt": {},
+                            "f:workflows.argoproj.io/pod-name-format": {}
+                        },
+                        "f:labels": {
+                            "f:workflows.argoproj.io/completed": {},
+                            "f:workflows.argoproj.io/phase": {}
+                        }
+                    },
+                    "f:status": {}
+                }
+            }
+        ]
+    },
+    "spec": {
+        "arguments": {
+            "parameters": [
+                {
+                    "name": "a",
+                    "value": "-100"
+                },
+                {
+                    "name": "b",
+                    "value": "100"
+                }
+            ]
+        },
+        "workflow_template_ref": {
+            "name": "pipeline-test-parameter-pipeline-mhwgd"
+        }
+    },
+    "status": {
+        "phase": "Succeeded",
+        "started_at": "test-datetime-value",
+        "finished_at": "test-datetime-value",
+        "progress": "2/2",
+        "nodes": {
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq": {
+                "id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "type": "DAG",
+                "display_name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "template_name": "bettmensch-ai-dag",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "2/2",
+                "resources_duration": {
+                    "cpu": 2,
+                    "memory": 46
+                },
+                "children": [
+                    "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557"
+                ],
+                "outbound_nodes": [
+                    "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140"
+                ]
+            },
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309": {
+                "id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309",
+                "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-plus-2-0",
+                "type": "Retry",
+                "display_name": "a-plus-b-plus-2-0",
+                "template_name": "a-plus-b-plus-2",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 23
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1",
+                            "value": "0"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2",
+                            "value": "2"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value": "2",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140"
+                ]
+            },
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908": {
+                "id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908",
+                "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-0(0)",
+                "type": "Pod",
+                "display_name": "a-plus-b-0(0)",
+                "template_name": "a-plus-b",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 23
+                },
+                "node_flag": {
+                    "retried": true
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1",
+                            "value": "-100"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2",
+                            "value": "100"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value": "0",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-2800207309"
+                ],
+                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"
+            },
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140": {
+                "id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140",
+                "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-plus-2-0(0)",
+                "type": "Pod",
+                "display_name": "a-plus-b-plus-2-0(0)",
+                "template_name": "a-plus-b-plus-2",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 23
+                },
+                "node_flag": {
+                    "retried": true
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1",
+                            "value": "0"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2",
+                            "value": "2"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value": "2",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"
+            },
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557": {
+                "id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-929032557",
+                "name": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq.a-plus-b-0",
+                "type": "Retry",
+                "display_name": "a-plus-b-0",
+                "template_name": "a-plus-b",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "2/2",
+                "resources_duration": {
+                    "cpu": 2,
+                    "memory": 46
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1",
+                            "value": "-100"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2",
+                            "value": "100"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value": "0",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908"
+                ]
+            }
+        },
+        "stored_templates": {
+            "namespaced/pipeline-test-parameter-pipeline-mhwgd/a-plus-b": {
+                "name": "a-plus-b",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {},
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                }
+            },
+            "namespaced/pipeline-test-parameter-pipeline-mhwgd/a-plus-b-plus-2": {
+                "name": "a-plus-b-plus-2",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "default": "1"
+                        },
+                        {
+                            "name": "b",
+                            "default": "2"
+                        },
+                        {
+                            "name": "sum",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "sum",
+                            "value_from": {
+                                "path": "sum"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {},
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                }
+            },
+            "namespaced/pipeline-test-parameter-pipeline-mhwgd/bettmensch-ai-dag": {
+                "name": "bettmensch-ai-dag",
+                "inputs": {},
+                "outputs": {},
+                "metadata": {},
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "a-plus-b-0",
+                            "template": "a-plus-b",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "a",
+                                        "value": "{{workflow.parameters.a}}"
+                                    },
+                                    {
+                                        "name": "b",
+                                        "value": "{{workflow.parameters.b}}"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "name": "a-plus-b-plus-2-0",
+                            "template": "a-plus-b-plus-2",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "a",
+                                        "value": "{{tasks.a-plus-b-0.outputs.parameters.sum}}"
+                                    },
+                                    {
+                                        "name": "b",
+                                        "value": "2"
+                                    }
+                                ]
+                            },
+                            "depends": "a-plus-b-0"
+                        }
+                    ]
+                }
+            }
+        },
+        "conditions": [
+            {
+                "type": "PodRunning",
+                "status": "False"
+            },
+            {
+                "type": "Completed",
+                "status": "True"
+            }
+        ],
+        "resources_duration": {
+            "cpu": 2,
+            "memory": 46
+        },
+        "stored_workflow_template_spec": {
+            "templates": [
+                {
+                    "name": "bettmensch-ai-dag",
+                    "inputs": {},
+                    "outputs": {},
+                    "metadata": {},
+                    "dag": {
+                        "tasks": [
+                            {
+                                "name": "a-plus-b-0",
+                                "template": "a-plus-b",
+                                "arguments": {
+                                    "parameters": [
+                                        {
+                                            "name": "a",
+                                            "value": "{{workflow.parameters.a}}"
+                                        },
+                                        {
+                                            "name": "b",
+                                            "value": "{{workflow.parameters.b}}"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "a-plus-b-plus-2-0",
+                                "template": "a-plus-b-plus-2",
+                                "arguments": {
+                                    "parameters": [
+                                        {
+                                            "name": "a",
+                                            "value": "{{tasks.a-plus-b-0.outputs.parameters.sum}}"
+                                        },
+                                        {
+                                            "name": "b",
+                                            "value": "2"
+                                        }
+                                    ]
+                                },
+                                "depends": "a-plus-b-0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "a-plus-b",
+                    "inputs": {
+                        "parameters": [
+                            {
+                                "name": "a",
+                                "default": "1"
+                            },
+                            {
+                                "name": "b",
+                                "default": "2"
+                            },
+                            {
+                                "name": "sum",
+                                "default": "null"
+                            }
+                        ]
+                    },
+                    "outputs": {
+                        "parameters": [
+                            {
+                                "name": "sum",
+                                "value_from": {
+                                    "path": "sum"
+                                }
+                            }
+                        ]
+                    },
+                    "metadata": {},
+                    "script": {
+                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)",
+                        "name": "",
+                        "command": [
+                            "python"
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            }
+                        },
+                        "image_pull_policy": "Always"
+                    },
+                    "retry_strategy": {
+                        "limit": "1",
+                        "retry_policy": "OnError"
+                    }
+                },
+                {
+                    "name": "a-plus-b-plus-2",
+                    "inputs": {
+                        "parameters": [
+                            {
+                                "name": "a",
+                                "default": "1"
+                            },
+                            {
+                                "name": "b",
+                                "default": "2"
+                            },
+                            {
+                                "name": "sum",
+                                "default": "null"
+                            }
+                        ]
+                    },
+                    "outputs": {
+                        "parameters": [
+                            {
+                                "name": "sum",
+                                "value_from": {
+                                    "path": "sum"
+                                }
+                            }
+                        ]
+                    },
+                    "metadata": {},
+                    "script": {
+                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\ntry: b = json.loads(r'''{{inputs.parameters.b}}''')\nexcept: b = r'''{{inputs.parameters.b}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nsum = OutputParameter(\"sum\")\n\ndef add_parameters(a: InputParameter=1, b: InputParameter=2, sum: OutputParameter=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a simple addition bettmensch_ai.Component.\"\"\"\n    sum.assign(a + b)\nadd_parameters(a,b,sum)",
+                        "name": "",
+                        "command": [
+                            "python"
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            }
+                        },
+                        "image_pull_policy": "Always"
+                    },
+                    "retry_strategy": {
+                        "limit": "1",
+                        "retry_policy": "OnError"
+                    }
+                }
+            ],
+            "entrypoint": "bettmensch-ai-dag",
+            "arguments": {
+                "parameters": [
+                    {
+                        "name": "a",
+                        "value": "-100"
+                    },
+                    {
+                        "name": "b",
+                        "value": "100"
+                    }
+                ]
+            },
+            "service_account_name": "argo-workflow",
+            "workflow_template_ref": {
+                "name": "pipeline-test-parameter-pipeline-mhwgd"
+            }
+        },
+        "artifact_repository_ref": {
+            "config_map": "artifact-repositories",
+            "key": "bettmensch-ai-artifact-repository",
+            "namespace": "argo",
+            "artifact_repository": {
+                "s3": {
+                    "endpoint": "s3.us-east-2.amazonaws.com",
+                    "bucket": "bettmensch-ai-artifact-repository",
+                    "insecure": true
+                }
+            }
+        },
+        "artifact_gc_status": {
+            "not_specified": true
+        },
+        "task_results_completion_status": {
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-3394894908": true,
+            "pipeline-test-parameter-pipeline-mhwgd-flow-khxzq-764234140": true
+        }
+    }
+}

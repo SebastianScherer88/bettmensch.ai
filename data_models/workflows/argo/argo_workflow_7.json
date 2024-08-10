@@ -1,1 +1,552 @@
-{"metadata": {"name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "generate_name": "pipeline-test-artifact-pipeline-d5rzf-flow-", "namespace": "argo", "uid": "9948f727-967a-4905-800e-ec80117d8398", "resource_version": "9912", "generation": 7, "creation_timestamp": "test-datetime-value", "labels": {"workflows.argoproj.io/completed": "true", "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server", "workflows.argoproj.io/phase": "Succeeded"}, "annotations": {"karpenter.sh/do-not-disrupt": "true", "workflows.argoproj.io/pod-name-format": "v2"}, "managed_fields": [{"manager": "argo", "operation": "Update", "api_version": "argoproj.io/v1alpha1", "time": "test-datetime-value", "fields_type": "FieldsV1", "fields_v1": {"f:metadata": {"f:generateName": {}, "f:labels": {".": {}, "f:workflows.argoproj.io/creator": {}}}, "f:spec": {}}}, {"manager": "workflow-controller", "operation": "Update", "api_version": "argoproj.io/v1alpha1", "time": "test-datetime-value", "fields_type": "FieldsV1", "fields_v1": {"f:metadata": {"f:annotations": {".": {}, "f:karpenter.sh/do-not-disrupt": {}, "f:workflows.argoproj.io/pod-name-format": {}}, "f:labels": {"f:workflows.argoproj.io/completed": {}, "f:workflows.argoproj.io/phase": {}}}, "f:status": {}}}]}, "spec": {"arguments": {"parameters": [{"name": "a", "value": "First integration test value a"}]}, "workflow_template_ref": {"name": "pipeline-test-artifact-pipeline-d5rzf"}}, "status": {"phase": "Succeeded", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "nodes": {"pipeline-test-artifact-pipeline-d5rzf-flow-5z44k": {"id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "type": "DAG", "display_name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "template_name": "bettmensch-ai-dag", "template_scope": "local/", "phase": "Succeeded", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "resources_duration": {"cpu": 3, "memory": 164}, "children": ["pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103"], "outbound_nodes": ["pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088"]}, "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088": {"id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088", "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.show-artifact-0(0)", "type": "Pod", "display_name": "show-artifact-0(0)", "template_name": "show-artifact", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 1, "memory": 24}, "node_flag": {"retried": true}, "inputs": {"artifacts": [{"name": "a", "path": "a", "s3": {"key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"}}]}, "outputs": {"exit_code": "0"}, "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"}, "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103": {"id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103", "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.convert-to-artifact-0", "type": "Retry", "display_name": "convert-to-artifact-0", "template_name": "convert-to-artifact", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "2/2", "resources_duration": {"cpu": 3, "memory": 164}, "inputs": {"parameters": [{"name": "a", "value": "First integration test value a"}, {"name": "a_art", "default": "null", "value": "null"}]}, "outputs": {"artifacts": [{"name": "a_art", "path": "a_art", "s3": {"key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"}}], "exit_code": "0"}, "children": ["pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882"]}, "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882": {"id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882", "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.convert-to-artifact-0(0)", "type": "Pod", "display_name": "convert-to-artifact-0(0)", "template_name": "convert-to-artifact", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 2, "memory": 140}, "node_flag": {"retried": true}, "inputs": {"parameters": [{"name": "a", "value": "First integration test value a"}, {"name": "a_art", "default": "null", "value": "null"}]}, "outputs": {"artifacts": [{"name": "a_art", "path": "a_art", "s3": {"key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"}}], "exit_code": "0"}, "children": ["pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737"], "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"}, "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737": {"id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737", "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.show-artifact-0", "type": "Retry", "display_name": "show-artifact-0", "template_name": "show-artifact", "template_scope": "local/", "phase": "Succeeded", "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k", "started_at": "test-datetime-value", "finished_at": "test-datetime-value", "progress": "1/1", "resources_duration": {"cpu": 1, "memory": 24}, "inputs": {"artifacts": [{"name": "a", "path": "a", "s3": {"key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"}}]}, "outputs": {"exit_code": "0"}, "children": ["pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088"]}}, "stored_templates": {"namespaced/pipeline-test-artifact-pipeline-d5rzf/bettmensch-ai-dag": {"name": "bettmensch-ai-dag", "inputs": {}, "outputs": {}, "metadata": {}, "dag": {"tasks": [{"name": "convert-to-artifact-0", "template": "convert-to-artifact", "arguments": {"parameters": [{"name": "a", "value": "{{workflow.parameters.a}}"}]}}, {"name": "show-artifact-0", "template": "show-artifact", "arguments": {"artifacts": [{"name": "a", "_from": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}"}]}, "depends": "convert-to-artifact-0"}]}}, "namespaced/pipeline-test-artifact-pipeline-d5rzf/convert-to-artifact": {"name": "convert-to-artifact", "inputs": {"parameters": [{"name": "a"}, {"name": "a_art", "default": "null"}]}, "outputs": {"artifacts": [{"name": "a_art", "path": "a_art"}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}, "namespaced/pipeline-test-artifact-pipeline-d5rzf/show-artifact": {"name": "show-artifact", "inputs": {"artifacts": [{"name": "a", "path": "a"}]}, "outputs": {}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}}, "conditions": [{"type": "PodRunning", "status": "False"}, {"type": "Completed", "status": "True"}], "resources_duration": {"cpu": 3, "memory": 164}, "stored_workflow_template_spec": {"templates": [{"name": "bettmensch-ai-dag", "inputs": {}, "outputs": {}, "metadata": {}, "dag": {"tasks": [{"name": "convert-to-artifact-0", "template": "convert-to-artifact", "arguments": {"parameters": [{"name": "a", "value": "{{workflow.parameters.a}}"}]}}, {"name": "show-artifact-0", "template": "show-artifact", "arguments": {"artifacts": [{"name": "a", "_from": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}"}]}, "depends": "convert-to-artifact-0"}]}}, {"name": "convert-to-artifact", "inputs": {"parameters": [{"name": "a"}, {"name": "a_art", "default": "null"}]}, "outputs": {"artifacts": [{"name": "a_art", "path": "a_art"}]}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}, {"name": "show-artifact", "inputs": {"artifacts": [{"name": "a", "path": "a"}]}, "outputs": {}, "metadata": {}, "script": {"image": "bettmensch88/bettmensch.ai:3.11-latest", "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)", "name": "", "command": ["python"], "resources": {"limits": {"cpu": "100m", "memory": "100Mi"}, "requests": {"cpu": "100m", "memory": "100Mi"}}, "image_pull_policy": "Always"}, "retry_strategy": {"limit": "1", "retry_policy": "OnError"}}], "entrypoint": "bettmensch-ai-dag", "arguments": {"parameters": [{"name": "a", "value": "First integration test value a"}]}, "service_account_name": "argo-workflow", "workflow_template_ref": {"name": "pipeline-test-artifact-pipeline-d5rzf"}}, "artifact_repository_ref": {"config_map": "artifact-repositories", "key": "bettmensch-ai-artifact-repository", "namespace": "argo", "artifact_repository": {"s3": {"endpoint": "s3.us-east-2.amazonaws.com", "bucket": "bettmensch-ai-artifact-repository", "insecure": true}}}, "artifact_gc_status": {"not_specified": true}, "task_results_completion_status": {"pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088": true, "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882": true}}}
+{
+    "metadata": {
+        "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+        "generate_name": "pipeline-test-artifact-pipeline-d5rzf-flow-",
+        "namespace": "argo",
+        "uid": "9948f727-967a-4905-800e-ec80117d8398",
+        "resource_version": "9912",
+        "generation": 7,
+        "creation_timestamp": "test-datetime-value",
+        "labels": {
+            "workflows.argoproj.io/completed": "true",
+            "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server",
+            "workflows.argoproj.io/phase": "Succeeded"
+        },
+        "annotations": {
+            "karpenter.sh/do-not-disrupt": "true",
+            "workflows.argoproj.io/pod-name-format": "v2"
+        },
+        "managed_fields": [
+            {
+                "manager": "argo",
+                "operation": "Update",
+                "api_version": "argoproj.io/v1alpha1",
+                "time": "test-datetime-value",
+                "fields_type": "FieldsV1",
+                "fields_v1": {
+                    "f:metadata": {
+                        "f:generateName": {},
+                        "f:labels": {
+                            ".": {},
+                            "f:workflows.argoproj.io/creator": {}
+                        }
+                    },
+                    "f:spec": {}
+                }
+            },
+            {
+                "manager": "workflow-controller",
+                "operation": "Update",
+                "api_version": "argoproj.io/v1alpha1",
+                "time": "test-datetime-value",
+                "fields_type": "FieldsV1",
+                "fields_v1": {
+                    "f:metadata": {
+                        "f:annotations": {
+                            ".": {},
+                            "f:karpenter.sh/do-not-disrupt": {},
+                            "f:workflows.argoproj.io/pod-name-format": {}
+                        },
+                        "f:labels": {
+                            "f:workflows.argoproj.io/completed": {},
+                            "f:workflows.argoproj.io/phase": {}
+                        }
+                    },
+                    "f:status": {}
+                }
+            }
+        ]
+    },
+    "spec": {
+        "arguments": {
+            "parameters": [
+                {
+                    "name": "a",
+                    "value": "First integration test value a"
+                }
+            ]
+        },
+        "workflow_template_ref": {
+            "name": "pipeline-test-artifact-pipeline-d5rzf"
+        }
+    },
+    "status": {
+        "phase": "Succeeded",
+        "started_at": "test-datetime-value",
+        "finished_at": "test-datetime-value",
+        "progress": "2/2",
+        "nodes": {
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k": {
+                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "type": "DAG",
+                "display_name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "template_name": "bettmensch-ai-dag",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "2/2",
+                "resources_duration": {
+                    "cpu": 3,
+                    "memory": 164
+                },
+                "children": [
+                    "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103"
+                ],
+                "outbound_nodes": [
+                    "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088"
+                ]
+            },
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088": {
+                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088",
+                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.show-artifact-0(0)",
+                "type": "Pod",
+                "display_name": "show-artifact-0(0)",
+                "template_name": "show-artifact",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 24
+                },
+                "node_flag": {
+                    "retried": true
+                },
+                "inputs": {
+                    "artifacts": [
+                        {
+                            "name": "a",
+                            "path": "a",
+                            "s3": {
+                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"
+                            }
+                        }
+                    ]
+                },
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"
+            },
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103": {
+                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2149832103",
+                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.convert-to-artifact-0",
+                "type": "Retry",
+                "display_name": "convert-to-artifact-0",
+                "template_name": "convert-to-artifact",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "2/2",
+                "resources_duration": {
+                    "cpu": 3,
+                    "memory": 164
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "value": "First integration test value a"
+                        },
+                        {
+                            "name": "a_art",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "artifacts": [
+                        {
+                            "name": "a_art",
+                            "path": "a_art",
+                            "s3": {
+                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882"
+                ]
+            },
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882": {
+                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882",
+                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.convert-to-artifact-0(0)",
+                "type": "Pod",
+                "display_name": "convert-to-artifact-0(0)",
+                "template_name": "convert-to-artifact",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 2,
+                    "memory": 140
+                },
+                "node_flag": {
+                    "retried": true
+                },
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "value": "First integration test value a"
+                        },
+                        {
+                            "name": "a_art",
+                            "default": "null",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "artifacts": [
+                        {
+                            "name": "a_art",
+                            "path": "a_art",
+                            "s3": {
+                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"
+                            }
+                        }
+                    ],
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737"
+                ],
+                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal"
+            },
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737": {
+                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-651241737",
+                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k.show-artifact-0",
+                "type": "Retry",
+                "display_name": "show-artifact-0",
+                "template_name": "show-artifact",
+                "template_scope": "local/",
+                "phase": "Succeeded",
+                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k",
+                "started_at": "test-datetime-value",
+                "finished_at": "test-datetime-value",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 24
+                },
+                "inputs": {
+                    "artifacts": [
+                        {
+                            "name": "a",
+                            "path": "a",
+                            "s3": {
+                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k/pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-convert-to-artifact-2691985882/a_art.tgz"
+                            }
+                        }
+                    ]
+                },
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "children": [
+                    "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088"
+                ]
+            }
+        },
+        "stored_templates": {
+            "namespaced/pipeline-test-artifact-pipeline-d5rzf/bettmensch-ai-dag": {
+                "name": "bettmensch-ai-dag",
+                "inputs": {},
+                "outputs": {},
+                "metadata": {},
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "convert-to-artifact-0",
+                            "template": "convert-to-artifact",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "a",
+                                        "value": "{{workflow.parameters.a}}"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "name": "show-artifact-0",
+                            "template": "show-artifact",
+                            "arguments": {
+                                "artifacts": [
+                                    {
+                                        "name": "a",
+                                        "_from": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}"
+                                    }
+                                ]
+                            },
+                            "depends": "convert-to-artifact-0"
+                        }
+                    ]
+                }
+            },
+            "namespaced/pipeline-test-artifact-pipeline-d5rzf/convert-to-artifact": {
+                "name": "convert-to-artifact",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a"
+                        },
+                        {
+                            "name": "a_art",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "artifacts": [
+                        {
+                            "name": "a_art",
+                            "path": "a_art"
+                        }
+                    ]
+                },
+                "metadata": {},
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                }
+            },
+            "namespaced/pipeline-test-artifact-pipeline-d5rzf/show-artifact": {
+                "name": "show-artifact",
+                "inputs": {
+                    "artifacts": [
+                        {
+                            "name": "a",
+                            "path": "a"
+                        }
+                    ]
+                },
+                "outputs": {},
+                "metadata": {},
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                }
+            }
+        },
+        "conditions": [
+            {
+                "type": "PodRunning",
+                "status": "False"
+            },
+            {
+                "type": "Completed",
+                "status": "True"
+            }
+        ],
+        "resources_duration": {
+            "cpu": 3,
+            "memory": 164
+        },
+        "stored_workflow_template_spec": {
+            "templates": [
+                {
+                    "name": "bettmensch-ai-dag",
+                    "inputs": {},
+                    "outputs": {},
+                    "metadata": {},
+                    "dag": {
+                        "tasks": [
+                            {
+                                "name": "convert-to-artifact-0",
+                                "template": "convert-to-artifact",
+                                "arguments": {
+                                    "parameters": [
+                                        {
+                                            "name": "a",
+                                            "value": "{{workflow.parameters.a}}"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "name": "show-artifact-0",
+                                "template": "show-artifact",
+                                "arguments": {
+                                    "artifacts": [
+                                        {
+                                            "name": "a",
+                                            "_from": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}"
+                                        }
+                                    ]
+                                },
+                                "depends": "convert-to-artifact-0"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "convert-to-artifact",
+                    "inputs": {
+                        "parameters": [
+                            {
+                                "name": "a"
+                            },
+                            {
+                                "name": "a_art",
+                                "default": "null"
+                            }
+                        ]
+                    },
+                    "outputs": {
+                        "artifacts": [
+                            {
+                                "name": "a_art",
+                                "path": "a_art"
+                            }
+                        ]
+                    },
+                    "metadata": {},
+                    "script": {
+                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)",
+                        "name": "",
+                        "command": [
+                            "python"
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            }
+                        },
+                        "image_pull_policy": "Always"
+                    },
+                    "retry_strategy": {
+                        "limit": "1",
+                        "retry_policy": "OnError"
+                    }
+                },
+                {
+                    "name": "show-artifact",
+                    "inputs": {
+                        "artifacts": [
+                            {
+                                "name": "a",
+                                "path": "a"
+                            }
+                        ]
+                    },
+                    "outputs": {},
+                    "metadata": {},
+                    "script": {
+                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)",
+                        "name": "",
+                        "command": [
+                            "python"
+                        ],
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "100Mi"
+                            }
+                        },
+                        "image_pull_policy": "Always"
+                    },
+                    "retry_strategy": {
+                        "limit": "1",
+                        "retry_policy": "OnError"
+                    }
+                }
+            ],
+            "entrypoint": "bettmensch-ai-dag",
+            "arguments": {
+                "parameters": [
+                    {
+                        "name": "a",
+                        "value": "First integration test value a"
+                    }
+                ]
+            },
+            "service_account_name": "argo-workflow",
+            "workflow_template_ref": {
+                "name": "pipeline-test-artifact-pipeline-d5rzf"
+            }
+        },
+        "artifact_repository_ref": {
+            "config_map": "artifact-repositories",
+            "key": "bettmensch-ai-artifact-repository",
+            "namespace": "argo",
+            "artifact_repository": {
+                "s3": {
+                    "endpoint": "s3.us-east-2.amazonaws.com",
+                    "bucket": "bettmensch-ai-artifact-repository",
+                    "insecure": true
+                }
+            }
+        },
+        "artifact_gc_status": {
+            "not_specified": true
+        },
+        "task_results_completion_status": {
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-1194847088": true,
+            "pipeline-test-artifact-pipeline-d5rzf-flow-5z44k-2691985882": true
+        }
+    }
+}
