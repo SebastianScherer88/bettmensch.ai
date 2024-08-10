@@ -13,8 +13,10 @@ from bettmensch_ai.server import (  # noqa: E402
     PIPELINE_NODE_EMOJI_MAP,
     DagVisualizationItems,
     DagVisualizationSettings,
+    RegisteredPipeline,
+    ResourceTemplate,
+    ScriptTemplate,
 )
-from bettmensch_ai.server import RegisteredPipeline as Pipeline  # noqa: E402
 from hera.workflows.models import (  # noqa: E402
     WorkflowTemplate as WorkflowTemplateModel,
 )
@@ -53,7 +55,7 @@ def get_pipeline_meta_data(
     """
 
     return [
-        registered_pipeline.metadata.to_dict()
+        registered_pipeline.dict()["metadata"]
         for registered_pipeline in registered_pipelines
     ]
 
@@ -71,8 +73,6 @@ def display_pipeline_summary_table(
     Returns:
         pd.DataFrame: The pipeline summary table shown on the frontend.
     """
-
-    st.markdown("## Registered pipelines")
 
     pipeline_summary_df = (
         pd.DataFrame(pipeline_meta_data)[["name", "uid", "creation_timestamp"]]
@@ -132,12 +132,16 @@ def get_formatted_pipeline_data(
         zip(pipeline_names, registered_pipelines)
     ):
         try:
-            pipeline_dict = Pipeline.from_hera_workflow_template_model(
-                registered_pipeline
-            ).model_dump()
+            pipeline_dict = (
+                RegisteredPipeline.from_hera_workflow_template_model(
+                    registered_pipeline
+                ).model_dump()
+            )
             formatted_pipeline_data["object"][
                 resource_name
-            ] = Pipeline.from_hera_workflow_template_model(registered_pipeline)
+            ] = RegisteredPipeline.from_hera_workflow_template_model(
+                registered_pipeline
+            )
             formatted_pipeline_data["metadata"][resource_name] = pipeline_dict[
                 "metadata"
             ]
@@ -265,7 +269,9 @@ def display_pipeline_dag_selection(
             task_inputs_tab, task_outputs_tab, task_script_tab = st.tabs(
                 ["Component Inputs", "Component Outputs", "Component Script"]
             )
-            pipeline = formatted_pipeline_data["object"][selected_pipeline]
+            pipeline: RegisteredPipeline = formatted_pipeline_data["object"][
+                selected_pipeline
+            ]
             task = pipeline.get_dag_task(element_id).model_dump()
 
             with task_inputs_tab:
@@ -383,11 +389,14 @@ def display_pipeline_dag_selection(
 
             with task_script_tab:
                 with st.container(height=tab_container_height, border=False):
-                    st.json(
-                        pipeline.get_template(task["template"]).model_dump()[
-                            "script"
-                        ]
-                    )
+                    task_template = pipeline.get_template(task["template"])
+                    if isinstance(task_template, ScriptTemplate):
+                        task_script_content = task_template.script.model_dump()
+                    elif isinstance(task_template, ResourceTemplate):
+                        task_script_content = (
+                            task_template.resource.model_dump()
+                        )
+                    st.json(task_script_content)
         else:
             st.markdown(
                 f"### {PIPELINE_NODE_EMOJI_MAP['task']} Component: None"
@@ -407,7 +416,7 @@ def display_pipeline_dag_selection(
 
 def display_selected_pipeline(
     formatted_pipeline_data: Dict,
-    selected_pipeline: str,
+    selected_pipeline: str = None,
     tab_container_height: int = 420,
     dag_image_height: int = 1100,
 ):
@@ -510,26 +519,34 @@ def main():
 
         A `Pipeline` is the *definition* of a workflow, i.e. it describes a DAG
         declaring the logic and dependencies that will be executd at runtime.
+
+        ## Registered pipelines
         """
     )
 
     workflow_templates = get_workflow_templates()
 
-    meta_data = get_pipeline_meta_data(workflow_templates)
-    display_pipeline_summary_table(meta_data)
+    if workflow_templates:
 
-    names = get_pipeline_names(meta_data)
+        meta_data = get_pipeline_meta_data(workflow_templates)
+        display_pipeline_summary_table(meta_data)
 
-    formatted_pipeline_data = get_formatted_pipeline_data(
-        workflow_templates, names
-    )
+        names = get_pipeline_names(meta_data)
 
-    selected_pipeline = display_pipeline_dropdown(names)
+        formatted_pipeline_data = get_formatted_pipeline_data(
+            workflow_templates, names
+        )
 
-    (
-        dag_visualization_schema,
-        dag_visualization_element,
-    ) = display_selected_pipeline(formatted_pipeline_data, selected_pipeline)
+        selected_pipeline = display_pipeline_dropdown(names)
+
+        (
+            dag_visualization_schema,
+            dag_visualization_element,
+        ) = display_selected_pipeline(
+            formatted_pipeline_data, selected_pipeline
+        )
+    else:
+        st.write("No Pipelines registered.")
 
     with st.sidebar:
         add_logo(sidebar=True)

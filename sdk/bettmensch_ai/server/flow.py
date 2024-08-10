@@ -8,8 +8,10 @@ from bettmensch_ai.server.pipeline import (
     NodeOutput,
     Pipeline,
     PipelineInputParameter,
+    ResourceTemplate,
     ScriptTemplate,
 )
+from bettmensch_ai.utils import copy_non_null_dict
 from hera.workflows.models import Workflow as WorkflowModel
 from pydantic import BaseModel
 
@@ -30,7 +32,7 @@ class FlowState(BaseModel):
     started_at: Optional[Union[datetime, None]] = None
     finshed_at: Optional[Union[datetime, None]] = None
     progress: str
-    conditions: List[Dict[str, str]]
+    conditions: List[Dict[str, Optional[str]]]
     resources_duration: Optional[Dict]
     task_results_completion_status: Dict[str, bool]
 
@@ -76,7 +78,7 @@ class FlowNodeOutputs(BaseModel):
 class FlowNode(BaseModel):
     id: str
     name: str
-    type: Literal["Pod", "Skipped"]
+    type: Literal["Pod", "Skipped", "Retry"]
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
     phase: Literal["Succeeded", "Failed", "Pending", "Error", "Omitted"]
@@ -102,7 +104,7 @@ class Flow(Pipeline):
     metadata: FlowMetadata
     state: FlowState
     artifact_configuration: FlowArtifactConfiguration
-    templates: List[ScriptTemplate]
+    templates: List[Union[ScriptTemplate, ResourceTemplate]]
     inputs: List[FlowInputParameter] = []
     dag: List[FlowNode]
 
@@ -133,11 +135,14 @@ class Flow(Pipeline):
 
         for pipeline_node in pipeline_dag:
             pipeline_node_dict = pipeline_node.model_dump()
-            workflow_node_dict = [
-                workflow_node
-                for workflow_node in workflow_nodes
-                if workflow_node["display_name"] == pipeline_node_dict["name"]
-            ][0]
+            workflow_node_dict = copy_non_null_dict(
+                [
+                    workflow_node
+                    for workflow_node in workflow_nodes
+                    if workflow_node["display_name"]
+                    == pipeline_node_dict["name"]
+                ][0]
+            )
 
             flow_node_dict = {
                 "id": workflow_node_dict["id"],
@@ -167,24 +172,29 @@ class Flow(Pipeline):
                             argument_type
                         ]
 
-                        for i, argument in enumerate(workflow_node_arguments):
-                            if i < len(flow_node_arguments):
-                                if (
-                                    flow_node_arguments[i]["name"]
-                                    == argument["name"]
-                                ):
-                                    if argument_type == "parameters":
-                                        flow_node_arguments[i][
-                                            "value"
-                                        ] = argument["value"]
-                                    elif argument_type == "artifacts":
-                                        flow_node_arguments[i][
-                                            "s3_prefix"
-                                        ] = argument["s3"]["key"]
-                            elif argument["name"] == "main-logs":
-                                flow_node_dict["logs"] = argument
-                            else:
-                                pass
+                        if workflow_node_arguments is None:
+                            continue
+                        else:
+                            for i, argument in enumerate(
+                                workflow_node_arguments
+                            ):
+                                if i < len(flow_node_arguments):
+                                    if (
+                                        flow_node_arguments[i]["name"]
+                                        == argument["name"]
+                                    ):
+                                        if argument_type == "parameters":
+                                            flow_node_arguments[i][
+                                                "value"
+                                            ] = argument["value"]
+                                        elif argument_type == "artifacts":
+                                            flow_node_arguments[i][
+                                                "s3_prefix"
+                                            ] = argument["s3"]["key"]
+                                elif argument["name"] == "main-logs":
+                                    flow_node_dict["logs"] = argument
+                                else:
+                                    pass
                     except KeyError:
                         pass
             try:
@@ -199,21 +209,21 @@ class Flow(Pipeline):
     @classmethod
     def from_hera_workflow_model(cls, workflow_model: WorkflowModel) -> Flow:
         """Utility to generate a Flow instance from a
-        hera.models.Workflow instance.
+        hera.workflows.models.Workflow instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing
         the DAG.
 
         Args:
-            workflow_model (hera.models.Workflow): Instance of hera's
+            workflow_model (hera.workflows.models.Workflow): Instance of hera's
                 WorkflowService response model.
 
         Returns:
             Flow: A Flow class instance.
         """
 
-        workflow_dict = workflow_model.to_dict()
+        workflow_dict = workflow_model.dict()
         workflow_spec = workflow_dict["spec"].copy()
         workflow_status = workflow_dict["status"].copy()
         workflow_template_spec = workflow_status[
@@ -234,11 +244,15 @@ class Flow(Pipeline):
 
         # templates
         entrypoint_template = workflow_template_spec["entrypoint"]
-        templates = [
-            ScriptTemplate.model_validate(template)
-            for template in workflow_template_spec["templates"]
-            if template["name"] != entrypoint_template
-        ]
+        templates = []
+        for template in workflow_template_spec["templates"]:
+            # we are not interested in the entrypoint template
+            if template["name"] == entrypoint_template:
+                continue
+            elif template["script"] is not None:
+                templates.append(ScriptTemplate.model_validate(template))
+            elif template["resource"] is not None:
+                templates.append(ResourceTemplate.model_validate(template))
 
         # inputs
         inputs = [

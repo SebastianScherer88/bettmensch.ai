@@ -10,6 +10,7 @@ from bettmensch_ai.server.dag import (
     DagTaskNode,
     DagVisualizationItems,
 )
+from bettmensch_ai.utils import copy_non_null_dict
 from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
 
@@ -92,6 +93,17 @@ class ScriptTemplate(BaseModel):
     script: Script
 
 
+class Resource(BaseModel):
+    action: Literal["create", "delete"]
+    manifest: Optional[str]
+    flags: Optional[List[str]]
+
+
+class ResourceTemplate(BaseModel):
+    name: str
+    resource: Resource
+
+
 # --- PipelineInput
 class PipelineInputParameter(BaseModel):
     name: str
@@ -156,7 +168,7 @@ class PipelineNode(BaseModel):
 # --- Pipeline
 class Pipeline(BaseModel):
     metadata: PipelineMetadata
-    templates: List[ScriptTemplate]
+    templates: List[Union[ScriptTemplate, ResourceTemplate]]
     inputs: List[PipelineInputParameter] = []
     dag: List[PipelineNode]
 
@@ -238,12 +250,14 @@ class Pipeline(BaseModel):
                 "name": task["name"],
                 "template": task["template"],
                 "depends": task["depends"].split(" && ")
-                if task.get("depends")
+                if task["depends"] is not None
                 else [],
             }
             # the outputs can be obtained from the reference template's outputs
             pipeline_node["outputs"] = NodeOutputs(
-                **templates_dict[pipeline_node["template"]]["outputs"]
+                **copy_non_null_dict(
+                    templates_dict[pipeline_node["template"]]["outputs"]
+                )
             )
 
             # the inputs need to resolve the expressions to either the pipeline
@@ -251,14 +265,22 @@ class Pipeline(BaseModel):
             # argument spec can be directly appended to the corresponding
             # parameters/artifacts list
             pipeline_node_inputs = {"parameters": [], "artifacts": []}
-            try:
+            # try:
+            #     node_input_parameters = task["arguments"]["parameters"]
+            # except KeyError:
+            #     node_input_parameters = []
+            if task["arguments"]["parameters"] is not None:
                 node_input_parameters = task["arguments"]["parameters"]
-            except KeyError:
+            else:
                 node_input_parameters = []
 
-            try:
+            # try:
+            #     node_input_artifacts = task["arguments"]["artifacts"]
+            # except KeyError:
+            #     node_input_artifacts = []
+            if task["arguments"]["artifacts"] is not None:
                 node_input_artifacts = task["arguments"]["artifacts"]
-            except KeyError:
+            else:
                 node_input_artifacts = []
 
             # build parameter inputs
@@ -290,7 +312,7 @@ class Pipeline(BaseModel):
                     upstream_node,
                     output_type,
                     output_name,
-                ) = cls.resolve_value_expression(node_argument["_from"])
+                ) = cls.resolve_value_expression(node_argument["from_"])
                 pipeline_node_inputs["artifacts"].append(
                     NodeArtifactInput(
                         name=node_argument["name"],
@@ -308,12 +330,12 @@ class Pipeline(BaseModel):
         return dag
 
     @classmethod
-    def from_argo_workflow_cr(
+    def from_hera_workflow_template_model(
         cls,
         workflow_template_resource: WorkflowTemplateModel,
     ) -> Pipeline:
         """Utility to generate a Pipeline instance from a
-        hera.workflows.WorkflowTemplate instance.
+        hera.workflows.models.WorkflowTemplate instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing
@@ -321,14 +343,14 @@ class Pipeline(BaseModel):
 
         Args:
             workflow_template_resource
-            (hera.workflows.WorkflowTemplate): Instance of hera's
+            (hera.workflows.models.WorkflowTemplate): Instance of hera's
                 WorkflowTemplateService response model.
 
         Returns:
             Pipeline: A Pipeline class instance.
         """
 
-        workflow_template_dict = workflow_template_resource.to_dict()
+        workflow_template_dict = workflow_template_resource.dict()
         workflow_template_spec = workflow_template_dict["spec"].copy()
 
         # metadata
@@ -340,11 +362,15 @@ class Pipeline(BaseModel):
 
         # templates
         entrypoint_template = workflow_template_spec["entrypoint"]
-        templates = [
-            ScriptTemplate.model_validate(template)
-            for template in workflow_template_spec["templates"]
-            if template["name"] != entrypoint_template
-        ]
+        templates = []
+        for template in workflow_template_spec["templates"]:
+            # we are not interested in the entrypoint template
+            if template["name"] == entrypoint_template:
+                continue
+            elif template["script"] is not None:
+                templates.append(ScriptTemplate.model_validate(template))
+            elif template["resource"] is not None:
+                templates.append(ResourceTemplate.model_validate(template))
 
         # inputs
         inputs = [

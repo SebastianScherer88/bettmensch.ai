@@ -11,8 +11,10 @@ from bettmensch_ai.server import (  # noqa: E402,E501
     PIPELINE_NODE_EMOJI_MAP,
     DagVisualizationItems,
     DagVisualizationSettings,
+    RegisteredFlow,
+    ResourceTemplate,
+    ScriptTemplate,
 )
-from bettmensch_ai.server import RegisteredFlow as Flow  # noqa: E402
 from hera.workflows.models import Workflow as WorkflowModel  # noqa: E402
 from streamlit_flow import streamlit_flow  # noqa: E402
 from streamlit_flow.interfaces import (  # noqa: E402
@@ -46,7 +48,7 @@ def get_flow_meta_data(submitted_flows: List[WorkflowModel]) -> List[Dict]:
     """
 
     return [
-        submitted_flow.metadata.to_dict() for submitted_flow in submitted_flows
+        submitted_flow.dict()["metadata"] for submitted_flow in submitted_flows
     ]
 
 
@@ -61,8 +63,6 @@ def display_flow_summary_table(formatted_flow_data: Dict) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The flow summary table shown on the frontend.
     """
-
-    st.markdown("## Submitted flows")
 
     records = []
 
@@ -135,12 +135,12 @@ def get_formatted_flow_data(
         zip(flow_names, submitted_flows)
     ):
         try:
-            flow_dict = Flow.from_hera_workflow_model(
+            flow_dict = RegisteredFlow.from_hera_workflow_model(
                 submitted_flow
             ).model_dump()
             formatted_flow_data["object"][
                 resource_name
-            ] = Flow.from_hera_workflow_model(submitted_flow)
+            ] = RegisteredFlow.from_hera_workflow_model(submitted_flow)
             formatted_flow_data["metadata"][resource_name] = flow_dict[
                 "metadata"
             ]
@@ -156,6 +156,7 @@ def get_formatted_flow_data(
                 "Please make sure the Argo Workflow was created with the "
                 "bettmensch.ai SDK and was submitted successfully."
             )
+            raise e
 
     return formatted_flow_data
 
@@ -269,7 +270,7 @@ def display_flow_dag_selection(
                     "Component State",
                 ]
             )
-            flow = formatted_flow_data["object"][selected_flow]
+            flow: RegisteredFlow = formatted_flow_data["object"][selected_flow]
             task = flow.get_dag_task(element_id).model_dump()
 
             with task_inputs_tab:
@@ -387,11 +388,14 @@ def display_flow_dag_selection(
 
             with task_script_tab:
                 with st.container(height=tab_container_height, border=False):
-                    st.json(
-                        flow.get_template(task["template"]).model_dump()[
-                            "script"
-                        ]
-                    )
+                    task_template = flow.get_template(task["template"])
+                    if isinstance(task_template, ScriptTemplate):
+                        task_script_content = task_template.script.model_dump()
+                    elif isinstance(task_template, ResourceTemplate):
+                        task_script_content = (
+                            task_template.resource.model_dump()
+                        )
+                    st.json(task_script_content)
 
             with task_state_tab:
                 with st.container(height=tab_container_height, border=False):
@@ -536,22 +540,28 @@ def main():
 
         A `Flow` is the *execution* of a workflow, i.e. it is the running of a
         `Pipeline`.
+
+        ## Submitted flows
         """
     )
 
     workflows = get_workflows()
 
-    meta_data = get_flow_meta_data(workflows)
+    if workflows:
 
-    names = get_flow_names(meta_data)
+        meta_data = get_flow_meta_data(workflows)
 
-    formatted_flow_data = get_formatted_flow_data(workflows, names)
+        names = get_flow_names(meta_data)
 
-    display_flow_summary_table(formatted_flow_data)
+        formatted_flow_data = get_formatted_flow_data(workflows, names)
 
-    selected_flow = display_flow_dropdown(names)
+        display_flow_summary_table(formatted_flow_data)
 
-    _, _ = display_selected_flow(formatted_flow_data, selected_flow)
+        selected_flow = display_flow_dropdown(names)
+
+        _, _ = display_selected_flow(formatted_flow_data, selected_flow)
+    else:
+        st.write("No Flows submitted.")
 
     with st.sidebar:
         add_logo(sidebar=True)

@@ -7,3 +7,7 @@ from bettmensch_ai.server.pipeline import PIPELINE_NODE_EMOJI_MAP  # noqa: F401
 from bettmensch_ai.server.pipeline import (  # noqa: F401
     Pipeline as RegisteredPipeline,
 )
+from bettmensch_ai.server.pipeline import (  # noqa: F401
+    ResourceTemplate,
+    ScriptTemplate,
+)
