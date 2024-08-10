@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 
@@ -8,14 +9,35 @@ from argo_workflows.api.workflow_template_service_api import (
 )
 from hera.workflows import WorkflowsService
 
-ARGO_DATA_MODELS_DIR = "./data_models/argo"
-HERA_DATA_MODELS_DIR = "./data_models/hera"
+ARGO_WORKFLOW_MODELS_DIR = "./data_models/workflows/argo"
+HERA_WORKFLOW_MODELS_DIR = "./data_models/workflows/hera"
+ARGO_WORKFLOW_TEMPLATE_MODELS_DIR = "./data_models/workflow_templates/argo"
+HERA_WORKFLOW_TEMPLATE_MODELS_DIR = "./data_models/workflow_templates/hera"
+DIRS = [
+    ARGO_WORKFLOW_MODELS_DIR,
+    HERA_WORKFLOW_MODELS_DIR,
+    ARGO_WORKFLOW_TEMPLATE_MODELS_DIR,
+    HERA_WORKFLOW_TEMPLATE_MODELS_DIR,
+]
+for DIR in DIRS:
+    if not os.path.exists(DIR):
+        os.makedirs(DIR)
 
-if not os.path.exists(ARGO_DATA_MODELS_DIR):
-    os.makedirs(ARGO_DATA_MODELS_DIR)
 
-if not os.path.exists(HERA_DATA_MODELS_DIR):
-    os.makedirs(HERA_DATA_MODELS_DIR)
+def recursive_datetime_to_string(data):
+    if isinstance(data, dict):
+        return dict(
+            [(k, recursive_datetime_to_string(v)) for k, v in data.items()]
+        )
+    elif isinstance(data, list):
+        return [recursive_datetime_to_string(data_i) for data_i in data]
+    elif isinstance(data, tuple):
+        return (recursive_datetime_to_string(data_i) for data_i in data)
+    elif isinstance(data, datetime.datetime):
+        return "test-datetime-value"
+    else:
+        return data
+
 
 # --- argo
 # argo client
@@ -39,23 +61,20 @@ argo_workflow_list_response = argo_workflow_api.list_workflows(
 for i, argo_workflow_template in enumerate(
     argo_workflow_template_list_response.items
 ):
-    argo_workflow_template_dict = argo_workflow_template.to_dict()
-    argo_workflow_template_dict["metadata"]["creation_timestamp"] = "test-time"
-    argo_workflow_template_dict["metadata"]["managed_fields"][0][
-        "time"
-    ] = "test-time"
+    argo_workflow_template_dict = recursive_datetime_to_string(
+        argo_workflow_template.to_dict()
+    )
     with open(
-        f"{ARGO_DATA_MODELS_DIR}/argo_workflow_template_{i}.json", "w"
+        f"{ARGO_WORKFLOW_TEMPLATE_MODELS_DIR}/argo_workflow_template_{i}.json",
+        "w",
     ) as argo_workflow_template_file:
         json.dump(argo_workflow_template_dict, argo_workflow_template_file)
 
 # export argo workflow
 for i, argo_workflow in enumerate(argo_workflow_list_response.items):
-    argo_workflow_dict = argo_workflow.to_dict()
-    argo_workflow_dict["metadata"]["creation_timestamp"] = "test-time"
-    argo_workflow_dict["metadata"]["managed_fields"][0]["time"] = "test-time"
+    argo_workflow_dict = recursive_datetime_to_string(argo_workflow.to_dict())
     with open(
-        f"{ARGO_DATA_MODELS_DIR}/argo_workflow_{i}.json", "w"
+        f"{ARGO_WORKFLOW_MODELS_DIR}/argo_workflow_{i}.json", "w"
     ) as argo_workflow_file:
         json.dump(argo_workflow_dict, argo_workflow_file)
 
@@ -73,22 +92,19 @@ hera_workflow_list_response = hera_api.list_workflows()
 for i, hera_workflow_template in enumerate(
     hera_workflow_template_list_response.items
 ):
-    hera_workflow_template_dict = hera_workflow_template.dict()
-    hera_workflow_template_dict["metadata"]["creation_timestamp"] = "test-time"
-    hera_workflow_template_dict["metadata"]["managed_fields"][0][
-        "time"
-    ] = "test-time"
+    hera_workflow_template_dict = recursive_datetime_to_string(
+        hera_workflow_template.dict()
+    )
     with open(
-        f"{HERA_DATA_MODELS_DIR}/hera_workflow_template_{i}.json", "w"
+        f"{HERA_WORKFLOW_TEMPLATE_MODELS_DIR}/hera_workflow_template_{i}.json",
+        "w",
     ) as hera_workflow_template_file:
         json.dump(hera_workflow_template_dict, hera_workflow_template_file)
 
 # export hera workflow
 for i, hera_workflow in enumerate(hera_workflow_list_response.items):
-    hera_workflow_dict = hera_workflow.dict()
-    hera_workflow_dict["metadata"]["creation_timestamp"] = "test-time"
-    hera_workflow_dict["metadata"]["managed_fields"][0]["time"] = "test-time"
+    hera_workflow_dict = recursive_datetime_to_string(hera_workflow.dict())
     with open(
-        f"{HERA_DATA_MODELS_DIR}/hera_workflow_template_{i}.json", "w"
+        f"{HERA_WORKFLOW_MODELS_DIR}/hera_workflow_{i}.json", "w"
     ) as hera_workflow_file:
         json.dump(hera_workflow_dict, hera_workflow_file)
