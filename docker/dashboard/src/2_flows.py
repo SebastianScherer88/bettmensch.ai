@@ -179,7 +179,7 @@ def display_flow_dropdown(flow_names: List[str]) -> str:
 
 
 def display_flow_dag(
-    formatted_flow_data,
+    formatted_flow_data: Dict,
     selected_flow: str,
     display_flow_ios: bool,
     dag_image_height: int,
