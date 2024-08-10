@@ -1,4 +1,4 @@
-from bettmensch_ai.client import hera_client  # noqa: F401
+from bettmensch_ai.pipelines.client import hera_client  # noqa: F401
 from bettmensch_ai.pipelines.pipeline import (  # noqa: F401
     Pipeline,
     delete_registered_pipeline,
