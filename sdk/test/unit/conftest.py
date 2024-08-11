@@ -47,6 +47,7 @@ def test_hera_artifact_workflow_template_model():
                     "uid": "310b62f6-95fb-418f-ab28-e7070b183979",
                 },
                 "spec": {
+                    "entrypoint": "bettmensch-ai-dag",
                     "arguments": {
                         "artifacts": None,
                         "parameters": [
@@ -120,6 +121,7 @@ def test_hera_artifact_workflow_template_model():
                                 ],
                             },
                             "script": {
+                                "command": ["python"],
                                 "image": "bettmensch88/bettmensch.ai:3.11-latest",
                                 "name": "",
                                 "resources": {
@@ -143,6 +145,10 @@ def test_hera_artifact_workflow_template_model():
                                         "path": "a",
                                     }
                                 ],
+                                "parameters": None,
+                            },
+                            "outputs": {
+                                "artifacts": None,
                                 "parameters": None,
                             },
                             "metadata": {"annotations": None, "labels": None},
@@ -190,6 +196,7 @@ def test_hera_parameter_workflow_template_model():
                     "uid": "eb9cff7d-b949-4aa9-9cf6-703b2a602128",
                 },
                 "spec": {
+                    "entrypoint": "bettmensch-ai-dag",
                     "arguments": {
                         "artifacts": None,
                         "parameters": [
@@ -291,6 +298,7 @@ def test_hera_parameter_workflow_template_model():
                                 ],
                             },
                             "script": {
+                                "command": ["python"],
                                 "image": "bettmensch88/bettmensch.ai:3.11-latest",
                                 "name": "",
                                 "resources": {
