@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from bettmensch_ai.server.dag import (
     DagConnection,
@@ -56,6 +56,7 @@ class ScriptTemplateParameterInput(BaseModel):
     name: str
     value: Optional[str] = None
     value_from: Optional[Union[str, Dict]] = None
+    default: Optional[Any] = None
 
 
 class ScriptTemplateArtifactInput(BaseModel):
@@ -108,6 +109,7 @@ class ResourceTemplate(BaseModel):
 class PipelineInputParameter(BaseModel):
     name: str
     value: Optional[str] = None
+    default: Optional[Any] = None
 
 
 # --- PipelineNode
