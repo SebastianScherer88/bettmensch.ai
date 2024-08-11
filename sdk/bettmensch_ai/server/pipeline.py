@@ -48,7 +48,9 @@ class Script(BaseModel):
     source: str
     name: str
     command: List[str]
-    resources: Dict = {}
+    resources: Optional[Dict] = None
+    env: Optional[List[Dict]] = None
+    ports: Optional[List[Dict]] = None
 
 
 # inputs
@@ -92,6 +94,7 @@ class ScriptTemplate(BaseModel):
     outputs: ScriptTemplateOutputs = {}
     metadata: Dict = {}
     script: Script
+    tolerations: Optional[List[Dict]] = None
 
 
 class Resource(BaseModel):
