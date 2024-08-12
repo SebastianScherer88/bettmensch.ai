@@ -28,7 +28,7 @@ class FlowMetadata(BaseModel):
 
 # --- FlowStatus
 class FlowState(BaseModel):
-    phase: Literal["Succeeded", "Failed", "Pending", "Error"]
+    phase: Literal["Pending", "Running", "Succeeded", "Failed", "Error"]
     started_at: Optional[Union[datetime, None]] = None
     finshed_at: Optional[Union[datetime, None]] = None
     progress: str
@@ -81,7 +81,9 @@ class FlowNode(BaseModel):
     type: Literal["Pod", "Skipped", "Retry"]
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
-    phase: Literal["Succeeded", "Failed", "Pending", "Error", "Omitted"]
+    phase: Literal[
+        "Pending", "Running", "Succeeded", "Failed", "Error", "Omitted"
+    ]
     template: str
     inputs: Optional[FlowNodeInputs] = None
     outputs: Optional[FlowNodeOutputs] = None
@@ -133,8 +135,13 @@ class Flow(Pipeline):
         flow_dag = []
         workflow_nodes = list(workflow_status["nodes"].values())
 
+        print(
+            f"Workflow node display names:{[wn['display_name'] for wn in workflow_nodes]}"  # noqa: E501
+        )
+
         for pipeline_node in pipeline_dag:
             pipeline_node_dict = pipeline_node.model_dump()
+            print(f"Pipeline node name: {pipeline_node_dict['name']}")
             workflow_node_dict = copy_non_null_dict(
                 [
                     workflow_node
