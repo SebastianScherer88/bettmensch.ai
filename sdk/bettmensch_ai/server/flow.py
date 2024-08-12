@@ -150,6 +150,12 @@ class Flow(Pipeline):
                     == pipeline_node_dict["name"]
                 ][0]
             )
+            # if the above gives an index error, its because the workflow node
+            # hasnt been scheduled and is not in pending state yet, meaning the
+            # hera api workflow response does not include it. in that case we
+            # need to assemble the flow node dict from its pipeline equivalent
+            # where possible and sensible and set the state to "Not scheduled
+            # yet" or similar
 
             flow_node_dict = {
                 "id": workflow_node_dict["id"],
