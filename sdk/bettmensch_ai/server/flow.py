@@ -78,7 +78,7 @@ class FlowNodeOutputs(BaseModel):
 class FlowNode(BaseModel):
     id: Optional[str] = None
     name: str
-    type: Literal["Pod", "Skipped", "Retry"]
+    type: Optional[Literal["Pod", "Skipped", "Retry"]] = None
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
     phase: Literal[
@@ -164,11 +164,11 @@ class Flow(Pipeline):
 
             if potential_workflow_node_dict:
                 workflow_node_dict = copy_non_null_dict(
-                    potential_workflow_node_dict
+                    potential_workflow_node_dict[0]
                 )
 
                 flow_node_dict["id"] = workflow_node_dict["id"]
-                flow_node_dict["type"] = (workflow_node_dict["type"],)
+                flow_node_dict["type"] = workflow_node_dict["type"]
                 flow_node_dict["pod_name"] = workflow_node_dict["name"]
                 flow_node_dict["phase"] = workflow_node_dict["phase"]
                 flow_node_dict["outputs"] = dict(
@@ -222,7 +222,7 @@ class Flow(Pipeline):
 
             else:
                 flow_node_dict["pod_name"] = pipeline_node_dict["name"]
-                flow_node_dict["phase"] = "Not scheduled"
+                flow_node_dict["phase"] = "Not Scheduled"
                 flow_node_dict["outputs"] = dict(
                     **pipeline_node_dict["outputs"],
                 )
