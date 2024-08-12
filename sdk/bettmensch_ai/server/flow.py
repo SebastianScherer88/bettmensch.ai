@@ -76,13 +76,19 @@ class FlowNodeOutputs(BaseModel):
 
 
 class FlowNode(BaseModel):
-    id: str
+    id: Optional[str] = None
     name: str
     type: Literal["Pod", "Skipped", "Retry"]
     pod_name: str  # this will match the PipelineNode.name, i.e the task name
     template: str
     phase: Literal[
-        "Pending", "Running", "Succeeded", "Failed", "Error", "Omitted"
+        "Not Scheduled",
+        "Pending",
+        "Running",
+        "Succeeded",
+        "Failed",
+        "Error",
+        "Omitted",
     ]
     template: str
     inputs: Optional[FlowNodeInputs] = None
@@ -142,74 +148,85 @@ class Flow(Pipeline):
         for pipeline_node in pipeline_dag:
             pipeline_node_dict = pipeline_node.model_dump()
             print(f"Pipeline node name: {pipeline_node_dict['name']}")
-            workflow_node_dict = copy_non_null_dict(
-                [
-                    workflow_node
-                    for workflow_node in workflow_nodes
-                    if workflow_node["display_name"]
-                    == pipeline_node_dict["name"]
-                ][0]
-            )
-            # if the above gives an index error, its because the workflow node
-            # hasnt been scheduled and is not in pending state yet, meaning the
-            # hera api workflow response does not include it. in that case we
-            # need to assemble the flow node dict from its pipeline equivalent
-            # where possible and sensible and set the state to "Not scheduled
-            # yet" or similar
 
             flow_node_dict = {
-                "id": workflow_node_dict["id"],
-                "name": workflow_node_dict["display_name"],
-                "type": workflow_node_dict["type"],
-                "pod_name": workflow_node_dict["name"],
-                "template": workflow_node_dict["template_name"],
-                "phase": workflow_node_dict["phase"],
+                "name": pipeline_node_dict["name"],
+                "template": pipeline_node_dict["template"],
                 "inputs": pipeline_node_dict["inputs"],
-                "outputs": dict(
+                "depends": pipeline_node_dict["depends"],
+            }
+
+            potential_workflow_node_dict = [
+                workflow_node
+                for workflow_node in workflow_nodes
+                if workflow_node["display_name"] == pipeline_node_dict["name"]
+            ]
+
+            if potential_workflow_node_dict:
+                workflow_node_dict = copy_non_null_dict(
+                    potential_workflow_node_dict
+                )
+
+                flow_node_dict["id"] = workflow_node_dict["id"]
+                flow_node_dict["type"] = (workflow_node_dict["type"],)
+                flow_node_dict["pod_name"] = workflow_node_dict["name"]
+                flow_node_dict["phase"] = workflow_node_dict["phase"]
+                flow_node_dict["outputs"] = dict(
                     **pipeline_node_dict["outputs"],
                     **{"exit_code": workflow_node_dict.get("exit_code")},
-                ),
-                "logs": None,
-                "depends": pipeline_node_dict["depends"],
-                "dependants": workflow_node_dict.get("children"),
-                "host_node_name": workflow_node_dict.get("host_node_name"),
-            }
-            # inject resolved input values where possible
-            for argument_io in ("inputs", "outputs"):
-                for argument_type in ("parameters", "artifacts"):
-                    try:
-                        workflow_node_arguments = workflow_node_dict[
-                            argument_io
-                        ][argument_type]
-                        flow_node_arguments = flow_node_dict[argument_io][
-                            argument_type
-                        ]
+                )
+                flow_node_dict["logs"] = None
+                flow_node_dict["dependants"] = workflow_node_dict.get(
+                    "children"
+                )
+                flow_node_dict["host_node_name"] = workflow_node_dict.get(
+                    "host_node_name"
+                )
 
-                        if workflow_node_arguments is None:
-                            continue
-                        else:
-                            for i, argument in enumerate(
-                                workflow_node_arguments
-                            ):
-                                if i < len(flow_node_arguments):
-                                    if (
-                                        flow_node_arguments[i]["name"]
-                                        == argument["name"]
-                                    ):
-                                        if argument_type == "parameters":
-                                            flow_node_arguments[i][
-                                                "value"
-                                            ] = argument["value"]
-                                        elif argument_type == "artifacts":
-                                            flow_node_arguments[i][
-                                                "s3_prefix"
-                                            ] = argument["s3"]["key"]
-                                elif argument["name"] == "main-logs":
-                                    flow_node_dict["logs"] = argument
-                                else:
-                                    pass
-                    except KeyError:
-                        pass
+                # inject resolved input values where possible
+                for argument_io in ("inputs", "outputs"):
+                    for argument_type in ("parameters", "artifacts"):
+                        try:
+                            workflow_node_arguments = workflow_node_dict[
+                                argument_io
+                            ][argument_type]
+                            flow_node_arguments = flow_node_dict[argument_io][
+                                argument_type
+                            ]
+
+                            if workflow_node_arguments is None:
+                                continue
+                            else:
+                                for i, argument in enumerate(
+                                    workflow_node_arguments
+                                ):
+                                    if i < len(flow_node_arguments):
+                                        if (
+                                            flow_node_arguments[i]["name"]
+                                            == argument["name"]
+                                        ):
+                                            if argument_type == "parameters":
+                                                flow_node_arguments[i][
+                                                    "value"
+                                                ] = argument["value"]
+                                            elif argument_type == "artifacts":
+                                                flow_node_arguments[i][
+                                                    "s3_prefix"
+                                                ] = argument["s3"]["key"]
+                                    elif argument["name"] == "main-logs":
+                                        flow_node_dict["logs"] = argument
+                                    else:
+                                        pass
+                        except KeyError:
+                            pass
+
+            else:
+                flow_node_dict["pod_name"] = pipeline_node_dict["name"]
+                flow_node_dict["phase"] = "Not scheduled"
+                flow_node_dict["outputs"] = dict(
+                    **pipeline_node_dict["outputs"],
+                )
+                flow_node_dict["logs"] = None
             try:
                 flow_node = FlowNode(**flow_node_dict)
             except Exception as e:
