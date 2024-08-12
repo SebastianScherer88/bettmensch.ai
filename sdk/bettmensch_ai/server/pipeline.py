@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
-import argo_workflows
-import yaml
-from argo_workflows.api import workflow_template_service_api
-from argo_workflows.model.io_argoproj_workflow_v1alpha1_workflow_template import (  # noqa: E501
-    IoArgoprojWorkflowV1alpha1WorkflowTemplate,
-)
 from bettmensch_ai.server.dag import (
     DagConnection,
     DagPipelineIONode,
@@ -16,8 +10,20 @@ from bettmensch_ai.server.dag import (
     DagTaskNode,
     DagVisualizationItems,
 )
-from bettmensch_ai.server.utils import PIPELINE_NODE_EMOJI_MAP
+from bettmensch_ai.utils import copy_non_null_dict
+from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
+
+PIPELINE_NODE_EMOJI_MAP = {
+    "task": "🔵",  # :large_blue_circle:
+    "inputs": {
+        "task": "⤵️",  # :arrow_heading_down:
+        "pipeline": "⏬",  # :arrow_double_down:
+    },
+    "outputs": {"task": "↪️"},  # :arrow_right_hook:
+    "parameters": "📃",  # :page_with_curl
+    "artifacts": "📂",  # :open_file_folder:
+}
 
 
 # --- PipelineMetadata
@@ -42,7 +48,9 @@ class Script(BaseModel):
     source: str
     name: str
     command: List[str]
-    resources: Dict = {}
+    resources: Optional[Dict] = None
+    env: Optional[List[Dict]] = None
+    ports: Optional[List[Dict]] = None
 
 
 # inputs
@@ -50,6 +58,7 @@ class ScriptTemplateParameterInput(BaseModel):
     name: str
     value: Optional[str] = None
     value_from: Optional[Union[str, Dict]] = None
+    default: Optional[Any] = None
 
 
 class ScriptTemplateArtifactInput(BaseModel):
@@ -85,12 +94,25 @@ class ScriptTemplate(BaseModel):
     outputs: ScriptTemplateOutputs = {}
     metadata: Dict = {}
     script: Script
+    tolerations: Optional[List[Dict]] = None
+
+
+class Resource(BaseModel):
+    action: Literal["create", "delete"]
+    manifest: Optional[str]
+    flags: Optional[List[str]]
+
+
+class ResourceTemplate(BaseModel):
+    name: str
+    resource: Resource
 
 
 # --- PipelineInput
 class PipelineInputParameter(BaseModel):
     name: str
     value: Optional[str] = None
+    default: Optional[Any] = None
 
 
 # --- PipelineNode
@@ -151,7 +173,7 @@ class PipelineNode(BaseModel):
 # --- Pipeline
 class Pipeline(BaseModel):
     metadata: PipelineMetadata
-    templates: List[ScriptTemplate]
+    templates: List[Union[ScriptTemplate, ResourceTemplate]]
     inputs: List[PipelineInputParameter] = []
     dag: List[PipelineNode]
 
@@ -208,7 +230,7 @@ class Pipeline(BaseModel):
 
         Args:
             workflow_template_spec (Dict): The spec field of a dict-ified
-                IoArgoprojWorkflowV1alpha1WorkflowTemplate class instance
+                hera.workflows.WorkflowTemplate class instance
 
         Returns:
             List[PipelineNode]: The constructed dag attribute of a Pipeline
@@ -233,12 +255,14 @@ class Pipeline(BaseModel):
                 "name": task["name"],
                 "template": task["template"],
                 "depends": task["depends"].split(" && ")
-                if task.get("depends")
+                if task["depends"] is not None
                 else [],
             }
             # the outputs can be obtained from the reference template's outputs
             pipeline_node["outputs"] = NodeOutputs(
-                **templates_dict[pipeline_node["template"]]["outputs"]
+                **copy_non_null_dict(
+                    templates_dict[pipeline_node["template"]]["outputs"]
+                )
             )
 
             # the inputs need to resolve the expressions to either the pipeline
@@ -246,14 +270,22 @@ class Pipeline(BaseModel):
             # argument spec can be directly appended to the corresponding
             # parameters/artifacts list
             pipeline_node_inputs = {"parameters": [], "artifacts": []}
-            try:
+            # try:
+            #     node_input_parameters = task["arguments"]["parameters"]
+            # except KeyError:
+            #     node_input_parameters = []
+            if task["arguments"]["parameters"] is not None:
                 node_input_parameters = task["arguments"]["parameters"]
-            except KeyError:
+            else:
                 node_input_parameters = []
 
-            try:
+            # try:
+            #     node_input_artifacts = task["arguments"]["artifacts"]
+            # except KeyError:
+            #     node_input_artifacts = []
+            if task["arguments"]["artifacts"] is not None:
                 node_input_artifacts = task["arguments"]["artifacts"]
-            except KeyError:
+            else:
                 node_input_artifacts = []
 
             # build parameter inputs
@@ -285,7 +317,7 @@ class Pipeline(BaseModel):
                     upstream_node,
                     output_type,
                     output_name,
-                ) = cls.resolve_value_expression(node_argument["_from"])
+                ) = cls.resolve_value_expression(node_argument["from_"])
                 pipeline_node_inputs["artifacts"].append(
                     NodeArtifactInput(
                         name=node_argument["name"],
@@ -303,12 +335,12 @@ class Pipeline(BaseModel):
         return dag
 
     @classmethod
-    def from_argo_workflow_cr(
+    def from_hera_workflow_template_model(
         cls,
-        workflow_template_resource: IoArgoprojWorkflowV1alpha1WorkflowTemplate,
+        workflow_template_resource: WorkflowTemplateModel,
     ) -> Pipeline:
         """Utility to generate a Pipeline instance from a
-        IoArgoprojWorkflowV1alpha1WorkflowTemplate instance.
+        hera.workflows.models.WorkflowTemplate instance.
 
         To be used to easily convert the API response data structure
         to the bettmensch.ai pipeline data structure optimized for visualizing
@@ -316,15 +348,14 @@ class Pipeline(BaseModel):
 
         Args:
             workflow_template_resource
-            (IoArgoprojWorkflowV1alpha1WorkflowTemplate): The return of
-                ArgoWorkflow's
-                api/v1/workflow-templates/{namespace}/{name} endpoint.
+            (hera.workflows.models.WorkflowTemplate): Instance of hera's
+                WorkflowTemplateService response model.
 
         Returns:
             Pipeline: A Pipeline class instance.
         """
 
-        workflow_template_dict = workflow_template_resource.to_dict()
+        workflow_template_dict = workflow_template_resource.dict()
         workflow_template_spec = workflow_template_dict["spec"].copy()
 
         # metadata
@@ -336,11 +367,15 @@ class Pipeline(BaseModel):
 
         # templates
         entrypoint_template = workflow_template_spec["entrypoint"]
-        templates = [
-            ScriptTemplate.model_validate(template)
-            for template in workflow_template_spec["templates"]
-            if template["name"] != entrypoint_template
-        ]
+        templates = []
+        for template in workflow_template_spec["templates"]:
+            # we are not interested in the entrypoint template
+            if template["name"] == entrypoint_template:
+                continue
+            elif template["script"] is not None:
+                templates.append(ScriptTemplate.model_validate(template))
+            elif template["resource"] is not None:
+                templates.append(ResourceTemplate.model_validate(template))
 
         # inputs
         inputs = [
@@ -492,49 +527,3 @@ class Pipeline(BaseModel):
                 )
 
         return DagVisualizationItems(connections=connections, nodes=nodes)
-
-
-def main_test():
-    """Unit test the Pipeline class."""
-
-    # get a sample pipeline from the ArgoWorkflow server
-    configuration = argo_workflows.Configuration(host="https://127.0.0.1:2746")
-    configuration.verify_ssl = False
-
-    api_client = argo_workflows.ApiClient(configuration)
-    api_instance = workflow_template_service_api.WorkflowTemplateServiceApi(
-        api_client
-    )
-
-    workflow_templates = api_instance.list_workflow_templates(
-        namespace="argo"
-    )[  # noqa: E501
-        "items"
-    ]
-    print(
-        f"Registered pipelines: {[workflow_template['metadata']['name'] for workflow_template in workflow_templates]}"  # noqa: E501
-    )
-    workflow_template = workflow_templates[0]
-    print(f"Workflow template: {workflow_template.to_dict()}")
-
-    with open("pipeline_test_workflow_template.yaml", "w") as file:
-        yaml.dump(workflow_template.to_dict(), file)
-
-    # convert to pipeline and show results
-    pipeline = Pipeline.from_argo_workflow_cr(workflow_template)
-    print(f"Pipeline: {pipeline.model_dump()}")
-
-    with open("pipeline_test_pipeline.yaml", "w") as file:
-        yaml.dump(pipeline.model_dump(), file)
-
-    # create dag frontend visuzliation schema and show results
-    render_schema, render_blocks = pipeline.create_dag_visualization_assets()
-
-    print(f"Pipeline visualization schema: {render_schema}")
-
-    with open("pipeline_test_visualization_schema.yaml", "w") as file:
-        yaml.dump(render_schema, file)
-
-
-if __name__ == "__main__":
-    main_test()

@@ -1,0 +1,656 @@
+{
+    "metadata": {
+        "name": "pipeline-test-lightning-gpu-pipeline-9r6h2",
+        "generate_name": "pipeline-test-lightning-gpu-pipeline-",
+        "namespace": "argo",
+        "uid": "4e9795a0-2052-4a53-baa6-b8ab55724f5a",
+        "resource_version": "16215",
+        "generation": 1,
+        "creation_timestamp": "test-datetime-value",
+        "labels": {
+            "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server"
+        },
+        "managed_fields": [
+            {
+                "manager": "argo",
+                "operation": "Update",
+                "api_version": "argoproj.io/v1alpha1",
+                "time": "test-datetime-value",
+                "fields_type": "FieldsV1",
+                "fields_v1": {
+                    "f:metadata": {
+                        "f:generateName": {},
+                        "f:labels": {
+                            ".": {},
+                            "f:workflows.argoproj.io/creator": {}
+                        }
+                    },
+                    "f:spec": {}
+                }
+            }
+        ]
+    },
+    "spec": {
+        "templates": [
+            {
+                "name": "lightning-ddp-create-torch-service",
+                "inputs": {},
+                "outputs": {},
+                "metadata": {},
+                "resource": {
+                    "action": "create",
+                    "manifest": "apiVersion: v1\nkind: Service\nmetadata:\n  name: lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8\n  namespace: argo\n  labels:\n    app: lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8\nspec:\n  clusterIP: None  # ClusterIP set to None for headless service.\n  ports:\n  - name: ddp  # Port for torchrun master<->worker node coms.\n    port: 29200\n    targetPort: 29200\n  selector:\n    torch-job: lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8\n    torch-node: '0'  # Selector for pods associated with this service.\n"
+                }
+            },
+            {
+                "name": "lightning-ddp-delete-torch-service",
+                "inputs": {},
+                "outputs": {},
+                "metadata": {},
+                "resource": {
+                    "action": "delete",
+                    "flags": [
+                        "service",
+                        "--selector",
+                        "torch-job=lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8",
+                        "-n",
+                        "argo"
+                    ]
+                }
+            },
+            {
+                "name": "bettmensch-ai-dag",
+                "inputs": {},
+                "outputs": {},
+                "metadata": {},
+                "dag": {
+                    "tasks": [
+                        {
+                            "name": "lightning-ddp-create-torch-service",
+                            "template": "lightning-ddp-create-torch-service",
+                            "arguments": {}
+                        },
+                        {
+                            "name": "lightning-ddp-0",
+                            "template": "lightning-ddp-0",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "max_time",
+                                        "value": "{{workflow.parameters.max_time}}"
+                                    }
+                                ]
+                            },
+                            "depends": "lightning-ddp-create-torch-service"
+                        },
+                        {
+                            "name": "lightning-ddp-0-worker-1",
+                            "template": "lightning-ddp-1",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "max_time",
+                                        "value": "{{workflow.parameters.max_time}}"
+                                    }
+                                ]
+                            },
+                            "depends": "lightning-ddp-create-torch-service"
+                        },
+                        {
+                            "name": "lightning-ddp-0-worker-2",
+                            "template": "lightning-ddp-2",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "max_time",
+                                        "value": "{{workflow.parameters.max_time}}"
+                                    }
+                                ]
+                            },
+                            "depends": "lightning-ddp-create-torch-service"
+                        },
+                        {
+                            "name": "lightning-ddp-0-worker-3",
+                            "template": "lightning-ddp-3",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "max_time",
+                                        "value": "{{workflow.parameters.max_time}}"
+                                    }
+                                ]
+                            },
+                            "depends": "lightning-ddp-create-torch-service"
+                        },
+                        {
+                            "name": "lightning-ddp-delete-torch-service",
+                            "template": "lightning-ddp-delete-torch-service",
+                            "arguments": {},
+                            "depends": "lightning-ddp-0"
+                        },
+                        {
+                            "name": "show-duration-param-0",
+                            "template": "show-duration-param",
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "a",
+                                        "value": "{{tasks.lightning-ddp-0.outputs.parameters.duration}}"
+                                    }
+                                ]
+                            },
+                            "depends": "lightning-ddp-0"
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "lightning-ddp-0",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "max_time",
+                            "default": "00:00:00:30"
+                        },
+                        {
+                            "name": "duration",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {
+                    "labels": {
+                        "torch-job": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8",
+                        "torch-node": "0"
+                    }
+                },
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai-lightning:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: max_time = json.loads(r'''{{inputs.parameters.max_time}}''')\nexcept: max_time = r'''{{inputs.parameters.max_time}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef lightning_ddp(max_time: InputParameter='00:00:00:30', duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    from datetime import datetime as dt\n    import lightning.pytorch as pl\n    import torch\n    from bettmensch_ai.components.torch_utils import LaunchConfigSettings\n    from lightning.pytorch.strategies import DDPStrategy\n    start = dt.now()\n\n    class ToyExample(pl.LightningModule):\n\n        def __init__(self, model):\n            super().__init__()\n            self.model = model\n\n        def training_step(self, batch):\n            loss = self.model(batch).sum()\n            return loss\n\n        def configure_optimizers(self):\n            return torch.optim.Adam(self.model.parameters())\n    model = torch.nn.Linear(32, 2)\n    pl_module = ToyExample(model)\n    train_dataloader = torch.utils.data.DataLoader(torch.randn(8, 32))\n    has_gpu = torch.cuda.is_available()\n    print(f'GPU present: {has_gpu}')\n    process_group_backend = 'nccl' if has_gpu else 'gloo'\n    accelerator = 'gpu' if has_gpu else 'cpu'\n    ddp = DDPStrategy(process_group_backend=process_group_backend)\n    launch_settings = LaunchConfigSettings()\n    trainer = pl.Trainer(strategy=ddp, accelerator=accelerator, num_nodes=launch_settings.max_nodes, devices=launch_settings.nproc_per_node, max_time=max_time)\n    trainer.fit(pl_module, train_dataloader)\n    if duration is not None:\n        duration.assign(dt.now() - start)\n\nfrom bettmensch_ai.components import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(lightning_ddp)\n\ntorch_distributed_function(max_time,duration)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "ports": [
+                        {
+                            "container_port": 29200,
+                            "name": "ddp",
+                            "protocol": "TCP"
+                        }
+                    ],
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_min_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_node_rank",
+                            "value": "0"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_url",
+                            "value": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        },
+                        "requests": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                },
+                "tolerations": [
+                    {
+                        "key": "nvidia.com/gpu",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ],
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"
+            },
+            {
+                "name": "lightning-ddp-1",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "max_time",
+                            "default": "00:00:00:30"
+                        },
+                        {
+                            "name": "duration",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {
+                    "labels": {
+                        "torch-job": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8",
+                        "torch-node": "1"
+                    }
+                },
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai-lightning:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: max_time = json.loads(r'''{{inputs.parameters.max_time}}''')\nexcept: max_time = r'''{{inputs.parameters.max_time}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef lightning_ddp(max_time: InputParameter='00:00:00:30', duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    from datetime import datetime as dt\n    import lightning.pytorch as pl\n    import torch\n    from bettmensch_ai.components.torch_utils import LaunchConfigSettings\n    from lightning.pytorch.strategies import DDPStrategy\n    start = dt.now()\n\n    class ToyExample(pl.LightningModule):\n\n        def __init__(self, model):\n            super().__init__()\n            self.model = model\n\n        def training_step(self, batch):\n            loss = self.model(batch).sum()\n            return loss\n\n        def configure_optimizers(self):\n            return torch.optim.Adam(self.model.parameters())\n    model = torch.nn.Linear(32, 2)\n    pl_module = ToyExample(model)\n    train_dataloader = torch.utils.data.DataLoader(torch.randn(8, 32))\n    has_gpu = torch.cuda.is_available()\n    print(f'GPU present: {has_gpu}')\n    process_group_backend = 'nccl' if has_gpu else 'gloo'\n    accelerator = 'gpu' if has_gpu else 'cpu'\n    ddp = DDPStrategy(process_group_backend=process_group_backend)\n    launch_settings = LaunchConfigSettings()\n    trainer = pl.Trainer(strategy=ddp, accelerator=accelerator, num_nodes=launch_settings.max_nodes, devices=launch_settings.nproc_per_node, max_time=max_time)\n    trainer.fit(pl_module, train_dataloader)\n    if duration is not None:\n        duration.assign(dt.now() - start)\n\nfrom bettmensch_ai.components import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(lightning_ddp)\n\ntorch_distributed_function(max_time,duration)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_min_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_node_rank",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_url",
+                            "value": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        },
+                        "requests": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                },
+                "tolerations": [
+                    {
+                        "key": "nvidia.com/gpu",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ],
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"
+            },
+            {
+                "name": "lightning-ddp-2",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "max_time",
+                            "default": "00:00:00:30"
+                        },
+                        {
+                            "name": "duration",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {
+                    "labels": {
+                        "torch-job": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8",
+                        "torch-node": "2"
+                    }
+                },
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai-lightning:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: max_time = json.loads(r'''{{inputs.parameters.max_time}}''')\nexcept: max_time = r'''{{inputs.parameters.max_time}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef lightning_ddp(max_time: InputParameter='00:00:00:30', duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    from datetime import datetime as dt\n    import lightning.pytorch as pl\n    import torch\n    from bettmensch_ai.components.torch_utils import LaunchConfigSettings\n    from lightning.pytorch.strategies import DDPStrategy\n    start = dt.now()\n\n    class ToyExample(pl.LightningModule):\n\n        def __init__(self, model):\n            super().__init__()\n            self.model = model\n\n        def training_step(self, batch):\n            loss = self.model(batch).sum()\n            return loss\n\n        def configure_optimizers(self):\n            return torch.optim.Adam(self.model.parameters())\n    model = torch.nn.Linear(32, 2)\n    pl_module = ToyExample(model)\n    train_dataloader = torch.utils.data.DataLoader(torch.randn(8, 32))\n    has_gpu = torch.cuda.is_available()\n    print(f'GPU present: {has_gpu}')\n    process_group_backend = 'nccl' if has_gpu else 'gloo'\n    accelerator = 'gpu' if has_gpu else 'cpu'\n    ddp = DDPStrategy(process_group_backend=process_group_backend)\n    launch_settings = LaunchConfigSettings()\n    trainer = pl.Trainer(strategy=ddp, accelerator=accelerator, num_nodes=launch_settings.max_nodes, devices=launch_settings.nproc_per_node, max_time=max_time)\n    trainer.fit(pl_module, train_dataloader)\n    if duration is not None:\n        duration.assign(dt.now() - start)\n\nfrom bettmensch_ai.components import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(lightning_ddp)\n\ntorch_distributed_function(max_time,duration)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_min_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_node_rank",
+                            "value": "2"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_url",
+                            "value": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        },
+                        "requests": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                },
+                "tolerations": [
+                    {
+                        "key": "nvidia.com/gpu",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ],
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"
+            },
+            {
+                "name": "lightning-ddp-3",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "max_time",
+                            "default": "00:00:00:30"
+                        },
+                        {
+                            "name": "duration",
+                            "default": "null"
+                        }
+                    ]
+                },
+                "outputs": {
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "metadata": {
+                    "labels": {
+                        "torch-job": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8",
+                        "torch-node": "3"
+                    }
+                },
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai-lightning:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: max_time = json.loads(r'''{{inputs.parameters.max_time}}''')\nexcept: max_time = r'''{{inputs.parameters.max_time}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef lightning_ddp(max_time: InputParameter='00:00:00:30', duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    from datetime import datetime as dt\n    import lightning.pytorch as pl\n    import torch\n    from bettmensch_ai.components.torch_utils import LaunchConfigSettings\n    from lightning.pytorch.strategies import DDPStrategy\n    start = dt.now()\n\n    class ToyExample(pl.LightningModule):\n\n        def __init__(self, model):\n            super().__init__()\n            self.model = model\n\n        def training_step(self, batch):\n            loss = self.model(batch).sum()\n            return loss\n\n        def configure_optimizers(self):\n            return torch.optim.Adam(self.model.parameters())\n    model = torch.nn.Linear(32, 2)\n    pl_module = ToyExample(model)\n    train_dataloader = torch.utils.data.DataLoader(torch.randn(8, 32))\n    has_gpu = torch.cuda.is_available()\n    print(f'GPU present: {has_gpu}')\n    process_group_backend = 'nccl' if has_gpu else 'gloo'\n    accelerator = 'gpu' if has_gpu else 'cpu'\n    ddp = DDPStrategy(process_group_backend=process_group_backend)\n    launch_settings = LaunchConfigSettings()\n    trainer = pl.Trainer(strategy=ddp, accelerator=accelerator, num_nodes=launch_settings.max_nodes, devices=launch_settings.nproc_per_node, max_time=max_time)\n    trainer.fit(pl_module, train_dataloader)\n    if duration is not None:\n        duration.assign(dt.now() - start)\n\nfrom bettmensch_ai.components import torch_distribute\n\ntorch_distribute_decorator=torch_distribute()\ntorch_distributed_function=torch_distribute_decorator(lightning_ddp)\n\ntorch_distributed_function(max_time,duration)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_min_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_nodes",
+                            "value": "4"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_node_rank",
+                            "value": "3"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_url",
+                            "value": "lightning-ddp-0-3278f52c-b445-42e4-8e6e-ad2e351afcc8.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_distributed_torch_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        },
+                        "requests": {
+                            "cpu": "700m",
+                            "memory": "1Gi",
+                            "nvidia.com/gpu": "1"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                },
+                "tolerations": [
+                    {
+                        "key": "nvidia.com/gpu",
+                        "operator": "Exists",
+                        "effect": "NoSchedule"
+                    }
+                ],
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"
+            },
+            {
+                "name": "show-duration-param",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a"
+                        }
+                    ]
+                },
+                "outputs": {},
+                "metadata": {},
+                "script": {
+                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\ndef show_parameter(a: InputParameter) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputParameter.\"\"\"\n    print(f'Content of input parameter a is: {a}')\nshow_parameter(a)",
+                    "name": "",
+                    "command": [
+                        "python"
+                    ],
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "image_pull_policy": "Always"
+                },
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                }
+            }
+        ],
+        "entrypoint": "bettmensch-ai-dag",
+        "arguments": {
+            "parameters": [
+                {
+                    "name": "max_time",
+                    "value": "null"
+                }
+            ]
+        }
+    }
+}

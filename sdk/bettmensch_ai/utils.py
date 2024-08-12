@@ -25,7 +25,9 @@ def get_func_args(
             argument attribute to filter on. Defaults to [].
     """
 
-    func_args: Dict[str, inspect.Parameter] = inspect.signature(func).parameters
+    func_args: Dict[str, inspect.Parameter] = inspect.signature(
+        func
+    ).parameters  # noqa: E501
 
     if attribute_name and attribute_value_range:
         func_args = dict(
@@ -82,10 +84,12 @@ def bettmensch_ai_script(
 ) -> Callable:
     """A decorator that wraps a function into a Script object.
 
-    Using this decorator users can define a function that will be executed as a script in a container. Once the
-    `Script` is returned users can use it as they generally use a `Script` e.g. as a callable inside a DAG or Steps.
-    Note that invoking the function will result in the template associated with the script to be added to the
-    workflow context, so users do not have to worry about that.
+    Using this decorator users can define a function that will be executed as a
+    script in a container. Once the `Script` is returned users can use it as
+    they generally use a `Script` e.g. as a callable inside a DAG or Steps.
+    Note that invoking the function will result in the template associated with
+    the script to be added to the workflow context, so users do not have to
+    worry about that.
 
     Parameters
     ----------
@@ -111,11 +115,13 @@ def bettmensch_ai_script(
         Returns:
         -------
         Callable
-            Callable that represents the `Script` object `__call__` method when in a Steps or DAG context,
-            otherwise returns the callable function unchanged.
+            Callable that represents the `Script` object `__call__` method when
+            in a Steps or DAG context, otherwise returns the callable function
+            unchanged.
         """
-        # instance methods are wrapped in `staticmethod`. Hera can capture that type and extract the underlying
-        # function for remote submission since it does not depend on any class or instance attributes, so it is
+        # instance methods are wrapped in `staticmethod`. Hera can capture that
+        # type and extract the underlying function for remote submission since
+        # it does not depend on any class or instance attributes, so it is
         # submittable
         if isinstance(func, staticmethod):
             source: Callable = func.__func__
@@ -123,8 +129,8 @@ def bettmensch_ai_script(
             source = func
 
         if "name" in script_kwargs:
-            # take the client-provided `name` if it is submitted, pop the name for otherwise there will be two
-            # kwargs called `name`
+            # take the client-provided `name` if it is submitted, pop the name
+            # for otherwise there will be two kwargs called `name`
             name = script_kwargs.pop("name")
         else:
             # otherwise populate the `name` from the function name
@@ -139,13 +145,24 @@ def bettmensch_ai_script(
 
         @wraps(func)
         def task_wrapper(*args, **kwargs) -> Union[FuncR, Step, Task, None]:
-            """Invokes a `Script` object's `__call__` method using the given SubNode (Step or Task) args/kwargs."""
+            """Invokes a `Script` object's `__call__` method using the given
+            SubNode (Step or Task) args/kwargs."""
             if _context.active:
                 return s.__call__(*args, **kwargs)
             return func(*args, **kwargs)
 
-        # Set the wrapped function to the original function so that we can use it later
+        # Set the wrapped function to the original function so that we can use
+        # it later
         task_wrapper.wrapped_function = func  # type: ignore
         return task_wrapper
 
     return bettmensch_ai_script_wrapper
+
+
+def copy_non_null_dict(original_dict: Dict) -> Dict:
+    non_null_dict = original_dict.copy()
+    for k, v in original_dict.items():
+        if v is None:
+            del non_null_dict[k]
+
+    return non_null_dict

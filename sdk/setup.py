@@ -23,11 +23,10 @@ def get_extra_requirements() -> Dict[str, List[str]]:
             "streamlit-extras==0.4.6",
             "streamlit-flow-component<1.0.0",
             "opencv-python",
-            "argo-workflows==6.5.6",
+            "hera==5.15.1",
         ],
         SDKExtras.pipelines.value: [
             "hera==5.15.1",
-            "argo-workflows==6.5.6",
         ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
     }
