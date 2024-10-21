@@ -1,7 +1,38 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  csi.storage.k8s.io/fstype: xfs
+  type: io1
+  iopsPerGB: "50"
+  encrypted: "true"
+  tagSpecification_1: "project=local.name"
+  tagSpecification_2: "github=https://github.com/SebastianScherer88/bettmensch.ai"
+  tagSpecification_3: "component=mlflow"
+---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: mlflow
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mlflow-parameter-store-pvc
+  namespace: mlflow
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: "ebs-sc" # Empty string must be explicitly set otherwise default StorageClass will be set
+  resources:
+    requests:
+      storage: 5Gi
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -48,12 +79,20 @@ spec:
     spec:
       serviceAccountName: mlflow-server
       containers:
-        - name: mlflow-tracking-server
-          image: ghcr.io/mlflow/mlflow:v2.17.0
-          imagePullPolicy: Always
-          # use local storage for meta data and artifacts to start off
-          command: ["/bin/sh","-c"]
-          args: ["pip install boto3 && mlflow server --backend-store-uri /mlflow --default-artifact-root s3://bettmensch-ai-artifact-repository/mlflow --host 0.0.0.0 --port 5000"]
-          ports:
-            - name: tracking-server
-              containerPort: 5000
+      - name: mlflow-tracking-server
+        image: ghcr.io/mlflow/mlflow:v2.17.0
+        imagePullPolicy: Always
+        # use local storage for meta data and artifacts to start off
+        command: ["/bin/sh","-c"]
+        args: ["pip install boto3 && mlflow server --backend-store-uri /mlflow --default-artifact-root s3://bettmensch-ai-artifact-repository/mlflow --host 0.0.0.0 --port 5000"]
+        ports:
+          - name: tracking-server
+            containerPort: 5000
+        volumeMounts:
+        - name: mlflow-parameter-store-pv
+          mountPath: /mlflow
+      volumes:
+      - name: mlflow-parameter-store-pv
+        persistentVolumeClaim:
+          claimName: mlflow-parameter-store-pvc
+        
