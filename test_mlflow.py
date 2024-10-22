@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 
 # set the experiment id
 mlflow.set_tracking_uri("http://localhost:5000")
-mlflow.set_experiment(experiment_id="0")
+mlflow.set_experiment(experiment_id="996609967383889606")
 
 mlflow.autolog()
 db = load_diabetes()
