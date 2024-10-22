@@ -145,7 +145,64 @@ resource "kubectl_manifest" "karpenter_node_pool" {
 }
 
 ################################################################################
-# Nvidia device plugin (GPUs)
+# EBS CSI plugin & storage class
+################################################################################
+
+resource "helm_release" "aws-ebs-csi-driver" {
+  namespace           = "kube-system"
+  create_namespace    = false
+  name                = "aws-ebs-csi-driver"
+  repository          = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+  chart               = "aws-ebs-csi-driver"
+  version             = "2.36.0"
+  wait                = false
+
+  values = [
+    <<-EOT
+    controller:
+      serviceAccount:
+        create: true
+        name: ebs-csi-controller-sa
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-ebs-csi-role
+    node:
+      serviceAccount:
+        create: true
+        name: ebs-csi-node-sa
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-ebs-csi-role
+    EOT
+  ]
+
+}
+
+# storage class
+resource "kubectl_manifest" "ebs_storage_class" {
+  yaml_body = <<-YAML
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ebs-sc
+      annotations:
+        storageclass.kubernetes.io/is-default-class: "true"
+    provisioner: ebs.csi.aws.com
+    allowVolumeExpansion: true
+    volumeBindingMode: WaitForFirstConsumer
+    parameters:
+      csi.storage.k8s.io/fstype: xfs
+      encrypted: "true"
+      tagSpecification_1: "project=${local.tags.project}"
+      tagSpecification_2: "github=${local.tags.github}"
+      tagSpecification_3: "component=mlflow"
+  YAML
+
+  depends_on = [
+    kubectl_manifest.karpenter_node_pool
+  ]
+}
+
+################################################################################
+# Nvidia device CSI plugin (GPUs)
 ################################################################################
 
 resource "helm_release" "nvidia-device-plugin" {
@@ -207,11 +264,32 @@ resource "kubectl_manifest" "argo_workflows_artifact_repository" {
       bettmensch-ai-artifact-repository: |
         s3:
           bucket: ${resource.aws_s3_bucket.artifact_repository.id}
+          keyFormat: argo-workflows # prefix, since argo workflows and mlflow share this bucket
           endpoint: s3.${local.region}.amazonaws.com
           insecure: true
   YAML
 
   depends_on = [
     kubectl_manifest.karpenter_node_pool
+  ]
+}
+
+################################################################################
+# MlFlow
+################################################################################
+
+# argo workflows installation
+data "kubectl_file_documents" "mlflow" {
+    content = file("../../kubernetes/manifests/mlflow/mlflow-installation.yaml")
+}
+
+resource "kubectl_manifest" "mlflow" {
+    for_each  = data.kubectl_file_documents.mlflow.manifests
+    yaml_body = each.value
+
+    # the storage we set up in this section requires an installed EBS CSI driver
+    depends_on = [
+      helm_release.aws-ebs-csi-driver,
+      kubectl_manifest.ebs_storage_class
   ]
 }

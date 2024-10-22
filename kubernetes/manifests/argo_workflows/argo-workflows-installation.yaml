@@ -904,7 +904,7 @@ metadata:
   name: argo-server
   namespace: argo
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-artifact-role
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -912,7 +912,7 @@ metadata:
   name: argo-workflow
   namespace: argo
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-pipelines-artifact-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::743582000746:role/bettmensch-ai-artifact-role
 ---
 apiVersion: v1
 kind: ServiceAccount

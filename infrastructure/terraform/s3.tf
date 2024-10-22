@@ -20,6 +20,7 @@ data "aws_iam_policy_document" "artifact_repository_assume_policy" {
       values   = [
         "system:serviceaccount:argo:argo-server",
         "system:serviceaccount:argo:argo-workflow",
+        "system:serviceaccount:mlflow:mlflow-server",
         ]
     }
 
@@ -32,7 +33,7 @@ data "aws_iam_policy_document" "artifact_repository_assume_policy" {
 }
 
 resource "aws_iam_role" "artifact_repository" {
-  name               = "bettmensch-ai-pipelines-artifact-role"
+  name               = "bettmensch-ai-artifact-role"
   assume_role_policy = data.aws_iam_policy_document.artifact_repository_assume_policy.json
   tags = local.tags
 }
