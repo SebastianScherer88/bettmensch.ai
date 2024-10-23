@@ -261,7 +261,7 @@ resource "kubectl_manifest" "argo_workflows_artifact_repository" {
       bettmensch-ai-artifact-repository: |
         s3:
           bucket: ${resource.aws_s3_bucket.artifact_repository.id}
-          keyFormat: argo-workflows # prefix, since argo workflows and mlflow share this bucket
+          keyFormat: argo-workflows/{{workflow.name}}/{{pod.name}} # prefix, since argo workflows and mlflow share this bucket
           endpoint: s3.${local.region}.amazonaws.com
           insecure: true
   YAML
