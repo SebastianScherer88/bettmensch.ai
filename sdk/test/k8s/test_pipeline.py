@@ -183,7 +183,7 @@ def test_torch_pipeline_decorator_and_register_and_run(
     assert torch_ddp_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(3)
+@pytest.mark.order(4)
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
@@ -254,7 +254,7 @@ def test_lightning_pipeline_decorator_and_register_and_run(
     assert lightning_ddp_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(4)
+@pytest.mark.order(5)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
     [
@@ -289,7 +289,7 @@ def test_list_registered_pipelines(
         assert registered_pipeline.registered_namespace == test_namespace
 
 
-@pytest.mark.order(5)
+@pytest.mark.order(6)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
     [
@@ -344,7 +344,7 @@ def test_get_and_run_from_registry(
     assert flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(6)
+@pytest.mark.order(7)
 def test_delete(test_namespace):
     """Test the pipeline.delete function"""
 
