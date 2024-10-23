@@ -21,7 +21,13 @@ make infrastructure.build
 To port forward to the `ArgoWorkflow` server running on EKS, run:
 
 ```bash
-make kubernetes.connect
+make kubernetes.connect.argo
+```
+
+To port forward to the `Mlflow` server running on EKS, run:
+
+```bash
+make kubernetes.connect.mlflow
 ```
 
 When you're done, you can tear down the stack by running
@@ -60,6 +66,27 @@ from the repository's top directory.
 You can now start authoring `Pipeline`s and start submitting `Flow`s and 
 start monitoring them on both the `ArgoWorkflow` as well as the `bettmensch.ai`
 dashboards.
+
+## :wrench: Running tests
+
+To run unit tests for the python library, run
+
+```bash
+make sdk.test SUITE=unit
+```
+
+To run integration tests for the python library, run
+
+```bash
+make sdk.test SUITE=integration
+```
+
+To run K8s tests for the python library (requires a running and connected
+bettmensch.ai platform), run
+
+```bash
+make sdk.test SUITE=k8s
+```
 
 # Features (under active development )
 

@@ -50,7 +50,7 @@ class FlowNodeParameterInput(NodeInput):
 
 
 class FlowNodeArtifactInput(NodeInput):
-    s3_prefix: str
+    s3_prefix: Optional[str] = None
 
 
 class FlowNodeInputs(BaseModel):
@@ -66,7 +66,7 @@ class FlowNodeParameterOutput(NodeOutput):
 
 class FlowNodeArtifactOutput(NodeOutput):
     path: str
-    s3_prefix: str
+    s3_prefix: Optional[str] = None
 
 
 class FlowNodeOutputs(BaseModel):
