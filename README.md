@@ -3,6 +3,7 @@
 ![Python SDK](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/ci.yaml/badge.svg)
 
 <img align="center" src="image/logo_transparent.png" alt="bettmensch.ai">
+
 ![bettmensch.ai logo](image/logo_transparent.png)
 
 Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
