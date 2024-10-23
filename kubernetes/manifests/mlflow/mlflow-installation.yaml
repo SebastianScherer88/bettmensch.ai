@@ -1,9 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: mlflow
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mlflow-parameter-store-pvc

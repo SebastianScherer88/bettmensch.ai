@@ -197,8 +197,9 @@ resource "kubectl_manifest" "ebs_storage_class" {
   YAML
 
   depends_on = [
-    kubectl_manifest.karpenter_node_pool
+    helm_release.aws-ebs-csi-driver
   ]
+
 }
 
 ################################################################################
@@ -236,18 +237,14 @@ resource "helm_release" "nvidia-device-plugin" {
 # Argo Workflows
 ################################################################################
 
-# argo workflows installation
-data "kubectl_file_documents" "argo_workflows" {
-    content = file("../../kubernetes/manifests/argo_workflows/argo-workflows-installation.yaml")
-}
-
-resource "kubectl_manifest" "argo_workflows" {
-    for_each  = data.kubectl_file_documents.argo_workflows.manifests
-    yaml_body = each.value
-
-    depends_on = [
-    kubectl_manifest.karpenter_node_pool
-  ]
+# argo namespace
+resource "kubectl_manifest" "argo_namespace" {
+  yaml_body = <<-YAML
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: argo
+  YAML
 }
 
 # argo artifact repository configuration
@@ -270,13 +267,38 @@ resource "kubectl_manifest" "argo_workflows_artifact_repository" {
   YAML
 
   depends_on = [
-    kubectl_manifest.karpenter_node_pool
+    kubectl_manifest.argo_namespace
+  ]
+}
+
+# argo workflows installation
+data "kubectl_file_documents" "argo_workflows" {
+    content = file("../../kubernetes/manifests/argo_workflows/argo-workflows-installation.yaml")
+}
+
+resource "kubectl_manifest" "argo_workflows" {
+    for_each  = data.kubectl_file_documents.argo_workflows.manifests
+    yaml_body = each.value
+
+    depends_on = [
+    kubectl_manifest.karpenter_node_pool,
+    kubectl_manifest.argo_workflows_artifact_repository
   ]
 }
 
 ################################################################################
 # MlFlow
 ################################################################################
+
+# argo namespace
+resource "kubectl_manifest" "mlflow_namespace" {
+  yaml_body = <<-YAML
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: mlflow
+  YAML
+}
 
 # argo workflows installation
 data "kubectl_file_documents" "mlflow" {
@@ -289,7 +311,7 @@ resource "kubectl_manifest" "mlflow" {
 
     # the storage we set up in this section requires an installed EBS CSI driver
     depends_on = [
-      helm_release.aws-ebs-csi-driver,
-      kubectl_manifest.ebs_storage_class
+      kubectl_manifest.ebs_storage_class,
+      kubectl_manifest.mlflow_namespace
   ]
 }
