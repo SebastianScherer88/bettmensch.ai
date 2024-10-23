@@ -305,13 +305,13 @@ def test_list_registered_pipelines(
         (
             "test-lightning-gpu-pipeline-",
             {
-                "max_time": "00:00:30",
+                "max_time": "00:00:00:30",
             },
         ),
         (
             "test-lightning-cpu-pipeline-",
             {
-                "max_time": "00:00:30",
+                "max_time": "00:00:00:30",
             },
         ),
     ],
@@ -359,7 +359,7 @@ def test_delete(test_namespace):
         )
 
     assert (
-        list(
+        list_registered_pipelines(
             registered_namespace=test_namespace,
             registered_name_pattern="test-",  # noqa: E501
         )
