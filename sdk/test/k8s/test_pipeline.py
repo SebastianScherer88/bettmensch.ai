@@ -187,8 +187,8 @@ def test_torch_pipeline_decorator_and_register_and_run(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-lightning-cpu-pipeline", 6, None, "1Gi"),
-        ("test-lightning-gpu-pipeline", 4, 1, "1Gi"),
+        ("test-lightning-cpu-pipeline", 6, None, "300Mi"),
+        ("test-lightning-gpu-pipeline", 4, 1, "700Mi"),
     ],
 )
 def test_lightning_pipeline_decorator_and_register_and_run(

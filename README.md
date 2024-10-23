@@ -233,3 +233,5 @@ interactive dashboards
    [react-flow](https://reactflow.dev/) integration for streamlit
   - [st-pages](https://st-pages.streamlit.app/): A nice streamlit plugin for
    multi-page dashboards
+- [mlflow](https://mlflow.org/): ML experiment tracking, model registry and
+    serving support
