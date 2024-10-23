@@ -32,9 +32,9 @@ class FlowState(BaseModel):
     started_at: Optional[Union[datetime, None]] = None
     finshed_at: Optional[Union[datetime, None]] = None
     progress: str
-    conditions: List[Dict[str, Optional[str]]]
+    conditions: Optional[List[Dict[str, Optional[str]]]] = None
     resources_duration: Optional[Dict]
-    task_results_completion_status: Dict[str, bool]
+    task_results_completion_status: Optional[Dict[str, bool]] = None
 
 
 # --- FlowInput
@@ -50,7 +50,7 @@ class FlowNodeParameterInput(NodeInput):
 
 
 class FlowNodeArtifactInput(NodeInput):
-    s3_prefix: str
+    s3_prefix: Optional[str] = None
 
 
 class FlowNodeInputs(BaseModel):
@@ -66,7 +66,7 @@ class FlowNodeParameterOutput(NodeOutput):
 
 class FlowNodeArtifactOutput(NodeOutput):
     path: str
-    s3_prefix: str
+    s3_prefix: Optional[str] = None
 
 
 class FlowNodeOutputs(BaseModel):

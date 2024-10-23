@@ -176,7 +176,7 @@ def delete_torch_service_template(
         flags=[
             "service",
             "--selector",
-            f"torch-job={service_name}",
+            f"app={service_name}",
             "-n",
             namespace,
         ],

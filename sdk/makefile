@@ -10,5 +10,5 @@ sdk.install:
 sdk.test:
 	@echo "::group::Running sdk $(SUITE) test suite"
 	@echo "::group:: Commit: $(COMMIT)"
-	pytest ./sdk/test/$(SUITE)/ -vv
+	pytest ./sdk/test/$(SUITE)/ -vv -rfEs
 	@echo "::endgroup::"
