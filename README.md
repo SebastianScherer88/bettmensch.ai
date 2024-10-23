@@ -1,3 +1,5 @@
+![SDK](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/ci.yaml/badge.svg)
+
 # :hotel: Welcome to Bettmensch.AI
 
 ![bettmensch.ai logo](image/logo_transparent.png)
