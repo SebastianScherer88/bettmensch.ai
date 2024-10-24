@@ -12,11 +12,8 @@ on:
 jobs:
   unit-test:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: ./.github/workflows/test.yaml
-        with:
-          test-suite: unit
-          test-flags: ${{ inputs.test-flags }}
-          python-version: ${{ inputs.python-version }}
+    uses: ./.github/workflows/test.yaml
+    with:
+      test-suite: unit
+      test-flags: ${{ inputs.test-flags }}
+      python-version: ${{ inputs.python-version }}
