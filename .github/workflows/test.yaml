@@ -67,4 +67,4 @@ jobs:
       
       - name: Bring down platform
         if: ${{ inputs.test-suite == 'k8s' }}
-        run: make platform.down
+        run: make platform.init && make platform.down
