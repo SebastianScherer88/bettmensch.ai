@@ -31,10 +31,16 @@ on:
         default: "3.10" # "3.11"
         required: false
         type: string
-        
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+
 jobs:
   k8s-test:
     uses: ./.github/workflows/test.yaml
+    secrets: inherit
     with:
       test-suite: k8s
       test-flags: ${{ inputs.test-flags }}

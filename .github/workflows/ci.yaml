@@ -15,13 +15,14 @@ on:
 jobs:
   unit-test:
     uses: ./.github/workflows/unit-test.yaml
-
+    
   integration-test:
     uses: ./.github/workflows/integration-test.yaml
-
+    
   # <remove when done with testing of the underlying workflows
   k8s-test:
     uses: ./.github/workflows/k8s-test.yaml
+    secrets: inherit
   # remove when done with testing of the underlying workflows>
 
   docker-components:
