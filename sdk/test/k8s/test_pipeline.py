@@ -2,10 +2,10 @@ import pytest
 from bettmensch_ai.components.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
-    lightning_ddp_lightning_factory,
+    lightning_train_torch_ddp_factory,
     show_artifact_factory,
     show_parameter_factory,
-    torch_ddp_torch_factory,
+    tensor_reduce_torch_ddp_factory,
 )
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import (
@@ -136,7 +136,7 @@ def test_torch_pipeline_decorator_and_register_and_run(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
         torch_ddp_test = (
-            torch_ddp_torch_factory(
+            tensor_reduce_torch_ddp_factory(
                 "torch-ddp",
                 hera_template_kwargs={
                     "pod_spec_patch": """topologySpreadConstraints:
@@ -208,7 +208,7 @@ def test_lightning_pipeline_decorator_and_register_and_run(
         max_time: InputParameter,
     ) -> None:
         lightning_ddp_test = (
-            lightning_ddp_lightning_factory(
+            lightning_train_torch_ddp_factory(
                 "lightning-ddp",
                 hera_template_kwargs={
                     "pod_spec_patch": """topologySpreadConstraints:

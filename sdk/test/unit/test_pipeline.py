@@ -1,7 +1,7 @@
 from bettmensch_ai.components.examples import (
     add_parameters_factory,
-    add_parameters_torch_factory,
-    convert_to_artifact_torch_factory,
+    add_parameters_torch_ddp_factory,
+    convert_to_artifact_torch_ddp_factory,
     show_parameter_factory,
 )
 from bettmensch_ai.io import InputParameter
@@ -18,7 +18,7 @@ def test_artifact_pipeline(
     def parameter_to_artifact(
         a: InputParameter = "Param A",
     ) -> None:
-        convert = convert_to_artifact_torch_factory(
+        convert = convert_to_artifact_torch_ddp_factory(
             "convert-to-artifact",
             n_nodes=2,
             a=a,
@@ -56,17 +56,17 @@ def test_artifact_pipeline(
 
     task_names = [task.name for task in wft.templates[2].tasks]
     assert task_names == [
-        "convert-to-artifact-create-torch-service",
+        "convert-to-artifact-create-torch-ddp-service",
         "convert-to-artifact-0",
         "convert-to-artifact-0-worker-1",
-        "convert-to-artifact-delete-torch-service",
+        "convert-to-artifact-delete-torch-ddp-service",
         "show-artifact-0",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "convert-to-artifact-create-torch-service",
-        "convert-to-artifact-delete-torch-service",
+        "convert-to-artifact-create-torch-ddp-service",
+        "convert-to-artifact-delete-torch-ddp-service",
         "bettmensch-ai-dag",
         "convert-to-artifact-0",
         "convert-to-artifact-1",
@@ -91,7 +91,7 @@ def test_parameter_pipeline(test_output_dir):
     def adding_parameters(
         a: InputParameter = 1, b: InputParameter = 2
     ) -> None:  # noqa: E501
-        a_plus_b = add_parameters_torch_factory(
+        a_plus_b = add_parameters_torch_ddp_factory(
             "a-plus-b",
             n_nodes=2,
             a=a,
@@ -128,17 +128,17 @@ def test_parameter_pipeline(test_output_dir):
 
     task_names = [task.name for task in wft.templates[2].tasks]
     assert task_names == [
-        "a-plus-b-create-torch-service",
+        "a-plus-b-create-torch-ddp-service",
         "a-plus-b-0",
         "a-plus-b-0-worker-1",
-        "a-plus-b-delete-torch-service",
+        "a-plus-b-delete-torch-ddp-service",
         "a-plus-b-plus-2-0",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "a-plus-b-create-torch-service",
-        "a-plus-b-delete-torch-service",
+        "a-plus-b-create-torch-ddp-service",
+        "a-plus-b-delete-torch-ddp-service",
         "bettmensch-ai-dag",
         "a-plus-b-0",
         "a-plus-b-1",

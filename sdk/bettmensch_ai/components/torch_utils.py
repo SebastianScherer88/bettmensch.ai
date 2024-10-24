@@ -1,6 +1,11 @@
 from typing import Callable, Literal, Optional
 
-from bettmensch_ai.constants import DDP_PORT_NAME, DDP_PORT_NUMBER
+from bettmensch_ai.constants import (
+    ARGO_NAMESPACE,
+    COMPONENT_IMPLEMENTATION,
+    DDP_PORT_NAME,
+    DDP_PORT_NUMBER,
+)
 from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from torch.distributed.elastic.multiprocessing.api import Std
@@ -66,9 +71,7 @@ class LaunchConfigSettings(BaseSettings):
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
 
-    model_config = SettingsConfigDict(
-        env_prefix="bettmensch_ai_distributed_torch_"
-    )
+    model_config = SettingsConfigDict(env_prefix="bettmensch_ai_torch_ddp_")
 
 
 def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
@@ -106,7 +109,7 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
     )
 
 
-def torch_distribute(**config_settings_kwargs):
+def torch_ddp(**config_settings_kwargs):
     """Keyword decorator that wraps a callable in a torch distributed elastic
     launch runtime context.
 
@@ -135,14 +138,16 @@ def torch_distribute(**config_settings_kwargs):
     return decorator
 
 
-def create_torch_service_template(
-    component_base_name: str, service_name: str, namespace: str = "argo"
+def create_torch_ddp_service_template(
+    component_base_name: str,
+    service_name: str,
+    namespace: str = ARGO_NAMESPACE,  # noqa: E501
 ) -> Resource:
     """Utility for a template creating the service resource required for
-    accessing a TorchComponent's master node on K8s."""
+    accessing a TorchDDPComponent's master node on K8s."""
 
     return Resource(
-        name=f"{component_base_name}-create-torch-service",
+        name=f"{component_base_name}-create-{COMPONENT_IMPLEMENTATION.torch_ddp.value}-service",  # noqa: E501
         action="create",
         manifest=f"""apiVersion: v1
 kind: Service
@@ -164,14 +169,16 @@ spec:
     )
 
 
-def delete_torch_service_template(
-    component_base_name: str, service_name: str, namespace: str = "argo"
+def delete_torch_ddp_service_template(
+    component_base_name: str,
+    service_name: str,
+    namespace: str = ARGO_NAMESPACE,  # noqa: E501
 ) -> Resource:
     """Utility for a template deleting the service resource required for
-    accessing a TorchComponent's master node on K8s."""
+    accessing a TorchDDPComponent's master node on K8s."""
 
     return Resource(
-        name=f"{component_base_name}-delete-torch-service",
+        name=f"{component_base_name}-delete-{COMPONENT_IMPLEMENTATION.torch_ddp.value}-service",  # noqa: E501
         action="delete",
         flags=[
             "service",
