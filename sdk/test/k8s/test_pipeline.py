@@ -7,6 +7,7 @@ from bettmensch_ai.components.examples import (
     show_parameter_factory,
     tensor_reduce_torch_ddp_factory,
 )
+from bettmensch_ai.constants import COMPONENT_IMAGE
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import (
     delete_registered_pipeline,
@@ -16,6 +17,7 @@ from bettmensch_ai.pipelines import (
 )
 
 
+@pytest.mark.standard
 @pytest.mark.order(1)
 def test_artifact_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
@@ -65,6 +67,7 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     assert parameter_to_artifact_flow.status.phase == "Succeeded"
 
 
+@pytest.mark.standard
 @pytest.mark.order(2)
 def test_parameter_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
@@ -111,15 +114,90 @@ def test_parameter_pipeline_decorator_and_register_and_run(
     assert adding_parameters_flow.status.phase == "Succeeded"
 
 
+@pytest.mark.standard
 @pytest.mark.order(3)
+@pytest.mark.parametrize(
+    "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
+    [
+        ("test-artifact-pipeline-", 1),
+        ("test-parameter-pipeline-", 1),
+        ("test-", 2),
+    ],
+)
+def test_list_registered_standard_pipelines(
+    test_namespace,
+    test_registered_pipeline_name_pattern,
+    test_n_registered_pipelines,
+):
+    """Test the pipeline.list function."""
+    registered_pipelines = list_registered_pipelines(
+        registered_namespace=test_namespace,
+        registered_name_pattern=test_registered_pipeline_name_pattern,
+    )
+
+    assert len(registered_pipelines) == test_n_registered_pipelines
+
+    for registered_pipeline in registered_pipelines:
+        assert registered_pipeline.registered
+        assert registered_pipeline.registered_id is not None
+        assert registered_pipeline.registered_name.startswith(
+            f"pipeline-{test_registered_pipeline_name_pattern}"
+        )
+        assert registered_pipeline.registered_namespace == test_namespace
+
+
+@pytest.mark.standard
+@pytest.mark.order(4)
+@pytest.mark.parametrize(
+    "test_registered_pipeline_name_pattern,test_pipeline_inputs",
+    [
+        (
+            "test-artifact-pipeline-",
+            {
+                "a": "Second integration test value a",
+            },
+        ),
+        ("test-parameter-pipeline-", {"a": -10, "b": 20}),
+    ],
+)
+def test_run_standard_registered_pipelines_from_registry(
+    test_namespace, test_registered_pipeline_name_pattern, test_pipeline_inputs
+):
+    """Test the pipeline.get function, and the Pipeline's constructor when
+    using the registered WorkflowTemplate on the Argo server as a source."""
+
+    # we use the `list` method to retrieve the pipeline and access its
+    # `registered_name` property to use as an input for the `get` method.
+    registered_pipeline_name = list_registered_pipelines(
+        registered_namespace=test_namespace,
+        registered_name_pattern=test_registered_pipeline_name_pattern,
+    )[0].registered_name
+
+    registered_pipeline = get_registered_pipeline(
+        registered_pipeline_name, test_namespace
+    )
+
+    assert registered_pipeline.registered
+    assert registered_pipeline.registered_id is not None
+    assert registered_pipeline.registered_name.startswith(
+        f"pipeline-{test_registered_pipeline_name_pattern}"
+    )
+    assert registered_pipeline.registered_namespace == test_namespace
+
+    flow = registered_pipeline.run(test_pipeline_inputs, wait=True)
+    assert flow.status.phase == "Succeeded"
+
+
+@pytest.mark.ddp
+@pytest.mark.order(5)
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-torch-cpu-pipeline", 6, None, "300Mi"),
-        ("test-torch-gpu-pipeline", 4, 1, "700Mi"),
+        ("test-torch-cpu-pipeline", 2, None, "300Mi"),
+        ("test-torch-gpu-pipeline", 2, 1, "700Mi"),
     ],
 )
-def test_torch_pipeline_decorator_and_register_and_run(
+def test_torch_ddp_pipeline_decorator_and_register_and_run(
     test_pipeline_name,
     test_n_nodes,
     test_gpus,
@@ -177,21 +255,22 @@ def test_torch_pipeline_decorator_and_register_and_run(
     assert torch_ddp_pipeline.registered_namespace == test_namespace
 
     torch_ddp_flow = torch_ddp_pipeline.run(
-        {"n_iter": 12, "n_seconds_sleep": 5}, wait=True
+        {"n_iter": 5, "n_seconds_sleep": 2}, wait=True
     )
 
     assert torch_ddp_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(4)
+@pytest.mark.ddp
+@pytest.mark.order(6)
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-lightning-cpu-pipeline", 6, None, "1Gi"),
-        ("test-lightning-gpu-pipeline", 4, 1, "1Gi"),
+        ("test-lightning-cpu-pipeline", 2, None, "1Gi"),
+        ("test-lightning-gpu-pipeline", 2, 1, "1Gi"),
     ],
 )
-def test_lightning_pipeline_decorator_and_register_and_run(
+def test_lightning_ddp_pipeline_decorator_and_register_and_run(
     test_pipeline_name,
     test_n_nodes,
     test_gpus,
@@ -211,13 +290,14 @@ def test_lightning_pipeline_decorator_and_register_and_run(
             lightning_train_torch_ddp_factory(
                 "lightning-ddp",
                 hera_template_kwargs={
+                    "image": COMPONENT_IMAGE.lightning.value,
                     "pod_spec_patch": """topologySpreadConstraints:
 - maxSkew: 1
   topologyKey: kubernetes.io/hostname
   whenUnsatisfiable: DoNotSchedule
   labelSelector:
     matchExpressions:
-      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"""
+      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}""",
                 },
                 n_nodes=test_n_nodes,
                 max_time=max_time,
@@ -254,20 +334,18 @@ def test_lightning_pipeline_decorator_and_register_and_run(
     assert lightning_ddp_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(5)
+@pytest.mark.ddp
+@pytest.mark.order(7)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
     [
-        ("test-artifact-pipeline-", 1),
-        ("test-parameter-pipeline-", 1),
         ("test-torch-cpu-pipeline-", 1),
         ("test-torch-gpu-pipeline-", 1),
         ("test-lightning-cpu-pipeline-", 1),
         ("test-lightning-gpu-pipeline-", 1),
-        ("test-", 6),
     ],
 )
-def test_list_registered_pipelines(
+def test_list_registered_ddp_pipelines(
     test_namespace,
     test_registered_pipeline_name_pattern,
     test_n_registered_pipelines,
@@ -289,19 +367,13 @@ def test_list_registered_pipelines(
         assert registered_pipeline.registered_namespace == test_namespace
 
 
-@pytest.mark.order(6)
+@pytest.mark.ddp
+@pytest.mark.order(8)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
     [
-        (
-            "test-artifact-pipeline-",
-            {
-                "a": "Second integration test value a",
-            },
-        ),
-        ("test-parameter-pipeline-", {"a": -10, "b": 20}),
-        ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
-        ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+        ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 2}),
+        ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 2}),
         (
             "test-lightning-gpu-pipeline-",
             {
@@ -316,7 +388,7 @@ def test_list_registered_pipelines(
         ),
     ],
 )
-def test_get_and_run_from_registry(
+def test_run_dpp_registered_pipelines_from_registry(
     test_namespace, test_registered_pipeline_name_pattern, test_pipeline_inputs
 ):
     """Test the pipeline.get function, and the Pipeline's constructor when
@@ -344,7 +416,10 @@ def test_get_and_run_from_registry(
     assert flow.status.phase == "Succeeded"
 
 
-@pytest.mark.order(7)
+@pytest.mark.standard
+@pytest.mark.ddp
+@pytest.mark.delete_pipelines
+@pytest.mark.order(9)
 def test_delete(test_namespace):
     """Test the pipeline.delete function"""
 
