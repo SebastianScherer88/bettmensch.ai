@@ -1,7 +1,7 @@
 ## VARIABLES
 EXTRAS?=pipelines# see sdk's setup.py for all options
 SUITE?=unit# unit,integration,k8s
-PYTEST_FLAGS?= # e.g. "-m basic", "-m ddp" for k8s suite
+PYTEST_FLAGS?= # e.g. "-m standard", "-m ddp" for k8s suite
 sdk.install:
 	@echo "::group::Installing sdk with $(EXTRAS) extras"
 	pip install ./sdk[$(EXTRAS)]
