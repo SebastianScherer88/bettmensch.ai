@@ -1,26 +1,37 @@
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       test-flags:
+#         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
+#         required: false
+#         type: choice
+#         options:
+#         - ""
+#         - "-m standard"
+#         - "-m ddp"
+#         - "-m delete_pipelines"
+#         - "-m delete_flows"
+
+#       python-version:
+#         default: "3.10" # "3.11"
+#         required: false
+#         type: choice
+#         options:
+#         - "3.10"
+#         - "3.11"
+#         - "3.12"
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       test-flags:
         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
         required: false
-        type: choice
-        options:
-        - ""
-        - "-m standard"
-        - "-m ddp"
-        - "-m delete_pipelines"
-        - "-m delete_flows"
-
+        type: string 
       python-version:
         default: "3.10" # "3.11"
         required: false
-        type: choice
-        options:
-        - "3.10"
-        - "3.11"
-        - "3.12"
-
+        type: string
+        
 jobs:
   k8s-test:
     uses: ./.github/workflows/test.yaml

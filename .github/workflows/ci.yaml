@@ -19,8 +19,10 @@ jobs:
   integration-test:
     uses: ./.github/workflows/integration-test.yaml
 
+  # <remove when done with testing of the underlying workflows
   k8s-test:
     uses: ./.github/workflows/k8s-test.yaml
+  # remove when done with testing of the underlying workflows>
 
   docker-components:
     runs-on: ubuntu-latest
