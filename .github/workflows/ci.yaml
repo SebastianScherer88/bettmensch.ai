@@ -19,6 +19,9 @@ jobs:
   integration-test:
     uses: ./.github/workflows/integration-test.yaml
 
+  k8s-test:
+    uses: ./.github/workflows/k8s-test.yaml
+
   docker-components:
     runs-on: ubuntu-latest
     needs: integration-test

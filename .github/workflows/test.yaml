@@ -14,7 +14,7 @@ on:
         required: false
         type: string
 jobs:
-  sdk:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Set Swap Space
