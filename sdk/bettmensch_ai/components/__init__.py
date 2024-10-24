@@ -9,27 +9,16 @@ from bettmensch_ai.components.component import (  # noqa: F401
 )
 
 try:
-    from bettmensch_ai.components.torch_component import (  # noqa: F401
-        TorchComponent,
-        TorchComponentInlineScriptRunner,
-        torch_component,
+    from bettmensch_ai.components.torch_ddp_component import (  # noqa: F401
+        TorchDDPComponent,
+        TorchDDPComponentInlineScriptRunner,
+        torch_ddp_component,
     )
     from bettmensch_ai.components.torch_utils import (  # noqa: F401,E501
-        torch_distribute,
+        torch_ddp,
     )
 except ImportError as ie:
     print(
         f"WARNING. Could not import torch component assets: {ie}"
         "Make sure you have installed pytorch if you want to use them."
-    )
-
-try:
-    from bettmensch_ai.components.lightning_component import (  # noqa: F401
-        LightningComponent,
-        lightning_component,
-    )
-except ImportError as ie:
-    print(
-        f"WARNING. Could not import lightning component assets: {ie}"
-        "Make sure you have installed lightning if you want to use them."
     )

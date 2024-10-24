@@ -6,8 +6,6 @@ from hera.workflows import Script, Step, Task
 from hera.workflows._context import _context
 from hera.workflows.script import FuncIns, FuncR, _add_type_hints
 
-COMPONENT_BASE_IMAGE = "bettmensch88/bettmensch.ai:3.11-latest"
-
 
 def get_func_args(
     func: Callable,
@@ -74,7 +72,7 @@ class BettmenschAIScript(Script):
     pass
 
 
-class BettmenschAITorchScript(Script):
+class BettmenschAITorchDDPScript(Script):
     pass
 
 
@@ -139,7 +137,7 @@ def bettmensch_ai_script(
         if not torch_component:
             s = BettmenschAIScript(name=name, source=source, **script_kwargs)
         else:
-            s = BettmenschAITorchScript(
+            s = BettmenschAITorchDDPScript(
                 name=name, source=source, **script_kwargs
             )
 

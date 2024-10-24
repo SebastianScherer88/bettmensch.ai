@@ -1,8 +1,8 @@
-from bettmensch_ai.components import TorchComponent, torch_component
+from bettmensch_ai.components import TorchDDPComponent, torch_ddp_component
 from bettmensch_ai.components.examples import (
-    add_parameters_torch_factory,
-    convert_to_artifact_torch_factory,
-    show_parameter_torch_factory,
+    add_parameters_torch_ddp_factory,
+    convert_to_artifact_torch_ddp_factory,
+    show_parameter_torch_ddp_factory,
 )
 from bettmensch_ai.io import (
     InputArtifact,
@@ -47,7 +47,7 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
 
         # add components to pipeline context
         test_component = (
-            TorchComponent(
+            TorchDDPComponent(
                 func=test_function,
                 name="test_name",
                 n_nodes=2,
@@ -64,8 +64,8 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
     assert test_component == _pipeline_context.components[0]
 
     # validate component attributes
-    assert isinstance(test_component, TorchComponent)
-    assert test_component.implementation == "torch"
+    assert isinstance(test_component, TorchDDPComponent)
+    assert test_component.implementation == "torch-ddp"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
@@ -126,7 +126,7 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    test_component_factory = torch_component(test_function)
+    test_component_factory = torch_ddp_component(test_function)
 
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
@@ -164,8 +164,8 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component == _pipeline_context.components[0]
 
     # validate component attributes
-    assert isinstance(test_component, TorchComponent)
-    assert test_component.implementation == "torch"
+    assert isinstance(test_component, TorchDDPComponent)
+    assert test_component.implementation == "torch-ddp"
     assert test_component.base_name == "test-name"
     assert test_component.name == "test-name-0"
     assert test_component.func == test_function
@@ -226,7 +226,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
 
         # add components to pipeline context
         a_plus_b = (
-            add_parameters_torch_factory(
+            add_parameters_torch_ddp_factory(
                 "a_plus_b",
                 n_nodes=2,
                 min_nodes=1,
@@ -239,7 +239,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
         )
 
         a_plus_b_plus_2 = (
-            add_parameters_torch_factory(
+            add_parameters_torch_ddp_factory(
                 "a_plus_b_plus_2",
                 n_nodes=2,
                 min_nodes=2,
@@ -275,22 +275,22 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
 
     task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
-        "a-plus-b-create-torch-service",
+        "a-plus-b-create-torch-ddp-service",
         "a-plus-b-0",
         "a-plus-b-0-worker-1",
-        "a-plus-b-delete-torch-service",
-        "a-plus-b-plus-2-create-torch-service",
+        "a-plus-b-delete-torch-ddp-service",
+        "a-plus-b-plus-2-create-torch-ddp-service",
         "a-plus-b-plus-2-0",
         "a-plus-b-plus-2-0-worker-1",
-        "a-plus-b-plus-2-delete-torch-service",
+        "a-plus-b-plus-2-delete-torch-ddp-service",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "a-plus-b-create-torch-service",
-        "a-plus-b-delete-torch-service",
-        "a-plus-b-plus-2-create-torch-service",
-        "a-plus-b-plus-2-delete-torch-service",
+        "a-plus-b-create-torch-ddp-service",
+        "a-plus-b-delete-torch-ddp-service",
+        "a-plus-b-plus-2-create-torch-ddp-service",
+        "a-plus-b-plus-2-delete-torch-ddp-service",
         "test_dag",
         "a-plus-b-0",
         "a-plus-b-1",
@@ -322,7 +322,7 @@ def test_artifact_torch_component_to_hera(
 
         # add components to pipeline context
         convert = (
-            convert_to_artifact_torch_factory(
+            convert_to_artifact_torch_ddp_factory(
                 "convert_parameters",
                 n_nodes=2,
                 min_nodes=1,
@@ -334,7 +334,7 @@ def test_artifact_torch_component_to_hera(
         )
 
         show = (
-            show_parameter_torch_factory(
+            show_parameter_torch_ddp_factory(
                 "show_artifacts",
                 a=convert.outputs["a_art"],
             )
@@ -363,21 +363,21 @@ def test_artifact_torch_component_to_hera(
 
     task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
-        "convert-parameters-create-torch-service",
+        "convert-parameters-create-torch-ddp-service",
         "convert-parameters-0",
         "convert-parameters-0-worker-1",
-        "convert-parameters-delete-torch-service",
-        "show-artifacts-create-torch-service",
+        "convert-parameters-delete-torch-ddp-service",
+        "show-artifacts-create-torch-ddp-service",
         "show-artifacts-0",
-        "show-artifacts-delete-torch-service",
+        "show-artifacts-delete-torch-ddp-service",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "convert-parameters-create-torch-service",
-        "convert-parameters-delete-torch-service",
-        "show-artifacts-create-torch-service",
-        "show-artifacts-delete-torch-service",
+        "convert-parameters-create-torch-ddp-service",
+        "convert-parameters-delete-torch-ddp-service",
+        "show-artifacts-create-torch-ddp-service",
+        "show-artifacts-delete-torch-ddp-service",
         "test_dag",
         "convert-parameters-0",
         "convert-parameters-1",

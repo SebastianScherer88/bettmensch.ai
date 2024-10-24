@@ -43,7 +43,7 @@ jobs:
     needs: sdk
     strategy:
       matrix:
-        component: ["base", "torch", "lightning"]
+        component: ["standard", "pytorch", "pytorch-lightning"]
 
     steps:
       - uses: actions/checkout@v4

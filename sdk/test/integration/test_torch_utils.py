@@ -1,8 +1,8 @@
 import os
 
 import pytest
-from bettmensch_ai.components import torch_distribute
-from bettmensch_ai.components.examples import lightning_ddp, torch_ddp
+from bettmensch_ai.components import torch_ddp
+from bettmensch_ai.components.examples import lightning_train, tensor_reduce
 
 
 def distributed_test_function_1():
@@ -26,8 +26,8 @@ def distributed_test_function_2(a: int, b: str = "test"):
     [
         (distributed_test_function_1, []),
         (distributed_test_function_2, [1, "test_value"]),
-        (torch_ddp, [5, 2]),
-        (lightning_ddp, []),
+        (tensor_reduce, [5, 2]),
+        (lightning_train, []),
     ],
 )
 def test_torch_distribute_decorator(
@@ -35,7 +35,7 @@ def test_torch_distribute_decorator(
 ):
     """Test the torch_distribute decorator with 3 test functions."""
 
-    torch_distribute_decorator = torch_distribute(
+    torch_distribute_decorator = torch_ddp(
         log_dir=os.path.join(test_output_dir, "logs")
     )
     torch_distributed_function = torch_distribute_decorator(test_function)

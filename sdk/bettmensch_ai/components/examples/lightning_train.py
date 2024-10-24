@@ -1,8 +1,8 @@
-from bettmensch_ai.components import lightning_component
+from bettmensch_ai.components import torch_ddp_component
 from bettmensch_ai.io import InputParameter, OutputParameter
 
 
-def lightning_ddp(
+def lightning_train(
     max_time: InputParameter = "00:00:00:30",
     duration: OutputParameter = None,
 ) -> None:
@@ -69,7 +69,7 @@ def lightning_ddp(
         duration.assign(dt.now() - start)
 
 
-lightning_ddp_lightning_factory = lightning_component(lightning_ddp)
+lightning_train_torch_ddp_factory = torch_ddp_component(lightning_train)
 
 if __name__ == "__main__":
-    lightning_ddp()
+    lightning_train()

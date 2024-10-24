@@ -9,29 +9,34 @@ from bettmensch_ai.components.base_inline_script_runner import (
     BaseComponentInlineScriptRunner,
 )
 from bettmensch_ai.components.torch_utils import (
-    create_torch_service_template,
-    delete_torch_service_template,
+    LaunchConfigSettings,
+    create_torch_ddp_service_template,
+    delete_torch_ddp_service_template,
 )
 from bettmensch_ai.constants import (
+    ARGO_NAMESPACE,
     COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
     DDP_PORT_NAME,
     DDP_PORT_NUMBER,
 )
 from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
-from bettmensch_ai.utils import BettmenschAITorchScript, bettmensch_ai_script
+from bettmensch_ai.utils import (
+    BettmenschAITorchDDPScript,
+    bettmensch_ai_script,
+)
 from hera.shared import global_config
 from hera.workflows import Env, Script, Task
 from hera.workflows._unparse import roundtrip
 from hera.workflows.models import ContainerPort, Protocol
 
 
-class TorchComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
+class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
     """
     A customised version of the TorchComponentInlineScriptRunner that adds the
     decoration of the callable with the
-    bettmensch_ai.torch_utils.torch_distribute decorator.
+    bettmensch_ai.torch_utils.torch_ddp decorator.
     """
 
     def generate_source(self, instance: Script) -> str:
@@ -79,41 +84,42 @@ class TorchComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
             if line.startswith("def") or line.startswith("async def"):
                 break
 
-        # add function definition and decoration with `torch_distribute`
-        torch_distribute_decoration = [
-            "\nfrom bettmensch_ai.components import torch_distribute\n",
-            "torch_distribute_decorator=torch_distribute()\n"
-            f"""torch_distributed_function=torch_distribute_decorator({
+        # add function definition and decoration with `torch_ddp`
+        torch_ddp_decoration = [
+            "\nfrom bettmensch_ai.components import torch_ddp\n",
+            "torch_ddp_decorator=torch_ddp()\n"
+            f"""torch_ddp_function=torch_ddp_decorator({
                 instance.source.__name__
             })\n""",
         ]
         function_definition = content[i:]
-        s = "\n".join(function_definition + torch_distribute_decoration)
+        s = "\n".join(function_definition + torch_ddp_decoration)
         script += s
 
         # add function call
-        torch_distributed_function_call = (
-            "\ntorch_distributed_function(" + ",".join(args) + ")"
+        torch_ddp_function_call = (
+            "\ntorch_ddp_function(" + ",".join(args) + ")"
         )
-        script += torch_distributed_function_call
+        script += torch_ddp_function_call
 
         return textwrap.dedent(script)
 
 
 global_config.set_class_defaults(
-    BettmenschAITorchScript, constructor=TorchComponentInlineScriptRunner()
+    BettmenschAITorchDDPScript,
+    constructor=TorchDDPComponentInlineScriptRunner(),
 )
 
 
-class TorchComponent(BaseComponent):
+class TorchDDPComponent(BaseComponent):
 
-    implementation: str = COMPONENT_IMPLEMENTATION.torch.value
+    implementation: str = COMPONENT_IMPLEMENTATION.torch_ddp.value
     default_image: str = COMPONENT_IMAGE.torch.value
     n_nodes: int
     min_nodes: int
     nproc_per_node: int
     service_templates: Dict[str, Callable] = None
-    k8s_namespace: str = "argo"
+    k8s_namespace: str = ARGO_NAMESPACE
     k8s_service_name: str = ""
 
     # if no resources are specified, set minimal requirements derived from
@@ -157,11 +163,11 @@ class TorchComponent(BaseComponent):
     def build_service_templates(self) -> Dict[str, Callable]:
 
         return {
-            "create": create_torch_service_template(
+            "create": create_torch_ddp_service_template(
                 component_base_name=self.base_name,
                 service_name=self.k8s_service_name,
             ),
-            "delete": delete_torch_service_template(
+            "delete": delete_torch_ddp_service_template(
                 component_base_name=self.base_name,
                 service_name=self.k8s_service_name,
             ),
@@ -195,50 +201,50 @@ class TorchComponent(BaseComponent):
                 value="INFO",
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_min_nodes",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}torch_min_nodes",  # noqa: E501
                 value=self.min_nodes,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_max_nodes",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}torch_max_nodes",  # noqa: E501
                 value=self.n_nodes,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_node_rank",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}node_rank",  # noqa: E501
                 value=torch_node_rank,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_nproc_per_node",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}nproc_per_node",  # noqa: E501
                 value=self.nproc_per_node,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_max_restarts",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}max_restarts",  # noqa: E501
                 value=1,
             ),
             # torch's LaunchConfig's default of 'spawn' doesnt seem to work
             # inside the argo emissary runtime context for some reason
             Env(
-                name="bettmensch_ai_distributed_torch_start_method",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}start_method",  # noqa: E501
                 value="fork",
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_rdzv_backend",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_backend",  # noqa: E501
                 value="static",
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_rdzv_endpoint_url",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_url",  # noqa: E501
                 value=f"{self.k8s_service_name}.{self.k8s_namespace}"
                 + ".svc.cluster.local",
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_rdzv_endpoint_port",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_port",  # noqa: E501
                 value=DDP_PORT_NUMBER,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_run_id",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}run_id",  # noqa: E501
                 value=1,
             ),
             Env(
-                name="bettmensch_ai_distributed_torch_tee",
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}tee",
                 value=0,
             ),
         ]
@@ -350,7 +356,7 @@ class TorchComponent(BaseComponent):
         )
 
 
-def torch_component(func: Callable) -> Callable[..., TorchComponent]:
+def torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
     """Takes a calleable and generates a configured TorchComponent factory that
     will generate a TorchComponent version of the callable if invoked inside an
     active PipelineContext.
@@ -372,16 +378,16 @@ def torch_component(func: Callable) -> Callable[..., TorchComponent]:
     PipelineContext.
     """
 
-    def torch_component_factory(
+    def torch_ddp_component_factory(
         name: str = "",
         hera_template_kwargs: Dict = {},
         n_nodes: int = 1,
         min_nodes: int = None,
         nproc_per_node: int = 1,
         **component_inputs_kwargs,
-    ) -> TorchComponent:
+    ) -> TorchDDPComponent:
 
-        return TorchComponent(
+        return TorchDDPComponent(
             func=func,
             name=name,
             hera_template_kwargs=hera_template_kwargs,
@@ -391,4 +397,4 @@ def torch_component(func: Callable) -> Callable[..., TorchComponent]:
             **component_inputs_kwargs,
         )
 
-    return torch_component_factory
+    return torch_ddp_component_factory
