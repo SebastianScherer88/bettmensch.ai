@@ -3,18 +3,35 @@ REGION?=us-east-2
 CLUSTER_NAME?=bettmensch-ai
 DIR?=infrastructure/terraform
 
-infrastructure.build:
-	@echo "::group::Building infrastructure"
+platform.init:
+	@echo "::group::Initializing platform infrastructure environment"
 	terraform -chdir=$(DIR) init
+		@echo "::endgroup::"
+
+platform.plan:
+	@echo "::group::Planning platform infrastructure"
 	terraform -chdir=$(DIR) plan
+
+platform.up:
+	@echo "::group::Bringing up platform infrastructure..."
+	make platform.init DIR=$(DIR)
+	make platform.plan DIR=$(DIR)
 	terraform -chdir=$(DIR) apply -auto-approve
 	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
 	@echo "::endgroup::"
 
-infrastructure.destroy:
-		@echo "::group::Tearing down infrastructure"
+platform.down:
+		@echo "::group::Tearing down platform infrastructure..."
 		# empty the argo workflow artifact repository s3 bucket, otherwise we
 		# wont be able to remove it from AWS
 		aws s3 rm s3://bettmensch-ai-artifact-repository --recursive
 		terraform -chdir=$(DIR) destroy -auto-approve
+		@echo "::endgroup::"
+
+platform.test:
+		@echo "::group::E2E testing platform..."
+		make platform.up
+		make kubernetes.connect.argo
+		make sdk.test SUITE=k8s
+		# make platform.down
 		@echo "::endgroup::"
