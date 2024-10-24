@@ -13,15 +13,9 @@ on:
       - master
 
 jobs:
-  unit-test:
-    uses: ./.github/workflows/unit-test.yaml
-    
-  integration-test:
-    uses: ./.github/workflows/integration-test.yaml
 
   docker-components:
     runs-on: ubuntu-latest
-    needs: integration-test
     strategy:
       matrix:
         component: ["standard", "pytorch", "pytorch-lightning"]
@@ -41,7 +35,6 @@ jobs:
 
   docker-dashboard:
     runs-on: ubuntu-latest
-    needs: integration-test
     steps:
       - uses: actions/checkout@v4
       - name: Login to Docker Hub

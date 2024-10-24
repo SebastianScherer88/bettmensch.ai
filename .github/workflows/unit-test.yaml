@@ -1,24 +1,28 @@
 on:
-  workflow_call:
-    inputs:
-      test-flags:
-        default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
-        required: false
-        type: string 
-      python-version:
-        default: "3.10" # "3.11"
-        required: false
-        type: string
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
-        required: false
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+    # Sequence of patterns matched against refs/heads
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
 jobs:
-  unit-test:
+  unit-test-py310:
     uses: ./.github/workflows/test.yaml
     secrets: inherit
     with:
       test-suite: unit
-      test-flags: ${{ inputs.test-flags }}
-      python-version: ${{ inputs.python-version }}
+      python-version: "3.10"
+
+  unit-test-py311:
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit
+    with:
+      test-suite: unit
+      python-version: "3.11"
