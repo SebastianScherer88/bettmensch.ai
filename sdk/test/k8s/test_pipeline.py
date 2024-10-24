@@ -388,7 +388,7 @@ def test_list_registered_ddp_pipelines(
         ),
     ],
 )
-def test_run_all_registered_pipelines_from_registry(
+def test_run_dpp_registered_pipelines_from_registry(
     test_namespace, test_registered_pipeline_name_pattern, test_pipeline_inputs
 ):
     """Test the pipeline.get function, and the Pipeline's constructor when

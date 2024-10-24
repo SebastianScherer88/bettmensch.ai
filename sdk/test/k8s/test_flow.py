@@ -3,7 +3,7 @@ from bettmensch_ai.pipelines import delete_flow, list_flows
 
 
 @pytest.mark.delete_flows
-@pytest.mark.order(1)
+@pytest.mark.order(10)
 def test_delete(test_namespace):
     """Test the pipeline.delete function"""
 
