@@ -15,19 +15,9 @@ on:
 jobs:
   unit-test:
     uses: ./.github/workflows/unit-test.yaml
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11",]
-    with:
-      python-version: ${{ matrix.python-version }}
 
   integration-test:
     uses: ./.github/workflows/integration-test.yaml
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11",]
-    with:
-      python-version: ${{ matrix.python-version }}
 
   docker-components:
     runs-on: ubuntu-latest
