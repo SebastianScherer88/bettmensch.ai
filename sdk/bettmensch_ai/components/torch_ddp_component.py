@@ -201,11 +201,11 @@ class TorchDDPComponent(BaseComponent):
                 value="INFO",
             ),
             Env(
-                name=f"{LaunchConfigSettings.model_config['env_prefix']}torch_min_nodes",  # noqa: E501
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}_min_nodes",  # noqa: E501
                 value=self.min_nodes,
             ),
             Env(
-                name=f"{LaunchConfigSettings.model_config['env_prefix']}torch_max_nodes",  # noqa: E501
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}_max_nodes",  # noqa: E501
                 value=self.n_nodes,
             ),
             Env(
