@@ -13,3 +13,7 @@ kubernetes.connect.argo:
 	@echo "::group::Port forwarding the ArgoWorkflows server to the K8s cluster"
 	kubectl -n argo port-forward $(ARGO_HEAD_POD) --address 0.0.0.0 $(ARGO_PORT):$(ARGO_PORT) > argo-port-forward.log & # background process
 	@echo "::endgroup::"
+
+kubernetes.connect:
+	kubernetes.connect.mlflow
+	kubernetes.connect.argo

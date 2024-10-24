@@ -18,6 +18,7 @@ platform.up:
 	make platform.plan DIR=$(DIR)
 	terraform -chdir=$(DIR) apply -auto-approve
 	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
+	make kubernetes.connect
 	@echo "::endgroup::"
 
 platform.down:
@@ -31,7 +32,6 @@ platform.down:
 platform.test:
 		@echo "::group::E2E testing platform..."
 		make platform.up
-		make kubernetes.connect.argo
-		make sdk.test SUITE=k8s
+		make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
 		# make platform.down
 		@echo "::endgroup::"
