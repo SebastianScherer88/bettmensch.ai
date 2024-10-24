@@ -16,7 +16,7 @@ from bettmensch_ai.pipelines import (
 )
 
 
-@pytest.mark.basic
+@pytest.mark.standard
 @pytest.mark.order(1)
 def test_artifact_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
@@ -66,7 +66,7 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     assert parameter_to_artifact_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.basic
+@pytest.mark.standard
 @pytest.mark.order(2)
 def test_parameter_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
@@ -113,7 +113,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
     assert adding_parameters_flow.status.phase == "Succeeded"
 
 
-@pytest.mark.basic
+@pytest.mark.standard
 @pytest.mark.order(3)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
@@ -123,7 +123,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
         ("test-", 2),
     ],
 )
-def test_list_registered_basic_pipelines(
+def test_list_registered_standard_pipelines(
     test_namespace,
     test_registered_pipeline_name_pattern,
     test_n_registered_pipelines,
@@ -145,6 +145,7 @@ def test_list_registered_basic_pipelines(
         assert registered_pipeline.registered_namespace == test_namespace
 
 
+@pytest.mark.standard
 @pytest.mark.order(4)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
@@ -158,7 +159,7 @@ def test_list_registered_basic_pipelines(
         ("test-parameter-pipeline-", {"a": -10, "b": 20}),
     ],
 )
-def test_run_basic_registered_pipelines_from_registry(
+def test_run_standard_registered_pipelines_from_registry(
     test_namespace, test_registered_pipeline_name_pattern, test_pipeline_inputs
 ):
     """Test the pipeline.get function, and the Pipeline's constructor when
@@ -331,6 +332,7 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
     assert lightning_ddp_flow.status.phase == "Succeeded"
 
 
+@pytest.mark.ddp
 @pytest.mark.order(7)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
@@ -363,6 +365,7 @@ def test_list_registered_ddp_pipelines(
         assert registered_pipeline.registered_namespace == test_namespace
 
 
+@pytest.mark.ddp
 @pytest.mark.order(8)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
@@ -411,7 +414,7 @@ def test_run_all_registered_pipelines_from_registry(
     assert flow.status.phase == "Succeeded"
 
 
-@pytest.mark.basic
+@pytest.mark.standard
 @pytest.mark.ddp
 @pytest.mark.order(9)
 def test_delete(test_namespace):
