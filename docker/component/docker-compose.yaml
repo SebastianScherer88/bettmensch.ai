@@ -1,5 +1,5 @@
 services:
-  default:
+  standard:
     build:
       context: .
       additional_contexts:
