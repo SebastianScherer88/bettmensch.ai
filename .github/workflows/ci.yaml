@@ -20,10 +20,11 @@ jobs:
         python-version: ["3.10", "3.11",]
 
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/unit-test.yaml
         with:
           python-version: ${{ matrix.python-version }}
-          
+
       - uses: ./.github/workflows/integration-test.yaml
         with:
           python-version: ${{ matrix.python-version }}
