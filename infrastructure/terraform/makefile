@@ -25,11 +25,6 @@ platform.connect:
 	make kubernetes.connect
 	@echo "::endgroup::
 
-platform.test:
-	@echo "::group::E2E testing platform..."
-	make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
-	@echo "::endgroup::"
-
 platform.delete_pipelines:
 	@echo "::group:: Removing all pipelines"
 	make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_pipelines"
@@ -39,7 +34,7 @@ platform.delete_flows:
 	@echo "::group:: Removing all flows"
 	make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_flows"
 	@echo "::endgroup::"
-	
+
 platform.down:
 	@echo "::group::Tearing down platform infrastructure..."
 	# empty the argo workflow artifact repository s3 bucket, otherwise we

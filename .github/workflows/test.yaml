@@ -1,0 +1,61 @@
+on:
+  workflow_call:
+    inputs:
+      test-suite:
+        default: "unit" # "integration", "k8s"
+        required: true
+        type: string
+      test-flags:
+        default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
+        required: false
+        type: string 
+      python-version:
+        default: "3.10" # "3.11"
+        required: false
+        type: string
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      
+      - name: Installation setup
+        run: pip install setuptools
+      
+      - name: Install sdk
+        run: make sdk.install EXTRAS=test
+
+      - name: Install terraform
+        if: ${{ inputs.test-suite == 'k8s' }}
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Configure AWS Credentials
+        if: ${{ inputs.test-suite == 'k8s' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+        
+      - name: Boot up platform & connect
+        if: ${{ inputs.test-suite == 'k8s' }}
+        run: make platform.up & make platform.connect
+      
+      - name: Run test suite
+        run: make sdk.test SUITE=${{ inputs.test-suite }} PYTEST_FLAGS=${{ inputs.test-flags }}
+      
+      - name: Bring down platform
+        if: ${{ inputs.test-suite == 'k8s' }}
+        run: make platform.down

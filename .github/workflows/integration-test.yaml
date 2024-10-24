@@ -1,0 +1,20 @@
+on:
+  workflow_call:
+    inputs:
+      test-flags:
+        default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
+        required: false
+        type: string 
+      python-version:
+        default: "3.10" # "3.11"
+        required: false
+        type: string
+jobs:
+  platform-e2e-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/workflows/test.yaml
+        with:
+          test-suite: integration
+          test-flags: ${{ inputs.test-flags }}
+          python-version: ${{ inputs.python-version }}

@@ -20,23 +20,13 @@ jobs:
         python-version: ["3.10", "3.11",]
 
     steps:
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
-        with:
-          swap-size-gb: 10
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: ./.github/workflows/unit-test.yaml
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Installation setup
-        run: pip install setuptools
-      - name: Install sdk
-        run: make sdk.install EXTRAS=test
-      - name: Unit test sdk
-        run: make sdk.test SUITE=unit
-      - name: Integration test sdk
-        run: make sdk.test SUITE=integration
+          
+      - uses: ./.github/workflows/integration-test.yaml
+        with:
+          python-version: ${{ matrix.python-version }}
 
   docker-components:
     runs-on: ubuntu-latest
@@ -61,7 +51,6 @@ jobs:
   docker-dashboard:
     runs-on: ubuntu-latest
     needs: sdk
-
     steps:
       - uses: actions/checkout@v4
       - name: Login to Docker Hub
