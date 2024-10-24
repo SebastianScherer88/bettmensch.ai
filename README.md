@@ -19,25 +19,22 @@ To provision
     on the cluster,
 
 ```bash
-make infrastructure.build
+make platform.up
 ```
 
-To port forward to the `ArgoWorkflow` server running on EKS, run:
+To port forward to 
+- the `ArgoWorkflow` server running on EKS and
+- the `Mlflow` server running on EKS,
+run:
 
 ```bash
-make kubernetes.connect.argo
-```
-
-To port forward to the `Mlflow` server running on EKS, run:
-
-```bash
-make kubernetes.connect.mlflow
-```
+make platform.connect
+``` run:
 
 When you're done, you can tear down the stack by running
 
 ```bash
-make infrastructure.destroy
+make platform.down
 ```
 
 ## :computer: Dashboard
