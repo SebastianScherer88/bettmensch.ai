@@ -15,5 +15,5 @@ kubernetes.connect.argo:
 	@echo "::endgroup::"
 
 kubernetes.connect:
-	kubernetes.connect.mlflow
-	kubernetes.connect.argo
+	make kubernetes.connect.mlflow
+	make kubernetes.connect.argo
