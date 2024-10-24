@@ -35,3 +35,11 @@ platform.test:
 		make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
 		# make platform.down
 		@echo "::endgroup::"
+
+platform.delete_pipelines:
+		@echo "::group:: Removing all pipelines"
+		make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_pipelines"
+
+platform.delete_flows:
+		@echo "::group:: Removing all flows"
+		make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_flows"

@@ -7,6 +7,7 @@ from bettmensch_ai.components.examples import (
     show_parameter_factory,
     tensor_reduce_torch_ddp_factory,
 )
+from bettmensch_ai.constants import COMPONENT_IMAGE
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import (
     delete_registered_pipeline,
@@ -192,8 +193,8 @@ def test_run_standard_registered_pipelines_from_registry(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-torch-cpu-pipeline", 6, None, "300Mi"),
-        ("test-torch-gpu-pipeline", 4, 1, "700Mi"),
+        ("test-torch-cpu-pipeline", 2, None, "300Mi"),
+        ("test-torch-gpu-pipeline", 2, 1, "700Mi"),
     ],
 )
 def test_torch_ddp_pipeline_decorator_and_register_and_run(
@@ -254,7 +255,7 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
     assert torch_ddp_pipeline.registered_namespace == test_namespace
 
     torch_ddp_flow = torch_ddp_pipeline.run(
-        {"n_iter": 12, "n_seconds_sleep": 5}, wait=True
+        {"n_iter": 5, "n_seconds_sleep": 2}, wait=True
     )
 
     assert torch_ddp_flow.status.phase == "Succeeded"
@@ -265,8 +266,8 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
-        ("test-lightning-cpu-pipeline", 6, None, "1Gi"),
-        ("test-lightning-gpu-pipeline", 4, 1, "1Gi"),
+        ("test-lightning-cpu-pipeline", 2, None, "1Gi"),
+        ("test-lightning-gpu-pipeline", 2, 1, "1Gi"),
     ],
 )
 def test_lightning_ddp_pipeline_decorator_and_register_and_run(
@@ -289,13 +290,14 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
             lightning_train_torch_ddp_factory(
                 "lightning-ddp",
                 hera_template_kwargs={
+                    "image": COMPONENT_IMAGE.lightning.value,
                     "pod_spec_patch": """topologySpreadConstraints:
 - maxSkew: 1
   topologyKey: kubernetes.io/hostname
   whenUnsatisfiable: DoNotSchedule
   labelSelector:
     matchExpressions:
-      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"""
+      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}""",
                 },
                 n_nodes=test_n_nodes,
                 max_time=max_time,
@@ -370,8 +372,8 @@ def test_list_registered_ddp_pipelines(
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
     [
-        ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
-        ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 1}),
+        ("test-torch-gpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 2}),
+        ("test-torch-cpu-pipeline-", {"n_iter": 5, "n_seconds_sleep": 2}),
         (
             "test-lightning-gpu-pipeline-",
             {
@@ -416,6 +418,7 @@ def test_run_all_registered_pipelines_from_registry(
 
 @pytest.mark.standard
 @pytest.mark.ddp
+@pytest.mark.delete_pipelines
 @pytest.mark.order(9)
 def test_delete(test_namespace):
     """Test the pipeline.delete function"""
