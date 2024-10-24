@@ -1,6 +1,6 @@
 ## VARIABLES
 DOCKER_IMAGE_BASE=bettmensch88/bettmensch.ai
-COMPONENT?=default
+COMPONENT?=standard
 COMMIT?=$(shell git rev-parse --short HEAD)
 LOCAL_TAG=local
 COMMIT_TAG=3.11-$(COMMIT)
