@@ -28,16 +28,6 @@ jobs:
           swap-size-gb: 10
 
       - uses: actions/checkout@v4
-      
-      - name: Install terraform
-        if: ${{ inputs.test-suite == 'k8s' }}
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.9.8"
-
-      - run: echo ${{ secrets.AWS_ACCESS_KEY_ID}}
-
-      - run: echo ${{ secrets.AWS_SECRET_ACCESS_KEY}}
 
       - name: Configure AWS Credentials
         if: ${{ inputs.test-suite == 'k8s' }}
@@ -47,24 +37,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
         
-      # - name: Boot up platform & connect
-      #   if: ${{ inputs.test-suite == 'k8s' }}
-      #   run: make platform.up && make platform.connect
-
-      # - name: Set up Python ${{ inputs.python-version }}
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: ${{ inputs.python-version }}
-      
-      # - name: Installation setup
-      #   run: pip install setuptools
-      
-      # - name: Install sdk
-      #   run: make sdk.install EXTRAS=test
-      
-      # - name: Run test suite
-      #   run: make sdk.test SUITE=${{ inputs.test-suite }} PYTEST_FLAGS=${{ inputs.test-flags }}
-      
-      - name: Bring down platform
+      - name: Connect to platform
         if: ${{ inputs.test-suite == 'k8s' }}
-        run: make platform.init && make platform.down
+        run: make platform.connect
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      
+      - name: Installation setup
+        run: pip install setuptools
+      
+      - name: Install sdk
+        run: make sdk.install EXTRAS=test
+      
+      - name: Run test suite
+        run: make sdk.test SUITE=${{ inputs.test-suite }} PYTEST_FLAGS=${{ inputs.test-flags }}

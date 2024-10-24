@@ -1,8 +1,15 @@
 ## VARIABLES
+REGION?=us-east-2
+CLUSTER_NAME?=bettmensch-ai
 ARGO_HEAD_POD=$(shell kubectl get pods --selector=app=argo-server -n argo -o custom-columns=POD:metadata.name --no-headers)
 ARGO_PORT?=2746
 MLFLOW_HEAD_POD=$(shell kubectl get pods --selector=app=mlflow-server -n mlflow -o custom-columns=POD:metadata.name --no-headers)
 MLFLOW_PORT?=5000
+
+kubernetes.configure:
+	@echo "::group::Configuring kubeconfig"
+	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
+	@echo "::endgroup::"
 
 kubernetes.connect.mlflow:
 	@echo "::group::Port fowarding the Mlflow server on the K8s cluster"

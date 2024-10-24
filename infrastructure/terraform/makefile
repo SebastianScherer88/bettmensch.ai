@@ -1,6 +1,4 @@
 ## VARIABLES
-REGION?=us-east-2
-CLUSTER_NAME?=bettmensch-ai
 DIR?=infrastructure/terraform
 
 platform.init:
@@ -17,13 +15,18 @@ platform.up:
 	make platform.init DIR=$(DIR)
 	make platform.plan DIR=$(DIR)
 	terraform -chdir=$(DIR) apply -auto-approve
-	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
 	@echo "::endgroup::"
 
 platform.connect:
-	@echo "::group::Port forwarding to argo and mlflow platform components"
+	@echo "::group::Connecting to the platform..."
+	make kubernetes.configure
 	make kubernetes.connect
 	@echo "::endgroup::
+
+platform.test:
+	@echo "::group:: Running e2e platform tests"
+	make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
+	@echo "::endgroup::"
 
 platform.delete_pipelines:
 	@echo "::group:: Removing all pipelines"

@@ -1,36 +1,25 @@
-# on:
-#   workflow_dispatch:
-#     inputs:
-#       test-flags:
-#         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
-#         required: false
-#         type: choice
-#         options:
-#         - ""
-#         - "-m standard"
-#         - "-m ddp"
-#         - "-m delete_pipelines"
-#         - "-m delete_flows"
-
-#       python-version:
-#         default: "3.10" # "3.11"
-#         required: false
-#         type: choice
-#         options:
-#         - "3.10"
-#         - "3.11"
-#         - "3.12"
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       test-flags:
         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
         required: false
-        type: string 
+        type: choice
+        options:
+        - ""
+        - "-m standard"
+        - "-m ddp"
+        - "-m delete_pipelines"
+        - "-m delete_flows"
+
       python-version:
         default: "3.10" # "3.11"
         required: false
-        type: string
+        type: choice
+        options:
+        - "3.10"
+        - "3.11"
+        - "3.12"
     secrets:
       AWS_ACCESS_KEY_ID:
         required: false
