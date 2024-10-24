@@ -16,6 +16,10 @@ class Flow(object):
 
         self.registered_flow = registered_flow
 
+    @property
+    def registered_name(self) -> str:
+        return self.registered_flow.name
+
     @classmethod
     def from_workflow(cls, workflow: Workflow) -> "Flow":
         """Class method to initialize a Flow instance from a
@@ -58,7 +62,6 @@ def get_flow(
 
 def list_flows(
     registered_namespace: Optional[str] = None,
-    registered_name_pattern: Optional[str] = None,
     label_selector: Optional[str] = None,
     field_selector: Optional[str] = None,
     **kwargs,
@@ -71,7 +74,6 @@ def list_flows(
 
     response = hera_client.list_workflows(
         namespace=registered_namespace,
-        name_pattern=registered_name_pattern,
         label_selector=label_selector,
         field_selector=field_selector,
         **kwargs,
