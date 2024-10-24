@@ -25,11 +25,12 @@ make platform.up
 To port forward to 
 - the `ArgoWorkflow` server running on EKS and
 - the `Mlflow` server running on EKS,
+
 run:
 
 ```bash
 make platform.connect
-``` run:
+```
 
 When you're done, you can tear down the stack by running
 
