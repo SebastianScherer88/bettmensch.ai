@@ -41,6 +41,10 @@ jobs:
         with:
           terraform_version: "1.9.8"
 
+      - run: echo ${{ secrets.AWS_ACCESS_KEY_ID}}
+
+      - run: echo ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+
       - name: Configure AWS Credentials
         if: ${{ inputs.test-suite == 'k8s' }}
         uses: aws-actions/configure-aws-credentials@v4
