@@ -20,10 +20,9 @@ on:
         - "3.10"
         - "3.11"
         - "3.12"
-        
+
 jobs:
   k8s-test:
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/test.yaml
     with:
       test-suite: k8s

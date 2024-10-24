@@ -11,7 +11,6 @@ on:
         type: string
 jobs:
   integration-test:
-    runs-on: ubuntu-latest
     uses: ./.github/workflows/test.yaml
     with:
       test-suite: integration
