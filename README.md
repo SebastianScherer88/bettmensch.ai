@@ -4,7 +4,7 @@
 
 Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
 
-![docker](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/docker.yaml/badge.svg)
+![docker](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/docker/badge.svg)
 ![unit tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/unit-test.yaml/badge.svg)
 ![integration tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/integration-test.yaml/badge.svg)
 ![k8s tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/k8s-test.yaml/badge.svg)
