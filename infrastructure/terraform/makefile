@@ -21,7 +21,7 @@ platform.connect:
 	@echo "::group::Connecting to the platform..."
 	make kubernetes.configure
 	make kubernetes.connect
-	@echo "::endgroup::
+	@echo "::endgroup::"
 
 platform.test:
 	@echo "::group:: Running e2e platform tests"
