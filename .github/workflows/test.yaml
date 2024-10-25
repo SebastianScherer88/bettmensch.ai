@@ -5,14 +5,22 @@ on:
         default: "unit" # "integration", "k8s"
         required: true
         type: string
+        description: The test suite to run
       test-flags:
         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
         required: false
         type: string 
+        description: Optional pytest flags populating the `PYTEST_FLAGS` argument of the `sdk.test` make target.
       python-version:
         default: "3.10" # "3.11"
         required: false
         type: string
+        description: The python version that the sdk will be installed with.
+      deprovision-when-finished:
+        default: "false"
+        required: false
+        type: string
+        description: Whether to deprovision the platfrom after testing has finished, pass or fail. Only considered if the test suite is 'k8s'.
     secrets:
       AWS_ACCESS_KEY_ID:
         required: false
@@ -36,6 +44,16 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
+
+      - name: Install terraform
+        if: ${{ inputs.test-suite == 'k8s' }}
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Bring up platform
+        if: ${{ inputs.test-suite == 'k8s' }}
+        run: make platform.up
         
       - name: Connect to platform
         if: ${{ inputs.test-suite == 'k8s' }}
@@ -46,7 +64,7 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
       
-      - name: Installation setup
+      - name: Setup sdk installation tools
         run: pip install setuptools
       
       - name: Install sdk
@@ -54,3 +72,7 @@ jobs:
       
       - name: Run test suite
         run: make sdk.test SUITE="${{ inputs.test-suite }}" PYTEST_FLAGS="${{ inputs.test-flags }}"
+
+      - name: Tear down platform (optional)
+        if: ${{ (success() || failure()) && (inputs.test-suite == 'k8s') && (inputs.deprovision-when-finished == 'true') }}
+        run: make platform.init && make platform.down

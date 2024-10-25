@@ -1,6 +1,12 @@
 terraform {
   required_version = ">= 1.3.2"
 
+  backend "s3" {
+    bucket = "all-terraform-states"
+    key    = "bettmensch-ai-platform"
+    region = "us-east-2"
+  }
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
