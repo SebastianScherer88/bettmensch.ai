@@ -2,6 +2,8 @@ import pytest
 from bettmensch_ai.pipelines import delete_flow, list_flows
 
 
+@pytest.mark.standard
+@pytest.mark.ddp
 @pytest.mark.delete_flows
 @pytest.mark.order(10)
 def test_delete(test_namespace):
