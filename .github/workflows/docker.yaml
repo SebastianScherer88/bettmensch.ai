@@ -28,10 +28,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build component image
-        run: make component.build COMPONENT=${{ matrix.component }}
+        run: make component.build COMPONENT="${{ matrix.component }}"
       - name: Tag and push component image
         if: ${{ github.event_name == 'push' }}
-        run: make component.push COMPONENT=${{ matrix.component }}
+        run: make component.push COMPONENT="${{ matrix.component }}"
 
   docker-dashboard:
     runs-on: ubuntu-latest
