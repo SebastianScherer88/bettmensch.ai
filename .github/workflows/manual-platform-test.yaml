@@ -1,3 +1,4 @@
+name: Manual platform test
 on:
   workflow_dispatch:
     inputs:
@@ -11,7 +12,6 @@ on:
         - "-m ddp"
         - "-m delete_pipelines"
         - "-m delete_flows"
-
       python-version:
         default: "3.10" # "3.11"
         required: false
@@ -20,17 +20,10 @@ on:
         - "3.10"
         - "3.11"
         - "3.12"
-
       deprovision-when-finished:
         default: false
         required: false
         type: boolean
-        
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
-        required: false
 
 jobs:
   k8s-test:
