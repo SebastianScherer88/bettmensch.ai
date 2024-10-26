@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       test-flags:
+        description: Optional pytest flags to be passed to the `PYTEST_FLAGS` argument `make platform.test`
         default: "" # for the k8s test suite: "-m standard", "-m ddp" etc
         required: false
         type: choice
@@ -13,6 +14,7 @@ on:
         - "-m delete_pipelines"
         - "-m delete_flows"
       python-version:
+        description: The python version of the sdk
         default: "3.10" # "3.11"
         required: false
         type: choice
@@ -21,6 +23,7 @@ on:
         - "3.11"
         - "3.12"
       deprovision-when-finished:
+        description: Whether to deprovision platform infrastructure after testing regardless of pass/fail
         default: false
         required: false
         type: boolean
