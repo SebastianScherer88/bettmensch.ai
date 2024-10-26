@@ -80,4 +80,8 @@ jobs:
 
       - name: Tear down platform (optional)
         if: ${{ (always() && !cancelled()) && (inputs.test-suite == 'k8s') && (inputs.deprovision-when-finished == 'true') }}
-        run: make platform.init && make platform.down
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 2
+          command: make platform.init && make platform.down
