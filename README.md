@@ -9,9 +9,20 @@ Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML wo
 ![integration tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/integration-test.yaml/badge.svg)
 ![platform tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/platform-test.yaml/badge.svg)
 
+# :twisted_rightwards_arrows: CI
+
+The `.github/workflows` directory contains all Github Actions workflow files.
+
+Their respective state can be seen at the top of this README.
+
 # Setup
 
 ## :bridge_at_night: AWS Infrastructure & Kubernetes
+
+Before you start, make sure you have the following on your machine:
+- a working `terraform` installation
+- a working `aws` CLI installation configured to your AWS account
+
 To provision 
 - the S3 bucket for the Argo Workflows artifact repository
 - Karpenter required infrastructure (IAM, message queues, etc.)
@@ -44,16 +55,27 @@ make platform.down
 To build the `bettmensch.ai`'s custom dashboard's docker image, run:
 
 ```bash
-make dashboard.build
+make dashboard.build DOCKERHUB_ACCOUNT=your-account
 ```
 
-To run the dashboard, run:
+This will build the image and tag it locally with
+- `your-account/bettmensch-ai-dashboard:3.11-<commit-sha>`
+- `your-account/bettmensch-ai-dashboard:3.11-latest`
+
+To push the image to the docker repository and make it accessible to the 
+platform, run
+
+```bash
+make dashboard.push DOCKERHUB_ACCOUNT=your-account
+```
+
+To run the dashboard locally, run:
 
 ```bash
 make dashboard.run
 ```
 
-See the `docker` section for more details.
+See the `docker` directory for more details.
 
 ## :books: Python SDK installation
 
@@ -104,10 +126,16 @@ respective documentation of `bettmensch.ai` SDK.
 
 ## :twisted_rightwards_arrows: `Pipelines & Flows`
 
+### Overview
+
 `bettmensch.ai` comes with a python SDK for defining and executing distributed
  (ML) workloads by leveraging the 
  [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the
-  official [`hera`](https://github.com/argoproj-labs/hera) library.
+  official [`hera`](https://github.com/argoproj-labs/hera) library. In this 
+  framework, pipelines are DAGs with graph nodes implementing your custom logic
+  for the given pipeline step, executed on K8s in a containerised step.
+
+### Examples
 
 The `io` module implements the classes implementing the transfer of inputs and
  outputs between a workfload's components.
@@ -203,6 +231,39 @@ The submitted pipelines can be viewed on the dashboard's `Pipelines` section:
 The executed flows can be viewed on the dashboard's `Flows` section:
 
 ![bettmensch.ai flows](image/dashboard_2_flows.JPG)
+
+### Building images
+
+To build a 
+- `standard`,
+- `pytorch`, or
+- `pytorch-lightning`
+
+docker image to be used for the pipeline components, run
+
+```bash
+make component.build DOCKERHUB_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
+```
+
+This will build the image and tag it locally with
+- `your-account/bettmensch-ai-standard:3.11-<commit-sha>`
+- `your-account/bettmensch-ai-standard:3.11-latest`
+
+To push the image to the docker repository and make it accessible to the 
+platform, run
+
+```bash
+make component.push DOCKERHUB_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
+```
+
+By default, the components will use the
+- `standard` image for the `Component` class
+- `pytorch` image for the `DDPComponent` class
+
+See the `k8s` `ddp` test cases for how to use the `pytorch-lightning` image for
+the `DDPComponent`.
+
+## How it works
 
 The following sequence diagram illustrates how the creation, registration and
  running of `Pipeline`'s is supported by the infrastructure stack initiated in
