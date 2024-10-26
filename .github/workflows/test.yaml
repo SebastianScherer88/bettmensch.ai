@@ -53,7 +53,12 @@ jobs:
 
       - name: Bring up platform
         if: ${{ inputs.test-suite == 'k8s' }}
-        run: make platform.up
+        # retry bc of https://github.com/SebastianScherer88/bettmensch.ai/actions/runs/11522285647/job/32077818521
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 30
+          max_attempts: 2
+          command: make platform.up
         
       - name: Connect to platform
         if: ${{ inputs.test-suite == 'k8s' }}
@@ -74,5 +79,5 @@ jobs:
         run: make sdk.test SUITE="${{ inputs.test-suite }}" PYTEST_FLAGS="${{ inputs.test-flags }}"
 
       - name: Tear down platform (optional)
-        if: ${{ (success() || failure()) && (inputs.test-suite == 'k8s') && (inputs.deprovision-when-finished == 'true') }}
+        if: ${{ (always() && !cancelled()) && (inputs.test-suite == 'k8s') && (inputs.deprovision-when-finished == 'true') }}
         run: make platform.init && make platform.down
