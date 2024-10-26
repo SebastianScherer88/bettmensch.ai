@@ -55,7 +55,7 @@ make platform.down
 To build the `bettmensch.ai`'s custom dashboard's docker image, run:
 
 ```bash
-make dashboard.build DOCKERHUB_ACCOUNT=your-account
+make dashboard.build DOCKER_ACCOUNT=your-account
 ```
 
 This will build the image and tag it locally with
@@ -66,7 +66,7 @@ To push the image to the docker repository and make it accessible to the
 platform, run
 
 ```bash
-make dashboard.push DOCKERHUB_ACCOUNT=your-account
+make dashboard.push DOCKER_ACCOUNT=your-account
 ```
 
 To run the dashboard locally, run:
@@ -242,7 +242,7 @@ To build a
 docker image to be used for the pipeline components, run
 
 ```bash
-make component.build DOCKERHUB_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
+make component.build DOCKER_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
 ```
 
 This will build the image and tag it locally with
@@ -253,7 +253,7 @@ To push the image to the docker repository and make it accessible to the
 platform, run
 
 ```bash
-make component.push DOCKERHUB_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
+make component.push DOCKER_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
 ```
 
 By default, the components will use the
