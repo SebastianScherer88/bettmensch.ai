@@ -1,13 +1,27 @@
 from enum import Enum
 
 from hera.workflows.models import RetryStrategy, Toleration
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class ComponentImageSettings(BaseSettings):
+    account: str = "bettmensch88"
+    repo_base: str = "bettmensch.ai"
+
+    model_config = SettingsConfigDict(env_prefix="bettmensch_ai_docker_")
+
+
+component_image_settings = ComponentImageSettings()
+DOCKER_IMAGE_BASE = (
+    f"{component_image_settings.account}/{component_image_settings.repo_base}"
+)
 
 
 class COMPONENT_IMAGE(Enum):
-    base = "bettmensch88/bettmensch.ai:3.11-latest"
-    standard = "bettmensch88/bettmensch.ai:3.11-latest"
-    torch = "bettmensch88/bettmensch.ai-pytorch:3.11-latest"
-    lightning = "bettmensch88/bettmensch.ai-pytorch-lightning:3.11-latest"
+    base = f"{DOCKER_IMAGE_BASE}:3.11-latest"
+    standard = f"{DOCKER_IMAGE_BASE}:3.11-latest"
+    torch = f"{DOCKER_IMAGE_BASE}-pytorch:3.11-latest"
+    lightning = f"{DOCKER_IMAGE_BASE}-pytorch-lightning:3.11-latest"
 
 
 INPUT_TYPE = "inputs"
