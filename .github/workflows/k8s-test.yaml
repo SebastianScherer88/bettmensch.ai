@@ -39,3 +39,4 @@ jobs:
       test-suite: k8s
       test-flags: ${{ inputs.test-flags }}
       python-version: ${{ inputs.python-version }}
+      deprovision-when-finished: ${{ inputs.deprovision-when-finished }}
