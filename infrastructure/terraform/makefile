@@ -25,7 +25,7 @@ platform.connect:
 
 platform.test:
 	@echo "::group:: Running e2e platform tests"
-	make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
+	make sdk.test SUITE=k8s PYTEST_FLAGS="$(PYTEST_FLAGS)"
 	@echo "::endgroup::"
 
 platform.delete_test_pipelines:
