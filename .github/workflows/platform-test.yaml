@@ -1,0 +1,19 @@
+on:
+  schedule:
+    # run this test at 1am every other day
+    - cron: "00 01 */2 * *"
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+
+jobs:
+  k8s-test:
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit
+    with:
+      test-suite: k8s
+      test-flags: ""
+      python-version: "3.10"
+      deprovision-when-finished: true
