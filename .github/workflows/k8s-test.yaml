@@ -20,6 +20,11 @@ on:
         - "3.10"
         - "3.11"
         - "3.12"
+
+      deprovision-when-finished:
+        default: false
+        required: false
+        type: boolean
     secrets:
       AWS_ACCESS_KEY_ID:
         required: false
