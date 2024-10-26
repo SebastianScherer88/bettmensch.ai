@@ -1,7 +1,6 @@
 on:
   schedule:
-    # run this test at 1am every other day
-    - cron: "00 01 */2 * *"
+    - cron: '0 1 */2 * *' # run this test at 1am every other day
     secrets:
       AWS_ACCESS_KEY_ID:
         required: false
