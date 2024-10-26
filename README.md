@@ -22,6 +22,7 @@ Their respective state can be seen at the top of this README.
 Before you start, make sure you have the following on your machine:
 - a working `terraform` installation
 - a working `aws` CLI installation configured to your AWS account
+- a dockerhub account `your-account`
 
 To provision 
 - the S3 bucket for the Argo Workflows artifact repository
