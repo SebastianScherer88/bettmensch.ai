@@ -424,7 +424,8 @@ def test_delete_registered_pipeline(test_namespace):
     """Test the delete_registered_pipeline function"""
 
     registered_pipelines = list_registered_pipelines(
-        registered_namespace=test_namespace, registered_name_pattern="test-"
+        registered_namespace=test_namespace,
+        registered_name_pattern="pipeline-test-",
     )
 
     for registered_pipeline in registered_pipelines:
@@ -436,7 +437,7 @@ def test_delete_registered_pipeline(test_namespace):
     assert (
         list_registered_pipelines(
             registered_namespace=test_namespace,
-            registered_name_pattern="test-",  # noqa: E501
+            registered_name_pattern="pipeline-test-",  # noqa: E501
         )
         == []
     )
