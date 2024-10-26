@@ -25,6 +25,7 @@ on:
         default: false
         required: false
         type: boolean
+        
     secrets:
       AWS_ACCESS_KEY_ID:
         required: false

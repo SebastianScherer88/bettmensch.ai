@@ -17,9 +17,9 @@ on:
         type: string
         description: The python version that the sdk will be installed with.
       deprovision-when-finished:
-        default: "false"
+        default: false
         required: false
-        type: string
+        type: boolean
         description: Whether to deprovision the platfrom after testing has finished, pass or fail. Only considered if the test suite is 'k8s'.
     secrets:
       AWS_ACCESS_KEY_ID:
@@ -79,7 +79,7 @@ jobs:
         run: make sdk.test SUITE="${{ inputs.test-suite }}" PYTEST_FLAGS="${{ inputs.test-flags }}"
 
       - name: Tear down platform (optional)
-        if: ${{ (always() && !cancelled()) && (inputs.test-suite == 'k8s') && (inputs.deprovision-when-finished == 'true') }}
+        if: ${{ (always() && !cancelled()) && (inputs.test-suite == 'k8s') && inputs.deprovision-when-finished }}
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 30
