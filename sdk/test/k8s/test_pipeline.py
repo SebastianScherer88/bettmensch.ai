@@ -420,8 +420,8 @@ def test_run_dpp_registered_pipelines_from_registry(
 @pytest.mark.ddp
 @pytest.mark.delete_pipelines
 @pytest.mark.order(9)
-def test_delete(test_namespace):
-    """Test the pipeline.delete function"""
+def test_delete_registered_pipeline(test_namespace):
+    """Test the delete_registered_pipeline function"""
 
     registered_pipelines = list_registered_pipelines(
         registered_namespace=test_namespace, registered_name_pattern="test-"

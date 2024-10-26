@@ -28,12 +28,12 @@ platform.test:
 	make sdk.test SUITE=k8s PYTEST_FLAGS=$(PYTEST_FLAGS)
 	@echo "::endgroup::"
 
-platform.delete_pipelines:
+platform.delete_test_pipelines:
 	@echo "::group:: Removing all pipelines"
 	make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_pipelines"
 	@echo "::endgroup::"
 
-platform.delete_flows:
+platform.delete_test_flows:
 	@echo "::group:: Removing all flows"
 	make sdk.test SUITE=k8s PYTEST_FLAGS="-m delete_flows"
 	@echo "::endgroup::"
