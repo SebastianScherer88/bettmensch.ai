@@ -1,3 +1,4 @@
+name: CI unit test
 on:
   pull_request:
     types:

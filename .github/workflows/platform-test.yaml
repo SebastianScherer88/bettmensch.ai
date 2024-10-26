@@ -1,11 +1,7 @@
+name: Scheduled platform test
 on:
   schedule:
     - cron: '0 1 */2 * *' # run this test at 1am every other day
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
-        required: false
 
 jobs:
   k8s-test:
