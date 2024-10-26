@@ -1,5 +1,7 @@
 ## VARIABLES
-DOCKER_IMAGE_BASE=bettmensch88/bettmensch.ai
+DOCKER_ACCOUNT=bettmensch88
+DOCKER_REPO_BASE=bettmensch.ai
+DOCKER_IMAGE_BASE=${DOCKER_ACCOUNT}/$(DOCKER_REPO_BASE)
 COMPONENT?=standard
 COMMIT?=$(shell git rev-parse --short HEAD)
 LOCAL_TAG=local
@@ -10,12 +12,12 @@ component.build:
 	@echo "::group::Building $(COMPONENT) component docker image"
 	@echo "::group:: Commit: $(COMMIT)"
 	docker compose -f docker/component/docker-compose.yaml build $(COMPONENT)
+	docker tag $(DOCKER_IMAGE_BASE)-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${COMMIT_TAG}
+	docker tag ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LATEST_TAG}
 	@echo "::endgroup::"
 
 component.push:
 	@echo "::group::Pushing $(COMPONENT) component docker image"
-	docker tag ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${COMMIT_TAG}
-	docker tag ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LATEST_TAG}
 	docker push ${DOCKER_IMAGE_BASE}-${COMPONENT}:${COMMIT_TAG}
 	docker push ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LATEST_TAG}
 	@echo "::endgroup::"
