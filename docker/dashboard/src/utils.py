@@ -4,9 +4,21 @@ import cv2
 import numpy as np
 import streamlit as st
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # --- Colouring
 LOGO_IMAGE = cv2.imread("./image/logo_transparent.png")
+
+
+# --- ArgoWorkflows dashboard embedding config
+class MlflowDisplaySettings(BaseSettings):
+    width: int = 1200
+    height: int = 1000
+    scrolling: bool = True
+    host: str = "mlflow.svc.cluster.local:5000"
+    starting_endpoint: str = "#/models"
+
+    model_config = SettingsConfigDict(env_prefix="mlflow_backend_")
 
 
 class CustomTheme(BaseModel):
