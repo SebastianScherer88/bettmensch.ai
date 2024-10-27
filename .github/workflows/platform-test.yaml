@@ -1,7 +1,7 @@
 name: Scheduled platform test
 on:
   schedule:
-    - cron: '50 16 * * *' # run this test at 16:40 UTC every day
+    - cron: '25 18 * * *' # run this test at 16:40 UTC every day
 jobs:
   k8s-test:
     uses: ./.github/workflows/test.yaml
