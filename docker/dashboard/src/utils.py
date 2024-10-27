@@ -21,17 +21,6 @@ class MlflowDisplaySettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="mlflow_backend_")
 
 
-# --- Mlflow dashboard embedding config
-class ArgoWorkflowsDisplaySettings(BaseSettings):
-    width: int = 1200
-    height: int = 1000
-    scrolling: bool = True
-    host: str = "argo.svc.cluster.local:2746"
-    starting_endpoint: str = "workflows?namespace=argo&limit=50"
-
-    model_config = SettingsConfigDict(env_prefix="argo_workflows_backend_")
-
-
 class CustomTheme(BaseModel):
     """Defaults to "dark" if not specified. Colors MUST be HEX values, e.g.
 
