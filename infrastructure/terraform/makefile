@@ -1,5 +1,6 @@
 ## VARIABLES
 DIR?=infrastructure/terraform
+ARTIFACT_REPOSITORY_S3_BUCKET=bettmensch-ai-artifact-repository
 
 platform.init:
 	@echo "::group::Initializing platform infrastructure environment"
@@ -40,8 +41,10 @@ platform.delete_test_flows:
 
 platform.down:
 	@echo "::group::Tearing down platform infrastructure..."
-	# empty the argo workflow artifact repository s3 bucket, otherwise we
-	# wont be able to remove it from AWS
-	aws s3 rm s3://bettmensch-ai-artifact-repository --recursive
+	# if it exists, empty the argo workflow artifact repository s3 bucket, 
+	# otherwise we wont be able to remove it from AWS
+	python3 -c "import boto3;buckets=boto3.client('s3').list_buckets()['Buckets'];exists=len([b for b in buckets if b['Name']=='$(ARTIFACT_REPOSITORY_S3_BUCKET)'])==1;_ = boto3.resource('s3').Bucket('$(ARTIFACT_REPOSITORY_S3_BUCKET)').objects.all().delete() if exists else None"
+	
+	# tear down infra stack
 	terraform -chdir=$(DIR) destroy -auto-approve
 	@echo "::endgroup::"
