@@ -4,6 +4,8 @@ ARTIFACT_REPOSITORY_S3_BUCKET=bettmensch-ai-artifact-repository
 
 platform.init:
 	@echo "::group::Initializing platform infrastructure environment"
+	pip install boto3 # needed for python bucket emptying utility in 
+	# `platform.down` target
 	terraform -chdir=$(DIR) init
 		@echo "::endgroup::"
 
