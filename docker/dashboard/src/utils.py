@@ -15,7 +15,7 @@ class MlflowDisplaySettings(BaseSettings):
     width: int = 1200
     height: int = 1000
     scrolling: bool = True
-    host: str = "mlflow.svc.cluster.local:5000"
+    host: str = "http://mlflow-server.mlflow.svc.cluster.local:5000"
     starting_endpoint: str = "#/models"
 
     model_config = SettingsConfigDict(env_prefix="mlflow_backend_")
