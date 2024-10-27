@@ -17,6 +17,7 @@ show_pages(
         Page(path="src/2_flows.py", name="Flows", icon=":arrow_forward:"),
         Page(path="src/3_models.py", name="Models", icon=":books:"),
         Page(path="src/4_servers.py", name="Servers", icon=":rocket:"),
+        Page(path="src/5_argo.py", name="Argo", icon=":rocket:"),
     ]
 )
 
