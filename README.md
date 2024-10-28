@@ -275,7 +275,12 @@ The following sequence diagram illustrates how the creation, registration and
 
 ![bettmensch.ai models](image/dashboard_3_models.JPG)
 
-Coming soon.
+We use [mlflow](https://mlflow.org/) as the default model registry backend for
+the time being, using an S3 storage backend for persisting the artifacts.
+
+NOTE: Currently, the user needs access to the mlflow service on the K8s cluster.
+This is achieved by the port forwarding done in `make platform.connect` (see 
+the setup section earlier.)
 
 ## :rocket: `Servers`
 
