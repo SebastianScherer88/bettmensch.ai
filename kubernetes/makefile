@@ -37,6 +37,6 @@ kubernetes.connect.dashboard:
 	@echo "::endgroup::"
 
 kubernetes.connect:
-	# make kubernetes.connect.mlflow
+	make kubernetes.connect.mlflow
 	make kubernetes.connect.argo
 	make kubernetes.connect.dashboard
