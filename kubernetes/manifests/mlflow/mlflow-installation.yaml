@@ -22,15 +22,13 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app: mlflow-server
   name: mlflow-server
   namespace: mlflow
 spec:
   ports:
   - port: 5000
     protocol: TCP
-    targetPort: tracking-server
+    targetPort: 5000
   selector:
     app: mlflow-server
 ---
