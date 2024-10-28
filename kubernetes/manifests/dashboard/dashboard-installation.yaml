@@ -37,7 +37,7 @@ spec:
         - name: mlflow_backend_scrolling
           value: "True"
         - name: mlflow_backend_host
-          value: "http://mlflow-server.mlflow.svc.cluster.local:5000"
+          value: "http://127.0.0.1:5000"
         - name: mlflow_backend_starting_endpoint
           value: "#/models"
         # argo workflows server specs
