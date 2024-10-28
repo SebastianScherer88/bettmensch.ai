@@ -69,6 +69,12 @@ module "eks" {
     }
   }
 
+  # try and reduce cloudwatch logging costs
+  create_cloudwatch_log_group = true
+  cloudwatch_log_group_class = "INFREQUENT_ACCESS"
+  cloudwatch_log_group_retention_in_days = 1
+  cluster_enabled_log_types = [] # "audit", "api", "authenticator"
+
   cluster_addons = {
     coredns = {}
     kube-proxy = {}
