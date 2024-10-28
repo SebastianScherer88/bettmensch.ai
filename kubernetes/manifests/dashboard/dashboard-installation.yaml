@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bettmensch-ai-dashboard
+  namespace: bettmensch-ai
+spec:
+  ports:
+  - port: 8501
+    protocol: TCP
+    targetPort: streamlit
+  selector:
+    app: bettmensch-ai-dashboard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bettmensch-ai-dashboard
+  namespace: bettmensch-ai
+spec:
+  selector:
+    matchLabels:
+      app: bettmensch-ai-dashboard
+  template:
+    metadata:
+      labels:
+        app: bettmensch-ai-dashboard
+    spec:
+      containers:
+      - name: streamlit
+        command: ["streamlit", "run", "src/0_home.py", "--server.port=8501", "--server.address=0.0.0.0"]
+        env:
+        # mlflow dashboard specs
+        - name: mlflow_backend_width
+          value: "1200"
+        - name: mlflow_backend_height
+          value: "1000"
+        - name: mlflow_backend_scrolling
+          value: "True"
+        - name: mlflow_backend_host
+          value: "http://127.0.0.1:5000"
+        - name: mlflow_backend_starting_endpoint
+          value: "#/models"
+        # argo workflows server specs
+        - name: argo_workflows_backend_namespace
+          value: "argo"
+        - name: argo_workflows_backend_host
+          value: "https://argo-server.argo.svc.cluster.local:2746"
+        - name: argo_workflows_backend_verify_ssl
+          value: "False"
+        image: bettmensch88/bettmensch.ai-dashboard:3.11-latest
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        ports:
+        - containerPort: 8501
+          name: streamlit

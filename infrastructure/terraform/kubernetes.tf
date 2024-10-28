@@ -315,3 +315,31 @@ resource "kubectl_manifest" "mlflow" {
       kubectl_manifest.mlflow_namespace
   ]
 }
+
+################################################################################
+# Bettmensch.ai dashboard
+################################################################################
+
+# argo namespace
+resource "kubectl_manifest" "bettmensch_ai_namespace" {
+  yaml_body = <<-YAML
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: bettmensch-ai
+  YAML
+}
+
+# bettmensch.ai dashboard installation
+data "kubectl_file_documents" "bettmensch_ai_dashboard" {
+    content = file("../../kubernetes/manifests/dashboard/dashboard-installation.yaml")
+}
+
+resource "kubectl_manifest" "bettmensch_ai_dashboard" {
+    for_each  = data.kubectl_file_documents.bettmensch_ai_dashboard.manifests
+    yaml_body = each.value
+
+    depends_on = [
+      kubectl_manifest.bettmensch_ai_namespace
+  ]
+}

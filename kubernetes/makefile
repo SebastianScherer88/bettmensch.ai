@@ -1,26 +1,42 @@
 ## VARIABLES
 REGION?=us-east-2
 CLUSTER_NAME?=bettmensch-ai
-ARGO_HEAD_POD=$(shell kubectl get pods --selector=app=argo-server -n argo -o custom-columns=POD:metadata.name --no-headers)
+ARGO_SERVICE?=argo-server
+ARGO_NAMESPACE?=argo
 ARGO_PORT?=2746
-MLFLOW_HEAD_POD=$(shell kubectl get pods --selector=app=mlflow-server -n mlflow -o custom-columns=POD:metadata.name --no-headers)
+MLFLOW_SERVICE?=mlflow-server
+MLFLOW_NAMESPACE=mlflow
 MLFLOW_PORT?=5000
+DASHBOARD_SERVICE?=bettmensch-ai-dashboard
+DASHBOARD_NAMESPACE?=bettmensch-ai
+DASHBOARD_PORT=8501
 
 kubernetes.configure:
 	@echo "::group::Configuring kubeconfig"
 	aws eks --region $(REGION) update-kubeconfig --name $(CLUSTER_NAME)
 	@echo "::endgroup::"
 
-kubernetes.connect.mlflow:
+kubernetes.connect_service:
 	@echo "::group::Port fowarding the Mlflow server on the K8s cluster"
-	kubectl -n mlflow port-forward $(MLFLOW_HEAD_POD) --address 0.0.0.0 $(MLFLOW_PORT):$(MLFLOW_PORT) > mlflow-port-forward.log & # background process
+	kubectl -n $(NAMESPACE) port-forward service/$(SERVICE) --address 0.0.0.0 $(PORT):$(PORT) > port-forward-$(SERVICE).log & # background process
 	@echo "::endgroup::"
 
 kubernetes.connect.argo:
-	@echo "::group::Port forwarding the ArgoWorkflows server to the K8s cluster"
-	kubectl -n argo port-forward $(ARGO_HEAD_POD) --address 0.0.0.0 $(ARGO_PORT):$(ARGO_PORT) > argo-port-forward.log & # background process
+	@echo "::group::Port fowarding the ArgoWorkflows server on the K8s cluster"
+	make kubernetes.connect_service NAMESPACE=$(ARGO_NAMESPACE) SERVICE=$(ARGO_SERVICE) PORT=$(ARGO_PORT)
+	@echo "::endgroup::"
+
+kubernetes.connect.mlflow:
+	@echo "::group::Port fowarding the Mlflow server on the K8s cluster"
+	make kubernetes.connect_service NAMESPACE=$(MLFLOW_NAMESPACE) SERVICE=$(MLFLOW_SERVICE) PORT=$(MLFLOW_PORT)
+	@echo "::endgroup::"
+
+kubernetes.connect.dashboard:
+	@echo "::group::Port fowarding the Bettmensch.ai dashboard on the K8s cluster"
+	make kubernetes.connect_service NAMESPACE=$(DASHBOARD_NAMESPACE) SERVICE=$(DASHBOARD_SERVICE) PORT=$(DASHBOARD_PORT)
 	@echo "::endgroup::"
 
 kubernetes.connect:
 	make kubernetes.connect.mlflow
 	make kubernetes.connect.argo
+	make kubernetes.connect.dashboard
