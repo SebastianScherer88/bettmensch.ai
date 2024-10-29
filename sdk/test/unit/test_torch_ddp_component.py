@@ -212,7 +212,9 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.task_factory is None
 
 
-def test_parameter_torch_component_to_hera(test_mock_pipeline):
+def test_parameter_torch_component_to_hera(
+    test_output_dir, test_mock_pipeline
+):
     """Declaration of Component using InputParameter and OutputParameter"""
 
     # mock active pipeline with 2 inputs
@@ -255,7 +257,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
     a_plus_b_plus_2.task_factory = a_plus_b_plus_2.build_hera_task_factory()
 
     with WorkflowTemplate(
-        name="test-parameter-component-workflow-template",
+        name="test-parameter-torch-ddp-component-workflow-template",
         entrypoint="test_dag",
         namespace="argo",
         arguments=[
@@ -272,6 +274,8 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
         with DAG(name="test_dag"):
             a_plus_b.to_hera()
             a_plus_b_plus_2.to_hera()
+
+    wft.to_file(test_output_dir)
 
     task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
@@ -310,6 +314,7 @@ def test_parameter_torch_component_to_hera(test_mock_pipeline):
 
 
 def test_artifact_torch_component_to_hera(
+    test_output_dir,
     test_mock_pipeline,
 ):
 
@@ -346,7 +351,7 @@ def test_artifact_torch_component_to_hera(
     show.task_factory = show.build_hera_task_factory()
 
     with WorkflowTemplate(
-        name="test-artifact-component-workflow-template",
+        name="test-artifact-torch-ddp-component-workflow-template",
         entrypoint="test_dag",
         namespace="argo",
         arguments=[
@@ -360,6 +365,8 @@ def test_artifact_torch_component_to_hera(
         with DAG(name="test_dag"):
             convert.to_hera()
             show.to_hera()
+
+    wft.to_file(test_output_dir)
 
     task_names = [task.name for task in wft.templates[4].tasks]
     assert task_names == [
