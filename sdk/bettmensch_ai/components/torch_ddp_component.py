@@ -2,7 +2,6 @@ import copy
 import inspect
 import textwrap
 from typing import Callable, Dict, List, Optional, Union
-from uuid import uuid4
 
 from bettmensch_ai.components.base_component import BaseComponent
 from bettmensch_ai.components.base_inline_script_runner import (
@@ -87,7 +86,7 @@ class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
         # add function definition and decoration with `torch_ddp`
         torch_ddp_decoration = [
             "\nfrom bettmensch_ai.components import torch_ddp\n",
-            "torch_ddp_decorator=torch_ddp()\n"
+            "torch_ddp_decorator=torch_ddp()\n",
             f"""torch_ddp_function=torch_ddp_decorator({
                 instance.source.__name__
             })\n""",
@@ -120,7 +119,6 @@ class TorchDDPComponent(BaseComponent):
     nproc_per_node: int
     service_templates: Dict[str, Callable] = None
     k8s_namespace: str = ARGO_NAMESPACE
-    k8s_service_name: str = ""
 
     # if no resources are specified, set minimal requirements derived from
     # testing the ddp example on K8s
@@ -165,11 +163,11 @@ class TorchDDPComponent(BaseComponent):
         return {
             "create": create_torch_ddp_service_template(
                 component_base_name=self.base_name,
-                service_name=self.k8s_service_name,
+                component_task_name=self.name,
             ),
             "delete": delete_torch_ddp_service_template(
                 component_base_name=self.base_name,
-                service_name=self.k8s_service_name,
+                component_task_name=self.name,
             ),
         }
 
@@ -232,8 +230,7 @@ class TorchDDPComponent(BaseComponent):
             ),
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_url",  # noqa: E501
-                value=f"{self.k8s_service_name}.{self.k8s_namespace}"
-                + ".svc.cluster.local",
+                value=f"{self.name}-{{{{workflow.uid}}}}.{self.k8s_namespace}.svc.cluster.local",  # noqa: E501
             ),
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_port",  # noqa: E501
@@ -255,7 +252,7 @@ class TorchDDPComponent(BaseComponent):
         labels.update(
             {
                 "torch-node": torch_node_rank,
-                "torch-job": self.k8s_service_name,
+                "torch-job": self.name,
             }
         )
         script_decorator_kwargs["labels"] = labels
@@ -272,8 +269,6 @@ class TorchDDPComponent(BaseComponent):
                 active hera DAG context, generate the hera Tasks, one for each
                 node in the distributed torch run.
         """
-
-        self.k8s_service_name = f"{self.name}-{uuid4()}"
 
         # add torch run environment variables to script kwargs
         task_factory = []

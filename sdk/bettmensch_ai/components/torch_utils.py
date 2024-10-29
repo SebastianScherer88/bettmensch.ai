@@ -140,7 +140,7 @@ def torch_ddp(**config_settings_kwargs):
 
 def create_torch_ddp_service_template(
     component_base_name: str,
-    service_name: str,
+    component_task_name: str,
     namespace: str = ARGO_NAMESPACE,  # noqa: E501
 ) -> Resource:
     """Utility for a template creating the service resource required for
@@ -152,10 +152,11 @@ def create_torch_ddp_service_template(
         manifest=f"""apiVersion: v1
 kind: Service
 metadata:
-  name: {service_name}
+  name: {component_task_name}-{{{{workflow.uid}}}}
   namespace: {namespace}
   labels:
-    app: {service_name}
+    workflows.argoproj.io/workflow: {{{{workflow.name}}}}
+    torch-job: {component_task_name}
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
   ports:
@@ -163,7 +164,8 @@ spec:
     port: {DDP_PORT_NUMBER}
     targetPort: {DDP_PORT_NUMBER}
   selector:
-    torch-job: {service_name}
+    workflows.argoproj.io/workflow: {{{{workflow.name}}}}
+    torch-job: {component_task_name}
     torch-node: '0'  # Selector for pods associated with this service.
 """,
     )
@@ -171,7 +173,7 @@ spec:
 
 def delete_torch_ddp_service_template(
     component_base_name: str,
-    service_name: str,
+    component_task_name: str,
     namespace: str = ARGO_NAMESPACE,  # noqa: E501
 ) -> Resource:
     """Utility for a template deleting the service resource required for
@@ -183,7 +185,7 @@ def delete_torch_ddp_service_template(
         flags=[
             "service",
             "--selector",
-            f"app={service_name}",
+            f"torch-job={component_task_name},workflows.argoproj.io/workflow={{{{workflow.name}}}}",  # noqa: E501
             "-n",
             namespace,
         ],
