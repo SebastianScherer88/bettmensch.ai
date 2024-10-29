@@ -74,11 +74,7 @@ def test_artifact_pipeline(
     ]
 
     assert wft.templates[3].labels["torch-node"] == "0"
-    assert (
-        wft.templates[3]
-        .labels["torch-job"]
-        .startswith("convert-to-artifact-0-")
-    )
+    assert wft.templates[3].labels["torch-job"] == "convert-to-artifact-0"
     assert wft.templates[4].labels["torch-node"] == "1"
 
     parameter_to_artifact.export(test_output_dir)
@@ -146,7 +142,7 @@ def test_parameter_pipeline(test_output_dir):
     ]
 
     assert wft.templates[3].labels["torch-node"] == "0"
-    assert wft.templates[3].labels["torch-job"].startswith("a-plus-b-0-")
+    assert wft.templates[3].labels["torch-job"] == "a-plus-b-0"
     assert wft.templates[4].labels["torch-node"] == "1"
 
     adding_parameters.export(test_output_dir)

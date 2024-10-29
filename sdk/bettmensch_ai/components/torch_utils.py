@@ -152,7 +152,7 @@ def create_torch_ddp_service_template(
         manifest=f"""apiVersion: v1
 kind: Service
 metadata:
-  name: {component_task_name}-{{workflow.name}}
+  name: {component_task_name}-{{{{workflow.name}}}}
   namespace: {namespace}
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
@@ -161,7 +161,7 @@ spec:
     port: {DDP_PORT_NUMBER}
     targetPort: {DDP_PORT_NUMBER}
   selector:
-    workflows.argoproj.io/workflow: {{workflow.name}}
+    workflows.argoproj.io/workflow: {{{{workflow.name}}}}
     torch-job: {component_task_name}
     torch-node: '0'  # Selector for pods associated with this service.
 """,
@@ -181,7 +181,9 @@ def delete_torch_ddp_service_template(
         action="delete",
         flags=[
             "service",
-            component_task_name + "-{{workflow.name}}" "-n",
+            "--selector",
+            f"torch-job={component_task_name},workflows.argoproj.io/workflow={{{{workflow.name}}}}",  # noqa: E501
+            "-n",
             namespace,
         ],
     )

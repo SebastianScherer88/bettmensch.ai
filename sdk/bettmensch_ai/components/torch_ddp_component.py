@@ -86,10 +86,7 @@ class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
         # add function definition and decoration with `torch_ddp`
         torch_ddp_decoration = [
             "\nfrom bettmensch_ai.components import torch_ddp\n",
-            "component_task_name={{task.name}}\n"
-            "workflow_name={{workflow.name}}\n",
-            "svc_dns=f'{component_task_name}-{workflow_name}.argo.svc.cluster.local'\n"  # noqa: E501
-            "torch_ddp_decorator=torch_ddp(rdzv_endpoint_url=svc_dns)\n"
+            "torch_ddp_decorator=torch_ddp()\n",
             f"""torch_ddp_function=torch_ddp_decorator({
                 instance.source.__name__
             })\n""",
@@ -230,6 +227,10 @@ class TorchDDPComponent(BaseComponent):
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_backend",  # noqa: E501
                 value="static",
+            ),
+            Env(
+                name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_url",  # noqa: E501
+                value=f"{self.name}-{{{{workflow.name}}}}.{self.k8s_namespace}.svc.cluster.local",  # noqa: E501
             ),
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_port",  # noqa: E501

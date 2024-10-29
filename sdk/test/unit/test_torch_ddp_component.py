@@ -303,12 +303,12 @@ def test_parameter_torch_component_to_hera(
     ]
 
     assert wft.templates[5].labels["torch-node"] == "0"
-    assert wft.templates[5].labels["torch-job"].startswith("a-plus-b-0-")
+    assert wft.templates[5].labels["torch-job"] == "a-plus-b-0"
     assert wft.templates[6].labels["torch-node"] == "1"
 
     assert wft.templates[7].labels["torch-node"] == "0"
     assert (
-        wft.templates[7].labels["torch-job"].startswith("a-plus-b-plus-2-0-")
+        wft.templates[7].labels["torch-job"] == "a-plus-b-plus-2-0"
     )  # noqa: E501
     assert wft.templates[8].labels["torch-node"] == "1"
 
@@ -393,11 +393,10 @@ def test_artifact_torch_component_to_hera(
 
     assert wft.templates[5].labels["torch-node"] == "0"
     assert (
-        wft.templates[5]
-        .labels["torch-job"]
-        .startswith("convert-parameters-0-")  # noqa: E501
+        wft.templates[5].labels["torch-job"]
+        == "convert-parameters-0"  # noqa: E501
     )
     assert wft.templates[6].labels["torch-node"] == "1"
 
     assert wft.templates[7].labels["torch-node"] == "0"
-    assert wft.templates[7].labels["torch-job"].startswith("show-artifacts-0-")
+    assert wft.templates[7].labels["torch-job"] == "show-artifacts-0"
