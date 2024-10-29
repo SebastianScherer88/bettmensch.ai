@@ -1,9 +1,6 @@
 import pytest
 from bettmensch_ai.components.examples import (
-    add_parameters_factory,
-    convert_to_artifact_factory,
     lightning_train_torch_ddp_factory,
-    show_artifact_factory,
     show_parameter_factory,
     tensor_reduce_torch_ddp_factory,
 )
@@ -15,6 +12,10 @@ from bettmensch_ai.pipelines import (
     list_registered_pipelines,
     pipeline,
 )
+from bettmensch_ai.pipelines.examples import (
+    adding_parameters_pipeline,
+    parameter_to_artifact_pipeline,
+)
 
 
 @pytest.mark.standard
@@ -22,22 +23,8 @@ from bettmensch_ai.pipelines import (
 def test_artifact_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
 ):
-    """Defines, registers and runs a Pipeline passing artifacts across
+    """Registers and runs an example Pipeline passing artifacts across
     components."""
-
-    @pipeline("test-artifact-pipeline", test_namespace, True)
-    def parameter_to_artifact_pipeline(
-        a: InputParameter = "Param A",
-    ) -> None:
-        convert = convert_to_artifact_factory(
-            "convert-to-artifact",
-            a=a,
-        )
-
-        show_artifact_factory(
-            "show-artifact",
-            a=convert.outputs["a_art"],
-        )
 
     parameter_to_artifact_pipeline.export(test_output_dir)
 
@@ -72,24 +59,8 @@ def test_artifact_pipeline_decorator_and_register_and_run(
 def test_parameter_pipeline_decorator_and_register_and_run(
     test_output_dir, test_namespace
 ):
-    """Defines, registers and runs a Pipeline passing parameters across
+    """Registers and runs an example Pipeline passing parameters across
     components."""
-
-    @pipeline("test-parameter-pipeline", test_namespace, True)
-    def adding_parameters_pipeline(
-        a: InputParameter = 1, b: InputParameter = 2
-    ) -> None:
-        a_plus_b = add_parameters_factory(
-            "a-plus-b",
-            a=a,
-            b=b,
-        )
-
-        add_parameters_factory(
-            "a-plus-b-plus-2",
-            a=a_plus_b.outputs["sum"],
-            b=InputParameter("two", 2),
-        )
 
     adding_parameters_pipeline.export(test_output_dir)
 
@@ -206,8 +177,8 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
     test_namespace,
 ):
     """Defines, registers and runs a Pipeline containing a non-trivial
-    TorchComponent. The pod spec patch ensures distributing replica pods of the
-    TorchComponent across different K8s nodes."""
+    TorchDDPComponent. The pod spec patch ensures distributing replica pods of
+    the TorchDDPComponent across different K8s nodes."""
 
     @pipeline(test_pipeline_name, test_namespace, True)
     def torch_ddp_pipeline(
@@ -279,8 +250,8 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
     test_namespace,
 ):
     """Defines, registers and runs a Pipeline containing a non-trivial
-    TorchComponent. The pod spec patch ensures distributing replica pods of the
-    TorchComponent across different K8s nodes."""
+    TorchDDPComponent. The pod spec patch ensures distributing replica pods of
+    the TorchDDPComponent across different K8s nodes."""
 
     @pipeline(test_pipeline_name, test_namespace, True)
     def lightning_ddp_pipeline(
