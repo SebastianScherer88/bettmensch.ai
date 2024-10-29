@@ -152,8 +152,11 @@ def create_torch_ddp_service_template(
         manifest=f"""apiVersion: v1
 kind: Service
 metadata:
-  name: {component_task_name}-{{{{workflow.name}}}}
+  name: {component_task_name}-{{{{workflow.uid}}}}
   namespace: {namespace}
+  labels:
+    workflows.argoproj.io/workflow: {{{{workflow.name}}}}
+    torch-job: {component_task_name}
 spec:
   clusterIP: None  # ClusterIP set to None for headless service.
   ports:
