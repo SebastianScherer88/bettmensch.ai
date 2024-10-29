@@ -230,7 +230,7 @@ class TorchDDPComponent(BaseComponent):
             ),
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_url",  # noqa: E501
-                value=f"{self.name}-{{{{workflow.name}}}}.{self.k8s_namespace}.svc.cluster.local",  # noqa: E501
+                value=f"{self.name}-{{{{workflow.uid}}}}.{self.k8s_namespace}.svc.cluster.local",  # noqa: E501
             ),
             Env(
                 name=f"{LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_port",  # noqa: E501
