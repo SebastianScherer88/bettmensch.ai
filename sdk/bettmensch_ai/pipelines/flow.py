@@ -124,19 +124,19 @@ def get_flow(
 
 def list_flows(
     registered_namespace: str = ARGO_NAMESPACE,
-    pipeline: Optional[str] = None,
+    registered_pipeline_name: Optional[str] = None,
     phase: Optional[str] = None,
     labels: Dict = {},
     **kwargs,
 ) -> List[Flow]:
-    """List[Flow]: A list of all Flows that meet the query scope.
+    """Get all flows that meet the query specifications.
 
     Args:
         registered_namespace (Optional[str], optional): The namespace in which
             the underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
-        pipeline (Optional[str], optional): Optional filter to only consider
-            Flows that originate from the specified pipeline. Defaults to None,
-            i.e. no pipeline-based filtering.
+        registered_pipeline_name (Optional[str], optional): Optional filter to
+            only consider Flows that originate from the specified pipeline.
+            Defaults to None, i.e. no pipeline-based filtering.
         phase (Optional[str], optional): Optional filter to only consider Flows
             that are in the specified phase. Defaults to None, i.e. no phase-
             based filtering.
@@ -149,13 +149,15 @@ def list_flows(
     """
 
     # build field selector
-    if pipeline is None and phase is None:
+    if registered_pipeline_name is None and phase is None:
         field_selector = None
     else:
         field_selectors = []
 
-        if pipeline is not None:
-            field_selectors.append(f"spec.workflowTemplateRef.name={pipeline}")
+        if registered_pipeline_name is not None:
+            field_selectors.append(
+                f"spec.workflowTemplateRef.name={registered_pipeline_name}"
+            )
 
         if phase is not None:
             assert phase in (
