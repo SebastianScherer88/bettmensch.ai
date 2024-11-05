@@ -51,3 +51,12 @@ class COMPONENT_IMPLEMENTATION(Enum):
     base: str = "base"
     standard: str = "standard"
     torch_ddp: str = "torch-ddp"
+
+
+class FLOW_PHASE(Enum):
+    pending: str = "Pending"
+    running: str = "Running"
+    succeeded: str = "Succeeded"
+    failed: str = "Failed"
+    error: str = "Error"
+    unknown: str = ""
