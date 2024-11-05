@@ -7,6 +7,8 @@ from bettmensch_ai.components.examples import (
 from bettmensch_ai.constants import COMPONENT_IMAGE
 from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import (
+    Flow,
+    Pipeline,
     delete_registered_pipeline,
     get_registered_pipeline,
     list_registered_pipelines,
@@ -88,27 +90,38 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 @pytest.mark.standard
 @pytest.mark.order(3)
 @pytest.mark.parametrize(
-    "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
+    "test_registered_pipeline_name_pattern,test_labels,test_n_registered_pipelines",  # noqa: E501
     [
-        ("test-artifact-pipeline-", 1),
-        ("test-parameter-pipeline-", 1),
-        ("test-", 2),
+        ("test-artifact-pipeline-", {}, 1),
+        (
+            "test-artifact-pipeline-",
+            {
+                "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server"  # noqa: E501
+            },
+            1,
+        ),
+        ("test-artifact-pipeline-", {"invalid-label": "test"}, 0),
+        ("test-parameter-pipeline-", {}, 1),
+        ("test-", {}, 2),
     ],
 )
 def test_list_registered_standard_pipelines(
     test_namespace,
     test_registered_pipeline_name_pattern,
+    test_labels,
     test_n_registered_pipelines,
 ):
     """Test the pipeline.list function."""
     registered_pipelines = list_registered_pipelines(
         registered_namespace=test_namespace,
         registered_name_pattern=test_registered_pipeline_name_pattern,
+        labels=test_labels,
     )
 
     assert len(registered_pipelines) == test_n_registered_pipelines
 
     for registered_pipeline in registered_pipelines:
+        assert isinstance(registered_pipeline, Pipeline)
         assert registered_pipeline.registered
         assert registered_pipeline.registered_id is not None
         assert registered_pipeline.registered_name.startswith(
@@ -119,6 +132,52 @@ def test_list_registered_standard_pipelines(
 
 @pytest.mark.standard
 @pytest.mark.order(4)
+@pytest.mark.parametrize(
+    "test_registered_pipeline_name_pattern,test_phase,test_labels,test_n_flows",  # noqa: E501
+    [
+        ("test-artifact-pipeline-", None, {}, 1),
+        (
+            "test-artifact-pipeline-",
+            None,
+            {"workflows.argoproj.io/completed": "true"},
+            1,
+        ),
+        ("test-artifact-pipeline-", "Succeeded", {}, 1),
+        ("test-artifact-pipeline-", None, {"invalid-label": "test"}, 0),
+        ("test-artifact-pipeline-", "Failed", {}, 0),
+        ("test-parameter-pipeline-", None, {}, 1),
+    ],
+)
+def test_list_flows_of_registered_standard_pipelines(
+    test_namespace,
+    test_registered_pipeline_name_pattern,
+    test_phase,
+    test_labels,
+    test_n_flows,
+):
+    """Test the pipeline.list function."""
+    registered_pipeline = list_registered_pipelines(
+        registered_namespace=test_namespace,
+        registered_name_pattern=test_registered_pipeline_name_pattern,
+    )[0]
+
+    flows = registered_pipeline.list_flows(
+        phase=test_phase, additional_labels=test_labels
+    )
+
+    assert len(flows) == test_n_flows
+    for flow in flows:
+        assert isinstance(flow, Flow)
+        assert flow.registered_namespace == test_namespace
+        assert flow.registered_pipeline == registered_pipeline.registered_name
+        assert flow.started_at is not None
+        assert flow.finished_at is not None
+        if test_phase is not None:
+            assert flow.phase == test_phase
+
+
+@pytest.mark.standard
+@pytest.mark.order(5)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
     [
@@ -160,7 +219,7 @@ def test_run_standard_registered_pipelines_from_registry(
 
 
 @pytest.mark.ddp
-@pytest.mark.order(5)
+@pytest.mark.order(6)
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
@@ -233,7 +292,7 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
 
 
 @pytest.mark.ddp
-@pytest.mark.order(6)
+@pytest.mark.order(7)
 @pytest.mark.parametrize(
     "test_pipeline_name, test_n_nodes, test_gpus, test_memory",
     [
@@ -306,7 +365,7 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
 
 
 @pytest.mark.ddp
-@pytest.mark.order(7)
+@pytest.mark.order(8)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_n_registered_pipelines",
     [
@@ -339,7 +398,7 @@ def test_list_registered_ddp_pipelines(
 
 
 @pytest.mark.ddp
-@pytest.mark.order(8)
+@pytest.mark.order(9)
 @pytest.mark.parametrize(
     "test_registered_pipeline_name_pattern,test_pipeline_inputs",
     [
@@ -390,7 +449,7 @@ def test_run_dpp_registered_pipelines_from_registry(
 @pytest.mark.standard
 @pytest.mark.ddp
 @pytest.mark.delete_pipelines
-@pytest.mark.order(9)
+@pytest.mark.order(12)
 def test_delete_registered_pipeline(test_namespace):
     """Test the delete_registered_pipeline function"""
 

@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
+from bettmensch_ai.constants import ARGO_NAMESPACE, FLOW_LABEL, FLOW_PHASE
 from bettmensch_ai.pipelines.client import hera_client
 from hera.workflows import Workflow
 from hera.workflows.models import Workflow as WorkflowModel
@@ -18,7 +19,68 @@ class Flow(object):
 
     @property
     def registered_name(self) -> str:
+        """The unique name of the Flow (= argo Workflow)
+
+        Returns:
+            str: The name of the Flow
+        """
         return self.registered_flow.name
+
+    @property
+    def registered_namespace(self) -> str:
+        """The namespace of the Flow (= argo Workflow)
+
+        Returns:
+            str: The namespace of the Flow
+        """
+
+        return self.registered_flow.namespace
+
+    @property
+    def registered_pipeline(self) -> str:
+        """The unique name of the registered pipeline (= argo WorkflowTemplate)
+        that the Flow originates from.
+
+        Returns:
+            str: The name of the parent Pipeline
+        """
+        return self.registered_flow.workflow_template_ref.name
+
+    @property
+    def phase(self) -> str:
+        """The current phase of the Flow (= argo Workflow)
+
+        Returns:
+            str: The phase of the Flow
+        """
+
+        return self.registered_flow.status.phase
+
+    @property
+    def started_at(self) -> str:
+        """The time the flow started (where applicable). Returns None if not
+        started yet.
+
+        E.g. "2024-11-05T13:04:19Z"
+
+        Returns:
+            str: The phase of the flow
+        """
+
+        return self.registered_flow.status.started_at
+
+    @property
+    def finished_at(self) -> str:
+        """The time the flow finished (where applicable). Returns None if not
+        finished yet.
+
+        E.g. "2024-11-05T13:04:19Z"
+
+        Returns:
+            str: The phase of the flow
+        """
+
+        return self.registered_flow.status.finished_at
 
     @classmethod
     def from_workflow(cls, workflow: Workflow) -> "Flow":
@@ -36,7 +98,7 @@ class Flow(object):
 
 
 def get_flow(
-    registered_name: str, registered_namespace: Optional[str] = None
+    registered_name: str, registered_namespace: str = ARGO_NAMESPACE
 ) -> Flow:
     """Returns the specified Flow.
 
@@ -50,7 +112,7 @@ def get_flow(
     """
 
     workflow_model: WorkflowModel = hera_client.get_workflow(
-        namespace=registered_name, name=registered_namespace
+        namespace=registered_namespace, name=registered_name
     )
 
     workflow: Workflow = Workflow.from_dict(workflow_model.dict())
@@ -61,21 +123,65 @@ def get_flow(
 
 
 def list_flows(
-    registered_namespace: Optional[str] = None,
-    label_selector: Optional[str] = None,
-    field_selector: Optional[str] = None,
+    registered_namespace: str = ARGO_NAMESPACE,
+    registered_pipeline_name: Optional[str] = None,
+    phase: Optional[str] = None,
+    labels: Dict = {},
     **kwargs,
 ) -> List[Flow]:
-    """Lists all flows.
+    """Get all flows that meet the query specifications.
+
+    Args:
+        registered_namespace (Optional[str], optional): The namespace in which
+            the underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
+        registered_pipeline_name (Optional[str], optional): Optional filter to
+            only consider Flows originating from the specified registered
+            Pipeline. Defaults to None, i.e. no pipeline-based filtering.
+        phase (Optional[str], optional): Optional filter to only consider Flows
+            that are in the specified phase. Defaults to None, i.e. no phase-
+            based filtering.
+        labels (Dict, optional): Optional filter to only consider Flows whose
+            underlying argo Workflow resource contains all of the specified
+            labels. Defaults to {}, i.e. no label-based filtering.
 
     Returns:
-        List[Flow]: A list of all Flows that meet the query scope.
+        List[Flow]: A list of Flows that meet the filtering specifications.
     """
+
+    # build label selector
+    if (not labels) and (phase is None) and (registered_pipeline_name is None):
+        label_selector = None
+    else:
+        all_labels = labels.copy()
+
+        # add phase label
+        if phase is not None:
+            assert phase in (
+                FLOW_PHASE.error.value,
+                FLOW_PHASE.failed.value,
+                FLOW_PHASE.pending.value,
+                FLOW_PHASE.running.value,
+                FLOW_PHASE.succeeded.value,
+                FLOW_PHASE.unknown.value,
+            ), f"Invalid phase spec: {phase}. Must be one of the constants.FLOW_PHASE levels."  # noqa: E501
+            all_labels.update({FLOW_LABEL.phase.value: phase})
+
+        # add pipeline identifier label
+        if registered_pipeline_name is not None:
+            all_labels.update(
+                {
+                    FLOW_LABEL.pipeline_name.value: registered_pipeline_name,
+                }
+            )
+
+        kv_label_list = list(all_labels.items())  # [('a',1),('b',2)]
+        label_selector = ",".join(
+            [f"{k}={v}" for k, v in kv_label_list]
+        )  # "a=1,b=2"
 
     response = hera_client.list_workflows(
         namespace=registered_namespace,
         label_selector=label_selector,
-        field_selector=field_selector,
         **kwargs,
     )
 
@@ -95,7 +201,7 @@ def list_flows(
 
 
 def delete_flow(
-    registered_name: str, registered_namespace: Optional[str] = None, **kwargs
+    registered_name: str, registered_namespace: str = ARGO_NAMESPACE, **kwargs
 ) -> WorkflowDeleteResponseModel:
     """Deletes the specified Flow from the server.
 
