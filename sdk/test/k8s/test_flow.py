@@ -3,6 +3,7 @@ from bettmensch_ai.pipelines import Flow, delete_flow, get_flow, list_flows
 
 
 @pytest.mark.standard
+@pytest.mark.ddp
 @pytest.mark.order(10)
 def test_get_standard_flow(test_namespace):
     flows = list_flows(registered_namespace=test_namespace)

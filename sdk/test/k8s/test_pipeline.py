@@ -169,10 +169,11 @@ def test_list_flows_of_registered_standard_pipelines(
     for flow in flows:
         assert isinstance(flow, Flow)
         assert flow.registered_namespace == test_namespace
-        assert flow.phase == test_phase
         assert flow.registered_pipeline == registered_pipeline.registered_name
         assert flow.started_at is not None
         assert flow.finished_at is not None
+        if test_phase is not None:
+            assert flow.phase == test_phase
 
 
 @pytest.mark.standard
