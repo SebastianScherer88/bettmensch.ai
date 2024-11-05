@@ -134,6 +134,9 @@ def list_flows(
     Args:
         registered_namespace (Optional[str], optional): The namespace in which
             the underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
+        registered_pipeline_name (Optional[str], optional): Optional filter to
+            only consider Flows originating from the specified registered
+            Pipeline. Defaults to None, i.e. no pipeline-based filtering.
         phase (Optional[str], optional): Optional filter to only consider Flows
             that are in the specified phase. Defaults to None, i.e. no phase-
             based filtering.

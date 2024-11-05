@@ -54,12 +54,16 @@ class COMPONENT_IMPLEMENTATION(Enum):
 
 
 class FLOW_LABEL(Enum):
+    """A utility class for valid Flow label keys"""
+
     pipeline_name: str = "bettmensch.ai/pipeline-name"
     pipeline_id: str = "bettmensch.ai/pipeline-id"
     phase: str = "workflows.argoproj.io/phase"
 
 
 class FLOW_PHASE(Enum):
+    """A utility class for valid Flow phase label values"""
+
     pending: str = "Pending"
     running: str = "Running"
     succeeded: str = "Succeeded"
