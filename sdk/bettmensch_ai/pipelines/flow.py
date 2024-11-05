@@ -19,29 +19,39 @@ class Flow(object):
 
     @property
     def registered_name(self) -> str:
-        """The unique name of the flow (= argo Workflow)
+        """The unique name of the Flow (= argo Workflow)
 
         Returns:
-            str: The name of the flow
+            str: The name of the Flow
         """
         return self.registered_flow.name
 
     @property
-    def pipeline(self) -> str:
-        """The unique name of the pipeline (= argo WorkflowTemplate) that the
-            flow originates from.
+    def registered_namespace(self) -> str:
+        """The namespace of the Flow (= argo Workflow)
 
         Returns:
-            str: The name of the parent pipeline
+            str: The namespace of the Flow
+        """
+
+        return self.registered_flow.namespace
+
+    @property
+    def pipeline(self) -> str:
+        """The unique name of the pipeline (= argo WorkflowTemplate) that the
+            Flow originates from.
+
+        Returns:
+            str: The name of the parent Pipeline
         """
         return self.registered_flow.workflow_template_ref.name
 
     @property
     def phase(self) -> str:
-        """The current phase of the flow (= argo Workflow)
+        """The current phase of the Flow (= argo Workflow)
 
         Returns:
-            str: The phase of the flow
+            str: The phase of the Flow
         """
 
         return self.registered_flow.status.phase
@@ -122,8 +132,8 @@ def list_flows(
     """List[Flow]: A list of all Flows that meet the query scope.
 
     Args:
-        registered_namespace (Optional[str], optional): The name in which the
-            underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
+        registered_namespace (Optional[str], optional): The namespace in which
+            the underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
         pipeline (Optional[str], optional): Optional filter to only consider
             Flows that originate from the specified pipeline. Defaults to None,
             i.e. no pipeline-based filtering.
