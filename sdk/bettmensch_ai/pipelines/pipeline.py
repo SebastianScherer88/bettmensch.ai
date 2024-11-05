@@ -1,12 +1,17 @@
 import inspect
 from typing import Any, Callable, Dict, List, Optional
 
-from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION, PIPELINE_TYPE
+from bettmensch_ai.constants import (
+    ARGO_NAMESPACE,
+    COMPONENT_IMPLEMENTATION,
+    PIPELINE_TYPE,
+)
 from bettmensch_ai.io import InputParameter, Parameter
 from bettmensch_ai.pipelines.client import (
     ArgoWorkflowsBackendConfiguration,
     hera_client,
 )
+from bettmensch_ai.pipelines.flow import Flow, list_flows
 from bettmensch_ai.pipelines.pipeline_context import (
     PipelineContext,
     _pipeline_context,
@@ -416,26 +421,60 @@ class Pipeline(object):
             **kwargs,
         )
 
+    def list_flows(
+        self, phase: Optional[str] = None, labels: Dict = {}, **kwargs
+    ) -> List[Flow]:
+        """Lists all Flows that originate from this Pipeline.
+
+        Args:
+            phase (Optional[str], optional): Optional filter to only consider
+            Flows that are in the specified phase. Defaults to None, i.e. no
+            phase-based filtering.
+        labels (Dict, optional): Optional filter to only consider Flows whose
+            underlying argo Workflow resource contains all of the specified
+            labels. Defaults to {}, i.e. no label-based filtering.
+
+        Returns:
+            List[Flow]: A list of Flows that meet the filtering specifications.
+        """
+
+        # validate registration status of pipeline
+        if not self.registered:
+            raise ValueError(
+                "Pipeline needs to be registered first. Are you sure you have"
+                "ran `register`?"
+            )
+
+        return list_flows(
+            registered_namespace=self.registered_namespace,
+            pipeline=self.registered_name,
+            phase=phase,
+            labels=labels,
+            **kwargs,
+        )
+
 
 def get_registered_pipeline(
     registered_name: str,
-    registered_namespace: Optional[str] = None,
+    registered_namespace: Optional[str] = ARGO_NAMESPACE,
     **kwargs,
 ) -> Pipeline:
-    """Returns the specified registered Pipeline.
+    """Get the registered pipeline.
 
     Args:
         registered_name (str): The `registered_name` of the Pipeline
-            (equivalent to the `name` of its underlying WorkflowTemplate).
-        registered_namespace (str): The `registered_namespace` of the Pipeline
-            (equivalent to the `namespace` of its underlying WorkflowTemplate).
+            (i.e. the name its underlying WorkflowTemplate).
+        registered_namespace (Optional[str], optional): The
+            `registered_namespace` of the Pipeline (i.e. the namespace of its
+            underlying WorkflowTemplate). Defaults to ARGO_NAMESPACE.
+
     Returns:
-        Pipeline: The registered Pipeline instance.
+        Pipeline: A Pipeline object.
     """
 
     workflow_template_model: WorkflowTemplateModel = (
         hera_client.get_workflow_template(
-            namespace=registered_namespace, name=registered_name
+            namespace=registered_namespace, name=registered_name, **kwargs
         )
     )
 
@@ -449,24 +488,42 @@ def get_registered_pipeline(
 
 
 def list_registered_pipelines(
-    registered_namespace: Optional[str] = None,
+    registered_namespace: str = ARGO_NAMESPACE,
     registered_name_pattern: Optional[str] = None,
-    label_selector: Optional[str] = None,
-    field_selector: Optional[str] = None,
+    labels: Dict = {},
     **kwargs,
 ) -> List[Pipeline]:
-    """Lists all registered pipelines.
+    """Get all registered pipelines that meet the query specification.
+
+    Args:
+        registered_namespace (Optional[str], optional): The namespace in which
+            the underlying argo WorkflowTemplate lives. Defaults to
+            ARGO_NAMESPACE.
+        registered_name_pattern (Optional[str], optional): The pattern to
+            filter the argo WorkflowTemplates' names against. Defaults to None,
+            i.e. no name-based filtering.
+        labels (Dict, optional): Optional filter to only consider Pipelines
+            whose underlying argo WorkflowTemplate resource contains all of the
+            specified labels. Defaults to {}, i.e. no label-based filtering.
 
     Returns:
         List[Pipeline]: A list of all registered Pipelines that meet the query
             scope.
     """
 
+    # build label selector
+    if labels is not None:
+        label_selector = None
+    else:
+        kv_label_list = list(labels.items())  # [('a',1),('b',2)]
+        label_selector = ",".join(
+            [f"{k}={v}" for k, v in kv_label_list]
+        )  # "a=1,b=2"
+
     response = hera_client.list_workflow_templates(
         namespace=registered_namespace,
         name_pattern=registered_name_pattern,
         label_selector=label_selector,
-        field_selector=field_selector,
         **kwargs,
     )
 
@@ -487,7 +544,9 @@ def list_registered_pipelines(
 
 
 def delete_registered_pipeline(
-    registered_name: str, registered_namespace: Optional[str] = None, **kwargs
+    registered_name: str,
+    registered_namespace: Optional[str] = ARGO_NAMESPACE,
+    **kwargs,
 ) -> WorkflowTemplateDeleteResponseModel:
     """Deletes the specified registered Pipeline from the server.
 
