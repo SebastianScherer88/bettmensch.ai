@@ -3,7 +3,10 @@ from typing import Any, Callable, Dict, List, Optional
 
 from bettmensch_ai.constants import COMPONENT_IMPLEMENTATION, PIPELINE_TYPE
 from bettmensch_ai.io import InputParameter, Parameter
-from bettmensch_ai.pipelines.client import hera_client
+from bettmensch_ai.pipelines.client import (
+    ArgoWorkflowsBackendConfiguration,
+    hera_client,
+)
 from bettmensch_ai.pipelines.pipeline_context import (
     PipelineContext,
     _pipeline_context,
@@ -67,9 +70,12 @@ class Pipeline(object):
     def configure(self):
         """Applies unsecure authentication configuration for an ArgoWorkflow
         server available on port 2746."""
-        self._config.host = "https://localhost:2746"
+
+        configuration = ArgoWorkflowsBackendConfiguration()
+
+        self._config.host = configuration.host
         self._config.token = ArgoCLITokenGenerator
-        self._config.verify_ssl = False
+        self._config.verify_ssl = configuration.verify_ssl
 
     def build_from_user(self, name: str, namespace: str, func: Callable):
         """Builds the pipeline definition and stores resulting
