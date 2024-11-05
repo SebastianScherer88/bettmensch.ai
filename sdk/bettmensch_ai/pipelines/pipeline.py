@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Optional
 from bettmensch_ai.constants import (
     ARGO_NAMESPACE,
     COMPONENT_IMPLEMENTATION,
+    FLOW_LABEL,
     PIPELINE_TYPE,
 )
 from bettmensch_ai.io import InputParameter, Parameter
@@ -374,6 +375,10 @@ class Pipeline(object):
             workflow_template_ref=pipeline_ref,
             namespace=self.registered_namespace,
             arguments=workflow_inputs,
+            labels={
+                FLOW_LABEL.pipeline_name.value: self.registered_name,
+                FLOW_LABEL.pipeline_id.value: self.registered_id,
+            },
         )
 
         registered_workflow: WorkflowModel = workflow.create(
@@ -422,17 +427,22 @@ class Pipeline(object):
         )
 
     def list_flows(
-        self, phase: Optional[str] = None, labels: Dict = {}, **kwargs
+        self,
+        phase: Optional[str] = None,
+        additional_labels: Dict = {},
+        **kwargs,
     ) -> List[Flow]:
         """Lists all Flows that originate from this Pipeline.
 
         Args:
             phase (Optional[str], optional): Optional filter to only consider
-            Flows that are in the specified phase. Defaults to None, i.e. no
-            phase-based filtering.
-        labels (Dict, optional): Optional filter to only consider Flows whose
-            underlying argo Workflow resource contains all of the specified
-            labels. Defaults to {}, i.e. no label-based filtering.
+                Flows that are in the specified phase. Defaults to None, i.e.
+                no phase-based filtering.
+            additional_labels (Dict, optional): Optional filter to only
+                consider Flows whose underlying argo Workflow resource contains
+                all of the specified labels. Defaults to {}, i.e. no
+                label-based filtering, however the pipeline's name and id will
+                always be added automatically.
 
         Returns:
             List[Flow]: A list of Flows that meet the filtering specifications.
@@ -445,11 +455,18 @@ class Pipeline(object):
                 "ran `register`?"
             )
 
+        # add pipeline name & id labels
+        additional_labels.update(
+            {
+                FLOW_LABEL.pipeline_name.value: self.registered_name,
+                FLOW_LABEL.pipeline_id.value: self.registered_id,
+            }
+        )
+
         return list_flows(
             registered_namespace=self.registered_namespace,
-            pipeline=self.registered_name,
             phase=phase,
-            labels=labels,
+            labels=additional_labels,
             **kwargs,
         )
 
@@ -512,7 +529,7 @@ def list_registered_pipelines(
     """
 
     # build label selector
-    if labels is not None:
+    if not labels:
         label_selector = None
     else:
         kv_label_list = list(labels.items())  # [('a',1),('b',2)]

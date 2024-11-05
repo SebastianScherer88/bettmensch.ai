@@ -37,9 +37,9 @@ class Flow(object):
         return self.registered_flow.namespace
 
     @property
-    def pipeline(self) -> str:
-        """The unique name of the pipeline (= argo WorkflowTemplate) that the
-            Flow originates from.
+    def registered_pipeline(self) -> str:
+        """The unique name of the registered pipeline (= argo WorkflowTemplate)
+        that the Flow originates from.
 
         Returns:
             str: The name of the parent Pipeline
@@ -112,7 +112,7 @@ def get_flow(
     """
 
     workflow_model: WorkflowModel = hera_client.get_workflow(
-        namespace=registered_name, name=registered_namespace
+        namespace=registered_namespace, name=registered_name
     )
 
     workflow: Workflow = Workflow.from_dict(workflow_model.dict())
@@ -124,7 +124,6 @@ def get_flow(
 
 def list_flows(
     registered_namespace: str = ARGO_NAMESPACE,
-    registered_pipeline_name: Optional[str] = None,
     phase: Optional[str] = None,
     labels: Dict = {},
     **kwargs,
@@ -134,9 +133,6 @@ def list_flows(
     Args:
         registered_namespace (Optional[str], optional): The namespace in which
             the underlying argo Workflow lives. Defaults to ARGO_NAMESPACE.
-        registered_pipeline_name (Optional[str], optional): Optional filter to
-            only consider Flows that originate from the specified pipeline.
-            Defaults to None, i.e. no pipeline-based filtering.
         phase (Optional[str], optional): Optional filter to only consider Flows
             that are in the specified phase. Defaults to None, i.e. no phase-
             based filtering.
@@ -149,31 +145,18 @@ def list_flows(
     """
 
     # build field selector
-    if registered_pipeline_name is None and phase is None:
-        field_selector = None
-    else:
-        field_selectors = []
-
-        if registered_pipeline_name is not None:
-            field_selectors.append(
-                f"spec.workflowTemplateRef.name={registered_pipeline_name}"
-            )
-
-        if phase is not None:
-            assert phase in (
-                FLOW_PHASE.error,
-                FLOW_PHASE.failed,
-                FLOW_PHASE.pending,
-                FLOW_PHASE.running,
-                FLOW_PHASE.succeeded,
-                FLOW_PHASE.unknown,
-            ), f"Invalid phase spec: {phase}. Must be one of the constants.FLOW_PHASE levels."  # noqa: E501
-            field_selectors.append(f"status.phase={phase}")
-
-        field_selector = ",".join(field_selectors)
+    if phase is not None:
+        assert phase in (
+            FLOW_PHASE.error.value,
+            FLOW_PHASE.failed.value,
+            FLOW_PHASE.pending.value,
+            FLOW_PHASE.running.value,
+            FLOW_PHASE.succeeded.value,
+            FLOW_PHASE.unknown.value,
+        ), f"Invalid phase spec: {phase}. Must be one of the constants.FLOW_PHASE levels."  # noqa: E501
 
     # build label selector
-    if labels is not None:
+    if not labels:
         label_selector = None
     else:
         kv_label_list = list(labels.items())  # [('a',1),('b',2)]
@@ -184,7 +167,6 @@ def list_flows(
     response = hera_client.list_workflows(
         namespace=registered_namespace,
         label_selector=label_selector,
-        field_selector=field_selector,
         **kwargs,
     )
 
@@ -199,6 +181,9 @@ def list_flows(
         ]
     else:
         flows = []
+
+    if phase is not None:
+        flows = [flow for flow in flows if flow.phase == phase]
 
     return flows
 

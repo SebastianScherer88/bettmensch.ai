@@ -53,6 +53,11 @@ class COMPONENT_IMPLEMENTATION(Enum):
     torch_ddp: str = "torch-ddp"
 
 
+class FLOW_LABEL(Enum):
+    pipeline_name: str = "bettmensch.ai/pipeline-name"
+    pipeline_id: str = "bettmensch.ai/pipeline-id"
+
+
 class FLOW_PHASE(Enum):
     pending: str = "Pending"
     running: str = "Running"
