@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional
 
-from bettmensch_ai.constants import ARGO_NAMESPACE, FLOW_PHASE
+from bettmensch_ai.constants import ARGO_NAMESPACE, FLOW_LABEL, FLOW_PHASE
 from bettmensch_ai.pipelines.client import hera_client
 from hera.workflows import Workflow
 from hera.workflows.models import Workflow as WorkflowModel
@@ -124,6 +124,7 @@ def get_flow(
 
 def list_flows(
     registered_namespace: str = ARGO_NAMESPACE,
+    registered_pipeline_name: Optional[str] = None,
     phase: Optional[str] = None,
     labels: Dict = {},
     **kwargs,
@@ -144,22 +145,33 @@ def list_flows(
         List[Flow]: A list of Flows that meet the filtering specifications.
     """
 
-    # build field selector
-    if phase is not None:
-        assert phase in (
-            FLOW_PHASE.error.value,
-            FLOW_PHASE.failed.value,
-            FLOW_PHASE.pending.value,
-            FLOW_PHASE.running.value,
-            FLOW_PHASE.succeeded.value,
-            FLOW_PHASE.unknown.value,
-        ), f"Invalid phase spec: {phase}. Must be one of the constants.FLOW_PHASE levels."  # noqa: E501
-
     # build label selector
-    if not labels:
+    if (not labels) and (phase is None) and (registered_pipeline_name is None):
         label_selector = None
     else:
-        kv_label_list = list(labels.items())  # [('a',1),('b',2)]
+        all_labels = labels.copy()
+
+        # add phase label
+        if phase is not None:
+            assert phase in (
+                FLOW_PHASE.error.value,
+                FLOW_PHASE.failed.value,
+                FLOW_PHASE.pending.value,
+                FLOW_PHASE.running.value,
+                FLOW_PHASE.succeeded.value,
+                FLOW_PHASE.unknown.value,
+            ), f"Invalid phase spec: {phase}. Must be one of the constants.FLOW_PHASE levels."  # noqa: E501
+            all_labels.update({FLOW_LABEL.phase.value: phase})
+
+        # add pipeline identifier label
+        if registered_pipeline_name is not None:
+            all_labels.update(
+                {
+                    FLOW_LABEL.pipeline_name.value: registered_pipeline_name,
+                }
+            )
+
+        kv_label_list = list(all_labels.items())  # [('a',1),('b',2)]
         label_selector = ",".join(
             [f"{k}={v}" for k, v in kv_label_list]
         )  # "a=1,b=2"
@@ -181,9 +193,6 @@ def list_flows(
         ]
     else:
         flows = []
-
-    if phase is not None:
-        flows = [flow for flow in flows if flow.phase == phase]
 
     return flows
 

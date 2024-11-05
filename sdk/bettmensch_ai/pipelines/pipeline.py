@@ -437,7 +437,7 @@ class Pipeline(object):
         Args:
             phase (Optional[str], optional): Optional filter to only consider
                 Flows that are in the specified phase. Defaults to None, i.e.
-                no phase-based filtering.
+                no phase-based filtering. This will be added to the labels.
             additional_labels (Dict, optional): Optional filter to only
                 consider Flows whose underlying argo Workflow resource contains
                 all of the specified labels. Defaults to {}, i.e. no
@@ -455,16 +455,9 @@ class Pipeline(object):
                 "ran `register`?"
             )
 
-        # add pipeline name & id labels
-        additional_labels.update(
-            {
-                FLOW_LABEL.pipeline_name.value: self.registered_name,
-                FLOW_LABEL.pipeline_id.value: self.registered_id,
-            }
-        )
-
         return list_flows(
             registered_namespace=self.registered_namespace,
+            registered_pipeline_name=self.registered_name,
             phase=phase,
             labels=additional_labels,
             **kwargs,
