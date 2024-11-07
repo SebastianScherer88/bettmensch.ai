@@ -33,11 +33,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
 
     extra_requirements[SDKExtras.torch_pipelines.value] = extra_requirements[
         SDKExtras.pipelines.value
-    ] + [
-        "torch==2.2.2",
-        "lightning==2.4.0",
-        "numpy==1.24.1",
-    ]
+    ] + ["torchtext==0.18.0", "spacy==3.8.2"]
 
     extra_requirements[SDKExtras.test.value] = (
         extra_requirements[SDKExtras.torch_pipelines.value]
