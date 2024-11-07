@@ -8,7 +8,6 @@ from bettmensch_ai.constants import (
 )
 from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from torch.distributed.elastic.multiprocessing.api import Std
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
 
 
@@ -101,10 +100,6 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         role=launch_config_settings_from_env.role,
         max_restarts=launch_config_settings_from_env.max_restarts,
         monitor_interval=launch_config_settings_from_env.monitor_interval,
-        tee=Std.from_str(launch_config_settings_from_env.tee),
-        redirects=Std.from_str(launch_config_settings_from_env.redirects),
-        log_dir=launch_config_settings_from_env.log_dir,
-        log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,  # noqa: E501
         rdzv_configs={"rank": launch_config_settings_from_env.node_rank},
     )
 
