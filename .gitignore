@@ -10,6 +10,10 @@ sdk/test/integration/outputs
 sdk/test/docker/outputs
 sdk/test/k8s/outputs
 
+# build outputs
+build/*
+sdk/build/*
+
 # pytorch lightning outputs
 lightning_logs/*
 

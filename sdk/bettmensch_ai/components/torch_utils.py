@@ -109,6 +109,28 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
     )
 
 
+class LaunchContext(BaseSettings):
+    """Utility to grab the DDP environment variables set by torchrun as per
+    https://pytorch.org/docs/stable/elastic/run.html#environment-variables.
+    Useful to get information from within the worker process about the devices
+    available to it."""
+
+    # local process rank & local size (i.e. within node)
+    local_rank: int
+    local_world_size: int  # equivalent to nproc_per_node
+
+    # global process rank & global size (i.e. across all nodes)
+    rank: int
+    world_size: int
+
+    # global, role scoped process rank & global, role scoped size
+    role_rank: int
+    role_world_size: int
+
+    # (global) node rank
+    group_rank: int  # same as node_rank in the LaunchConfigSettings
+
+
 def torch_ddp(**config_settings_kwargs):
     """Keyword decorator that wraps a callable in a torch distributed elastic
     launch runtime context.
