@@ -1,4 +1,5 @@
 from bettmensch_ai.components import torch_ddp_component
+from bettmensch_ai.constants import COMPONENT_IMAGE
 from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
 from bettmensch_ai.pipelines import pipeline
 
@@ -66,6 +67,9 @@ def train_transformer_pipeline(
 
     train_transformer = train_transformer_component(  # noqa: F841
         "train-seq-2-seq-transformer",
+        hera_template_kwargs={
+            "image": COMPONENT_IMAGE.annotated_transformer.value
+        },
         dataset=dataset,
         source_language=source_language,
         target_language=target_language,

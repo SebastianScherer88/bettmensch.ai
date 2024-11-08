@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 class SDKExtras(Enum):
     dashboard: str = "dashboard"
     pipelines: str = "pipelines"
-    torch_pipelines: str = "torch-pipelines"
+    annotated_transformer: str = "annotated-transformer"
     serving: str = "serving"
     test: str = "test"
 
@@ -31,17 +31,22 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         SDKExtras.serving.value: ["fastapi==0.112.0"],
     }
 
-    extra_requirements[SDKExtras.torch_pipelines.value] = extra_requirements[
-        SDKExtras.pipelines.value
-    ] + ["GPUtil==1.4.0", "torchtext==0.18.0", "spacy==3.8.2"]
-
     extra_requirements[SDKExtras.test.value] = (
-        extra_requirements[SDKExtras.torch_pipelines.value]
+        extra_requirements[SDKExtras.pipelines.value]
         + [
+            "torch==2.5.1",
+            "lightning==2.4.0",
+            "numpy==1.24.1",
             "pytest==8.2.2",
             "pytest-order==1.2.1",
         ],
     )
+
+    extra_requirements[SDKExtras.annotated_transformer.value] = [
+        "GPUtil==1.4.0",
+        "torchtext==0.18.0",
+        "spacy==3.8.2",
+    ]
 
     return extra_requirements
 

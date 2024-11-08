@@ -19,7 +19,7 @@ services:
       args:
         BASE_IMAGE: pytorch/pytorch
         BASE_IMAGE_VERSION: 2.5.1-cuda12.4-cudnn9-runtime
-        SDK_VERSION: torch-pipelines
+        SDK_VERSION: pipelines
     image: bettmensch88/bettmensch.ai-pytorch:local
   pytorch-lightning:
     build:
@@ -32,3 +32,14 @@ services:
         BASE_IMAGE_VERSION: 2.3.3-py3.11-torch2.2-cuda12.1.0
         SDK_VERSION: pipelines
     image: bettmensch88/bettmensch.ai-pytorch-lightning:local
+  annotated-transformer:
+    build:
+      context: .
+      additional_contexts:
+        sdk: ../../sdk
+      dockerfile: ./Dockerfile
+      args:
+        BASE_IMAGE: bettmensch88/bettmensch.ai-pytorch
+        BASE_IMAGE_VERSION: 3.11-latest
+        SDK_VERSION: annotated-transformer
+    image: bettmensch88/bettmensch.ai-annotated-transformer:local

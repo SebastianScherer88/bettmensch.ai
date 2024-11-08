@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        component: ["standard", "pytorch", "pytorch-lightning"]
+        component: ["standard", "pytorch", "pytorch-lightning","annotated-transformer"]
 
     steps:
       - uses: actions/checkout@v4
