@@ -1,11 +1,12 @@
 import os
 from os.path import exists
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 import spacy
 import torch
 from torch.nn.functional import pad
 from torch.utils.data import DataLoader
+from torch.utils.data.datapipes.iter import ShardingFilter
 from torch.utils.data.distributed import DistributedSampler
 from torchtext.data.functional import to_map_style_dataset
 from torchtext.vocab import Vocab, build_vocab_from_iterator
@@ -28,12 +29,12 @@ class Preprocessor(object):
 
     def __init__(
         self,
-        data_splits: List[Any],
+        data_splits: Tuple[ShardingFilter, ShardingFilter, ShardingFilter],
         language_src: str = SupportedLanguages.german.value,
         language_tgt: str = SupportedLanguages.english.value,
         max_padding: int = 128,
     ):
-        self.data_splits = data_splits
+        self.train, self.val, self.test = data_splits
         self.language_src = language_src
         self.language_tgt = language_tgt
         self.tokenizer_src, self.tokenizer_tgt = self.load_tokenizers()
@@ -80,7 +81,7 @@ class Preprocessor(object):
         print(f"Building {self.language_src} Vocabulary ...")
         vocab_src = build_vocab_from_iterator(
             self.yield_tokens(
-                sum(self.data_splits), self.tokenize_src, index=0
+                self.train + self.val + self.test, self.tokenize_src, index=0
             ),
             min_freq=2,
             specials=SpecialTokens.list(),
@@ -89,7 +90,7 @@ class Preprocessor(object):
         print(f"Building {self.language_tgt} Vocabulary ...")
         vocab_tgt = build_vocab_from_iterator(
             self.yield_tokens(
-                sum(self.data_splits), self.tokenize_tgt, index=1
+                self.train + self.val + self.test, self.tokenize_tgt, index=1
             ),
             min_freq=2,
             specials=SpecialTokens.list(),
