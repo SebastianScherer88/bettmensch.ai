@@ -4,7 +4,7 @@ SUITE?=unit# unit,integration,k8s
 PYTEST_FLAGS?= # e.g. "-m standard", "-m ddp" for k8s suite appended to the `addopts` setting of the pytest.ini
 sdk.install:
 	@echo "::group::Installing sdk with $(EXTRAS) extras"
-	pip install ./sdk[$(EXTRAS)]
+	pip install ./sdk[$(EXTRAS)] --no-cache-dir
 	@echo "::endgroup::"
 
 sdk.test:
