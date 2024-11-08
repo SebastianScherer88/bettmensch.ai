@@ -2,17 +2,13 @@ import copy
 
 import torch
 import torch.nn as nn
-from architecture import (
-    Decoder,
-    DecoderLayer,
-    Embeddings,
-    Encoder,
-    EncoderLayer,
-    Generator,
-    MultiHeadedAttention,
-    PositionalEncoding,
-    PositionwiseFeedForward,
-)
+
+from .attention import MultiHeadedAttention
+from .decoder import Decoder, DecoderLayer
+from .embedding import Embeddings, PositionalEncoding
+from .encoder import Encoder, EncoderLayer
+from .generator import Generator
+from .utils import PositionwiseFeedForward
 
 # --- [5] EncoderDecorder Model
 

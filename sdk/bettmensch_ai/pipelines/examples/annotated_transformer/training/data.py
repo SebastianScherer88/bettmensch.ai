@@ -10,7 +10,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torchtext.data.functional import to_map_style_dataset
 from torchtext.vocab import Vocab, build_vocab_from_iterator
-from training import TRANSLATION_DATASETS, SpecialTokens, SupportedLanguages
+
+from .utils import TRANSLATION_DATASETS, SpecialTokens, SupportedLanguages
 
 
 class Preprocessor(object):

@@ -1,6 +1,7 @@
 import torch.nn as nn
-from architecture.attention import MultiHeadedAttention, encoder_mask
-from architecture.utils import (
+
+from .attention import MultiHeadedAttention, encoder_mask
+from .utils import (
     LayerNorm,
     PositionwiseFeedForward,
     SublayerConnection,

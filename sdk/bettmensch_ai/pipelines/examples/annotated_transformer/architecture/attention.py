@@ -2,7 +2,8 @@ import math
 
 import torch
 import torch.nn as nn
-from architecture.utils import clones
+
+from .utils import clones
 
 
 def attention(query, key, value, coefficient_mask=None, dropout=None):

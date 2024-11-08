@@ -10,19 +10,15 @@ from bettmensch_ai.pipelines.examples.annotated_transformer.architecture import 
 )
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.lr_scheduler import LambdaLR
-from training import (
-    Batch,
+
+from .data import Preprocessor, create_dataloaders
+from .optimizer import (
     DummyOptimizer,
     DummyScheduler,
     LabelSmoothing,
-    Preprocessor,
     SimpleLossCompute,
-    SpecialTokens,
-    TrainConfig,
-    TrainState,
-    create_dataloaders,
-    rate,
 )
+from .utils import Batch, SpecialTokens, TrainConfig, TrainState, rate
 
 
 def run_epoch(

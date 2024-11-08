@@ -23,23 +23,6 @@ def execute_example(fn, args=[]):
         fn(*args)
 
 
-class DummyOptimizer(torch.optim.Optimizer):
-    def __init__(self):
-        self.param_groups = [{"lr": 0}]
-        None
-
-    def step(self):
-        None
-
-    def zero_grad(self, set_to_none=False):
-        None
-
-
-class DummyScheduler:
-    def step(self):
-        None
-
-
 # --- [1] Encoder/Decoder shared assets
 def clones(module: nn.Module, N: int):
     "Produce N identical layers."
