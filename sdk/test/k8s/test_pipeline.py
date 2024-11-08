@@ -448,6 +448,7 @@ def test_run_dpp_registered_pipelines_from_registry(
 
 @pytest.mark.standard
 @pytest.mark.ddp
+@pytest.mark.train_transformer
 @pytest.mark.delete_pipelines
 @pytest.mark.order(12)
 def test_delete_registered_pipeline(test_namespace):
