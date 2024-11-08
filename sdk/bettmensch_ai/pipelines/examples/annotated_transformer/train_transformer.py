@@ -65,7 +65,7 @@ def train_transformer_pipeline_1n_1p(
 
     train_transformer = (  # noqa: F841
         train_transformer_component(
-            "train-seq-2-seq-transformer",
+            "train-transformer",
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
             },
@@ -102,7 +102,7 @@ def train_transformer_pipeline_2n_2p(
 
     train_transformer = (  # noqa: F841
         train_transformer_component(
-            "train-seq-2-seq-transformer",
+            "train-transformer",
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
             },
