@@ -1,10 +1,9 @@
 import os
 from os.path import exists
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 import spacy
 import torch
-import torchtext.datasets as datasets
 from torch.nn.functional import pad
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -29,10 +28,12 @@ class Preprocessor(object):
 
     def __init__(
         self,
+        data_splits: List[Any],
         language_src: str = SupportedLanguages.german.value,
         language_tgt: str = SupportedLanguages.english.value,
         max_padding: int = 128,
     ):
+        self.data_splits = data_splits
         self.language_src = language_src
         self.language_tgt = language_tgt
         self.tokenizer_src, self.tokenizer_tgt = self.load_tokenizers()
@@ -76,18 +77,20 @@ class Preprocessor(object):
 
     def build_vocabularies(self):
 
-        print("Building German Vocabulary ...")
-        train, val, test = datasets.Multi30k(language_pair=("de", "en"))
+        print(f"Building {self.language_src} Vocabulary ...")
         vocab_src = build_vocab_from_iterator(
-            self.yield_tokens(train + val + test, self.tokenize_src, index=0),
+            self.yield_tokens(
+                sum(self.data_splits), self.tokenize_src, index=0
+            ),
             min_freq=2,
             specials=SpecialTokens.list(),
         )
 
-        print("Building English Vocabulary ...")
-        train, val, test = datasets.Multi30k(language_pair=("de", "en"))
+        print(f"Building {self.language_tgt} Vocabulary ...")
         vocab_tgt = build_vocab_from_iterator(
-            self.yield_tokens(train + val + test, self.tokenize_tgt, index=1),
+            self.yield_tokens(
+                sum(self.data_splits), self.tokenize_tgt, index=1
+            ),
             min_freq=2,
             specials=SpecialTokens.list(),
         )
@@ -175,12 +178,25 @@ class Preprocessor(object):
 
 
 def create_dataloaders(
-    device,
-    preprocessor: Preprocessor,
+    device: int,
     dataset: str,
+    source_language: str,
+    target_language: str,
+    max_padding: int,
     batch_size=12000,
-    is_distributed=True,
-):
+) -> Tuple[Preprocessor, Tuple[DataLoader, DataLoader]]:
+
+    train_iter, valid_iter, test_iter = TRANSLATION_DATASETS[dataset](
+        language_pair=(source_language, target_language)
+    )
+
+    preprocessor = Preprocessor(
+        [train_iter, valid_iter, test_iter],
+        source_language,
+        target_language,
+        max_padding,
+    )
+
     # def create_dataloaders(batch_size=12000):
     def collate_fn(batch):
         return preprocessor.collate_batch(
@@ -188,20 +204,14 @@ def create_dataloaders(
             device,
         )
 
-    train_iter, valid_iter, test_iter = TRANSLATION_DATASETS[dataset](
-        language_pair=(preprocessor.language_src, preprocessor.language_tgt)
-    )
+    train_iter, valid_iter, test_iter = preprocessor.data_splits
 
     train_iter_map = to_map_style_dataset(
         train_iter
     )  # DistributedSampler needs a dataset len()
-    train_sampler = (
-        DistributedSampler(train_iter_map) if is_distributed else None
-    )
+    train_sampler = DistributedSampler(train_iter_map)
     valid_iter_map = to_map_style_dataset(valid_iter)
-    valid_sampler = (
-        DistributedSampler(valid_iter_map) if is_distributed else None
-    )
+    valid_sampler = DistributedSampler(valid_iter_map)
 
     print(f"Size of train dataset: {len(train_iter_map)}")
     print(f"Size of valid dataset: {len(valid_iter_map)}")
@@ -220,4 +230,4 @@ def create_dataloaders(
         sampler=valid_sampler,
         collate_fn=collate_fn,
     )
-    return train_dataloader, valid_dataloader
+    return preprocessor, (train_dataloader, valid_dataloader)

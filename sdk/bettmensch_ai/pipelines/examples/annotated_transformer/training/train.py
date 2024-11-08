@@ -11,7 +11,7 @@ from bettmensch_ai.pipelines.examples.annotated_transformer.architecture import 
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.optim.lr_scheduler import LambdaLR
 
-from .data import Preprocessor, create_dataloaders
+from .data import create_dataloaders
 from .optimizer import (
     DummyOptimizer,
     DummyScheduler,
@@ -80,15 +80,22 @@ def train_worker(
 ):
     ddp_context = LaunchContext()
 
+    # data
+    preprocessor, (train_dataloader, valid_dataloader) = create_dataloaders(
+        ddp_context.local_rank,
+        config.dataset,
+        config.source_language,
+        config.target_language,
+        config.max_padding,
+        batch_size=config.batch_size // ddp_context.world_size,
+    )
+
+    # model
     print(
         f"Trainer process using GPU: {ddp_context.local_rank} for training",
         flush=True,
     )
     torch.cuda.set_device(ddp_context.local_rank)
-
-    preprocessor = Preprocessor(
-        config.source_language, config.target_language, config.max_padding
-    )
 
     pad_idx = preprocessor.vocab_tgt[SpecialTokens.blank.value]
     d_model = 512
@@ -107,14 +114,6 @@ def train_worker(
         size=preprocessor.vocab_tgt_size, padding_idx=pad_idx, smoothing=0.1
     )
     criterion.cuda(ddp_context.local_rank)
-
-    train_dataloader, valid_dataloader = create_dataloaders(
-        ddp_context.local_rank,
-        preprocessor,
-        config.dataset,
-        batch_size=config.batch_size // ddp_context.world_size,
-        is_distributed=True,
-    )
 
     optimizer = torch.optim.Adam(
         model.parameters(), lr=config.base_lr, betas=(0.9, 0.98), eps=1e-9
