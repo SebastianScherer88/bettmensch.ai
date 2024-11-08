@@ -16,6 +16,11 @@ from .utils import TRANSLATION_DATASETS, SpecialTokens, SupportedLanguages
 
 class Preprocessor(object):
 
+    language_src: str
+    language_tgt: str
+    train: ShardingFilter
+    val: ShardingFilter
+    test: ShardingFilter
     tokenizer_src: spacy.language.Language
     tokenizer_tgt: spacy.language.Language
     vocab_src: Vocab
@@ -56,7 +61,7 @@ class Preprocessor(object):
                 tokenizer = spacy.load(self.tokenizer_map[language])
             except IOError:
                 os.system(
-                    f"python -m spacy download {self.tokenizer_map[language]}"
+                    f"python3 -m spacy download {self.tokenizer_map[language]}"
                 )
                 tokenizer = spacy.load(self.tokenizer_map[language])
             tokenizers.append(tokenizer)
@@ -81,7 +86,7 @@ class Preprocessor(object):
         print(f"Building {self.language_src} Vocabulary ...")
         vocab_src = build_vocab_from_iterator(
             self.yield_tokens(
-                self.train + self.val + self.test, self.tokenize_src, index=0
+                self.train + self.val, self.tokenize_src, index=0
             ),
             min_freq=2,
             specials=SpecialTokens.list(),
@@ -90,7 +95,7 @@ class Preprocessor(object):
         print(f"Building {self.language_tgt} Vocabulary ...")
         vocab_tgt = build_vocab_from_iterator(
             self.yield_tokens(
-                self.train + self.val + self.test, self.tokenize_tgt, index=1
+                self.train + self.val, self.tokenize_src, index=1
             ),
             min_freq=2,
             specials=SpecialTokens.list(),
@@ -203,13 +208,11 @@ def create_dataloaders(
             device,
         )
 
-    train_iter, valid_iter, test_iter = preprocessor.data_splits
-
     train_iter_map = to_map_style_dataset(
-        train_iter
+        preprocessor.train
     )  # DistributedSampler needs a dataset len()
     train_sampler = DistributedSampler(train_iter_map)
-    valid_iter_map = to_map_style_dataset(valid_iter)
+    valid_iter_map = to_map_style_dataset(preprocessor.val)
     valid_sampler = DistributedSampler(valid_iter_map)
 
     print(f"Size of train dataset: {len(train_iter_map)}")

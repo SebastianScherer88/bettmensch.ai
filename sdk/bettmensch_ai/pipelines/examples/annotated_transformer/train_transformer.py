@@ -4,8 +4,7 @@ from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
 from bettmensch_ai.pipelines import pipeline
 
 
-@torch_ddp_component
-def train_transformer_component(
+def train_transformer(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
     target_language: InputParameter = "en",
@@ -26,10 +25,15 @@ def train_transformer_component(
     )
 
     # make sure model artifact export directory exists
-    if not os.path.exists(trained_transformer.path):
-        os.makedirs(trained_transformer.path)
+    if trained_transformer is not None:
+        if not os.path.exists(trained_transformer.path):
+            os.makedirs(trained_transformer.path)
 
-    file_prefix = os.path.join(trained_transformer.path, f"{dataset}_model_")
+        file_prefix = os.path.join(
+            trained_transformer.path, f"{dataset}_model_"
+        )
+    else:
+        file_prefix = os.path.join(".", f"{dataset}_model_")
 
     config = TrainConfig(
         dataset=dataset,
@@ -47,7 +51,11 @@ def train_transformer_component(
 
     train_worker(config)
 
-    training_config.assign(config)
+    if training_config is not None:
+        training_config.assign(config)
+
+
+train_transformer_factory = torch_ddp_component(train_transformer)
 
 
 @pipeline("test-train-pipeline-1n-1p", ARGO_NAMESPACE, True)
@@ -64,7 +72,7 @@ def train_transformer_pipeline_1n_1p(
 ):
 
     train_transformer = (  # noqa: F841
-        train_transformer_component(
+        train_transformer_factory(
             "train-transformer",
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
@@ -101,7 +109,7 @@ def train_transformer_pipeline_2n_2p(
 ):
 
     train_transformer = (  # noqa: F841
-        train_transformer_component(
+        train_transformer_factory(
             "train-transformer",
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value

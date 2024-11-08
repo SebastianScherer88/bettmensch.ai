@@ -8,6 +8,7 @@ from bettmensch_ai.constants import (
 )
 from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from torch.distributed.elastic.multiprocessing.api import DefaultLogsSpecs
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
 
 
@@ -65,8 +66,8 @@ class LaunchConfigSettings(BaseSettings):
     role: str = ""
     max_restarts: int = 3
     monitor_interval: float = 30
-    redirects: str = "0"
-    tee: str = "3"
+    # redirects: Std = Std
+    # tee: Std = Std
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
 
@@ -93,6 +94,11 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         min_nodes=launch_config_settings_from_env.min_nodes,
         max_nodes=launch_config_settings_from_env.max_nodes,
         nproc_per_node=launch_config_settings_from_env.nproc_per_node,
+        logs_specs=DefaultLogsSpecs(
+            log_dir=launch_config_settings_from_env.log_dir,
+            #  redirects=launch_config_settings_from_env.redirects,
+            #  tee=launch_config_settings_from_env.tee
+        ),
         start_method=launch_config_settings_from_env.start_method,
         rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",  # noqa: E501
         rdzv_backend=launch_config_settings_from_env.rdzv_backend,

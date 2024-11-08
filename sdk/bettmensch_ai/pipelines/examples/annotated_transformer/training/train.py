@@ -79,6 +79,7 @@ def train_worker(
     config: TrainConfig,
 ):
     ddp_context = LaunchContext()
+    dist.init_process_group("nccl")
 
     # data
     preprocessor, (train_dataloader, valid_dataloader) = create_dataloaders(
@@ -103,9 +104,6 @@ def train_worker(
         preprocessor.vocab_src_size, preprocessor.vocab_tgt_size, N=6
     )
     model.cuda(ddp_context.local_rank)
-    module = model
-
-    dist.init_process_group("nccl")
     model = DDP(model, device_ids=[ddp_context.local_rank])
     module = model.module
     is_main_process = ddp_context.rank == 0
