@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from bettmensch_ai.constants import (
     ARGO_NAMESPACE,
@@ -134,29 +134,29 @@ class Pipeline(object):
         return _pipeline_context
 
     @property
-    def built(self):
+    def built(self) -> bool:
         return self._built
 
     @property
-    def registered(self):
+    def registered(self) -> bool:
         return self._registered
 
     @property
-    def registered_id(self):
+    def registered_id(self) -> Union[None, str]:
         if not self.registered:
             return None
 
         return self.registered_workflow_template.uid
 
     @property
-    def registered_name(self):
+    def registered_name(self) -> Union[None, str]:
         if not self.registered:
             return None
 
         return self.registered_workflow_template.name
 
     @property
-    def registered_namespace(self):
+    def registered_namespace(self) -> Union[None, str]:
         if not self.registered:
             return None
 
@@ -575,7 +575,7 @@ def delete_registered_pipeline(
 
 def pipeline(
     name: str, namespace: str, clear_context: bool
-) -> Callable[[], Pipeline]:
+) -> Callable[[Callable], Pipeline]:
     """Module's main decorator that takes a Calleable and returns a Pipeline
     instance with populated `user_built_workflow_template` attribute holding an
     WorkflowTemplate instance that implements the pipeline defined in the
