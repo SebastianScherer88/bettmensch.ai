@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from bettmensch_ai.components.base_component import BaseComponent
 from bettmensch_ai.components.base_inline_script_runner import (
@@ -77,7 +77,9 @@ class Component(BaseComponent):
         return task
 
 
-def component(func: Callable) -> Callable[..., Component]:
+def component(
+    func: Callable,
+) -> Callable[[Callable, str, Dict, List[Any]], Component]:
     """Takes a calleable and generates a configured Component factory that will
     generate a Component version of the callable if invoked inside an active
     PipelineContext.
