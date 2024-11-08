@@ -45,6 +45,8 @@ def get_extra_requirements() -> Dict[str, List[str]]:
     extra_requirements[SDKExtras.annotated_transformer.value] = [
         "GPUtil==1.4.0",
         "torchtext==0.18.0",
+        "torchdata==0.9.0",
+        "portalocker==2.10.1",
         "spacy==3.8.2",
     ]
 
