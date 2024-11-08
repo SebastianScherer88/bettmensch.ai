@@ -102,9 +102,7 @@ class Preprocessor(object):
 
     def load_vocabularies(self):
         if not exists("vocab.pt"):
-            vocab_src, vocab_tgt = self.build_vocabularies(
-                self.tokenize_src, self.tokenize_tgt
-            )
+            vocab_src, vocab_tgt = self.build_vocabularies()
             torch.save((vocab_src, vocab_tgt), "vocab.pt")
         else:
             vocab_src, vocab_tgt = torch.load("vocab.pt")
