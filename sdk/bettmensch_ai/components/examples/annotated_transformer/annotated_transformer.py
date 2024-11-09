@@ -17,14 +17,20 @@ def get_tokenizers_and_vocabularies(
     vocabularies: OutputArtifact = None,
 ):
 
+    import os
+
     from bettmensch_ai.components.examples.annotated_transformer.training import (  # noqa: E501
         TRANSLATION_DATASETS,
         Preprocessor,
     )
 
+    print("Getting the data splits")
+
     train_iter, valid_iter, test_iter = TRANSLATION_DATASETS[dataset](
         language_pair=(source_language, target_language)
     )
+
+    print("Initializing preprocessor")
 
     preprocessor = Preprocessor(
         data_splits=[train_iter, valid_iter, test_iter],
@@ -32,17 +38,28 @@ def get_tokenizers_and_vocabularies(
         language_tgt=target_language,
         max_padding=max_padding,
     )
+
+    print(
+        f"Downloading tokenizers and saving to {source_tokenizer.path}&"
+        f"{target_tokenizer.path}"
+    )
+
     preprocessor.download_tokenizers(
         source_tokenizer.path, target_tokenizer.path
     )
-    preprocessor.load_tokenizers(source_tokenizer.path, target_tokenizer.path)
-    preprocessor.build_vocabularies()
-    import os
 
-    print(os.listdir())
-    print(f"Vocabularies output path: {vocabularies.path}")
+    print(f"Local files: {os.listdir()}")
+    print("Building vocabularies")
+
+    preprocessor.build_vocabularies()
+
+    print(f"Saving vocabularies to {vocabularies.path}")
+
     preprocessor.save_vocabularies(vocabularies.path)
-    print(os.listdir())
+
+    print(f"Local files: {os.listdir()}")
+
+    return
 
 
 def train_transformer(

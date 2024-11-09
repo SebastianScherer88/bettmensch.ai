@@ -45,7 +45,7 @@ class Preprocessor(object):
 
     def download_tokenizers(self, source_path: str, target_path: str):
         """Downloads the source and target language tokenizers into the
-        specified paths.
+        specified paths, then calls `load_tokenizers`.
 
         Args:
             language (str): The language of the tokenizer
@@ -60,6 +60,8 @@ class Preprocessor(object):
             )
             tokenizer = spacy.load(self.tokenizer_map[language])
             tokenizer.to_disk(path)
+
+        self.load_tokenizers(source_path, target_path)
 
     def load_tokenizers(self, source_path: str, target_path: str):
         """Loads spacy tokenizers for the source and target language from the
