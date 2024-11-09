@@ -37,7 +37,12 @@ def get_tokenizers_and_vocabularies(
     )
     preprocessor.load_tokenizers(source_tokenizer.path, target_tokenizer.path)
     preprocessor.build_vocabularies()
+    import os
+
+    print(os.listdir())
+    print(f"Vocabularies output path: {vocabularies.path}")
     preprocessor.save_vocabularies(vocabularies.path)
+    print(os.listdir())
 
 
 def train_transformer(
