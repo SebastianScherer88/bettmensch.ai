@@ -60,7 +60,7 @@ def train_transformer_pipeline_1n_1p(
             warmup=warmup,
         )
         .set_gpus(1)
-        .set_memory("1000Mi")
+        .set_memory("2000Mi")
     )
 
 
@@ -94,9 +94,9 @@ def train_transformer_pipeline_2n_2p(
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
             },
-            n_nodes=2,
-            min_nodes=2,
-            nproc_per_node=2,
+            n_nodes=4,
+            min_nodes=4,
+            nproc_per_node=1,
             dataset=dataset,
             source_language=source_language,
             target_language=target_language,
@@ -116,6 +116,6 @@ def train_transformer_pipeline_2n_2p(
             max_padding=max_padding,
             warmup=warmup,
         )
-        .set_gpus(2)
+        .set_gpus(1)
         .set_memory("2000Mi")
     )
