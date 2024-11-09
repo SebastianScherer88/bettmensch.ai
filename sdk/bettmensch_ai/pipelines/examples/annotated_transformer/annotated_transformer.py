@@ -20,16 +20,20 @@ def train_transformer_pipeline_1n_1p(
     warmup: InputParameter = 3000,
 ):
 
-    get_tokenizers_and_vocabularies = get_tokenizers_and_vocabularies_factory(
-        "preprocess",
-        hera_template_kwargs={
-            "image": COMPONENT_IMAGE.annotated_transformer.value
-        },
-        dataset=dataset,
-        source_language=source_language,
-        target_language=target_language,
-        max_padding=max_padding,
-    ).set_memory("1000Mi")
+    get_tokenizers_and_vocabularies = (
+        get_tokenizers_and_vocabularies_factory(
+            "preprocess",
+            hera_template_kwargs={
+                "image": COMPONENT_IMAGE.annotated_transformer.value
+            },
+            dataset=dataset,
+            source_language=source_language,
+            target_language=target_language,
+            max_padding=max_padding,
+        )
+        .set_memory("1000Mi")
+        .set_cpu(1)
+    )
 
     train_transformer = (  # noqa: F841
         train_transformer_factory(
@@ -59,13 +63,14 @@ def train_transformer_pipeline_1n_1p(
             max_padding=max_padding,
             warmup=warmup,
         )
+        .set_cpu(3.5)  # works with 3, fails with 1
         .set_gpus(1)
-        .set_memory("2000Mi")
+        .set_memory("8Gi")  # works with 4Gi
     )
 
 
 @pipeline("test-train-pipeline-2n-2p", ARGO_NAMESPACE, True)
-def train_transformer_pipeline_2n_2p(
+def train_transformer_pipeline_3n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
     target_language: InputParameter = "en",
@@ -77,16 +82,20 @@ def train_transformer_pipeline_2n_2p(
     warmup: InputParameter = 3000,
 ):
 
-    get_tokenizers_and_vocabularies = get_tokenizers_and_vocabularies_factory(
-        "preprocess",
-        hera_template_kwargs={
-            "image": COMPONENT_IMAGE.annotated_transformer.value
-        },
-        dataset=dataset,
-        source_language=source_language,
-        target_language=target_language,
-        max_padding=max_padding,
-    ).set_memory("1000Mi")
+    get_tokenizers_and_vocabularies = (
+        get_tokenizers_and_vocabularies_factory(
+            "preprocess",
+            hera_template_kwargs={
+                "image": COMPONENT_IMAGE.annotated_transformer.value
+            },
+            dataset=dataset,
+            source_language=source_language,
+            target_language=target_language,
+            max_padding=max_padding,
+        )
+        .set_memory("1000Mi")
+        .set_cpu(1)
+    )
 
     train_transformer = (  # noqa: F841
         train_transformer_factory(
@@ -94,8 +103,8 @@ def train_transformer_pipeline_2n_2p(
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
             },
-            n_nodes=4,
-            min_nodes=4,
+            n_nodes=3,
+            min_nodes=3,
             nproc_per_node=1,
             dataset=dataset,
             source_language=source_language,
@@ -116,6 +125,7 @@ def train_transformer_pipeline_2n_2p(
             max_padding=max_padding,
             warmup=warmup,
         )
+        .set_cpu(3.5)  # works with 3, fails with 1
         .set_gpus(1)
-        .set_memory("2000Mi")
+        .set_memory("8Gi")  # works with 4Gi
     )
