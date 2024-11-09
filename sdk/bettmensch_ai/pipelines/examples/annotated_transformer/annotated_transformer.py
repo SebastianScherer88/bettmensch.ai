@@ -1,4 +1,5 @@
 from bettmensch_ai.components.examples.annotated_transformer import (
+    get_tokenizers_and_vocabularies_factory,
     train_transformer_factory,
 )
 from bettmensch_ai.constants import ARGO_NAMESPACE, COMPONENT_IMAGE
@@ -19,6 +20,17 @@ def train_transformer_pipeline_1n_1p(
     warmup: InputParameter = 3000,
 ):
 
+    get_tokenizers_and_vocabularies = get_tokenizers_and_vocabularies_factory(
+        "preprocess",
+        hera_template_kwargs={
+            "image": COMPONENT_IMAGE.annotated_transformer.value
+        },
+        dataset=dataset,
+        source_language=source_language,
+        target_language=target_language,
+        max_padding=max_padding,
+    )
+
     train_transformer = (  # noqa: F841
         train_transformer_factory(
             "train-transformer",
@@ -31,6 +43,15 @@ def train_transformer_pipeline_1n_1p(
             dataset=dataset,
             source_language=source_language,
             target_language=target_language,
+            source_tokenizer=get_tokenizers_and_vocabularies.outputs[
+                "source_tokenizer"
+            ],
+            target_tokenizer=get_tokenizers_and_vocabularies.outputs[
+                "target_tokenizer"
+            ],
+            vocabularies=get_tokenizers_and_vocabularies.outputs[
+                "vocabularies"
+            ],
             batch_size=batch_size,
             num_epochs=num_epochs,
             accum_iter=accum_iter,
@@ -56,6 +77,17 @@ def train_transformer_pipeline_2n_2p(
     warmup: InputParameter = 3000,
 ):
 
+    get_tokenizers_and_vocabularies = get_tokenizers_and_vocabularies_factory(
+        "preprocess",
+        hera_template_kwargs={
+            "image": COMPONENT_IMAGE.annotated_transformer.value
+        },
+        dataset=dataset,
+        source_language=source_language,
+        target_language=target_language,
+        max_padding=max_padding,
+    )
+
     train_transformer = (  # noqa: F841
         train_transformer_factory(
             "train-transformer",
@@ -68,6 +100,15 @@ def train_transformer_pipeline_2n_2p(
             dataset=dataset,
             source_language=source_language,
             target_language=target_language,
+            source_tokenizer=get_tokenizers_and_vocabularies.outputs[
+                "source_tokenizer"
+            ],
+            target_tokenizer=get_tokenizers_and_vocabularies.outputs[
+                "target_tokenizer"
+            ],
+            vocabularies=get_tokenizers_and_vocabularies.outputs[
+                "vocabularies"
+            ],
             batch_size=batch_size,
             num_epochs=num_epochs,
             accum_iter=accum_iter,

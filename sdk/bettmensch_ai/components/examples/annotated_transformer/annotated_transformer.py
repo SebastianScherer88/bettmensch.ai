@@ -1,4 +1,4 @@
-from bettmensch_ai.components import torch_ddp_component
+from bettmensch_ai.components import component, torch_ddp_component
 from bettmensch_ai.io import (
     InputArtifact,
     InputParameter,
@@ -96,4 +96,7 @@ def train_transformer(
         training_config.assign(config)
 
 
+get_tokenizers_and_vocabularies_factory = component(
+    get_tokenizers_and_vocabularies
+)
 train_transformer_factory = torch_ddp_component(train_transformer)
