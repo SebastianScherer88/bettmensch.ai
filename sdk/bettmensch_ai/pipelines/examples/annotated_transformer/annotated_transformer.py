@@ -7,7 +7,7 @@ from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import pipeline
 
 
-@pipeline("test-train-pipeline-1n-1p", ARGO_NAMESPACE, True)
+@pipeline("test-train-pipeline-1n", ARGO_NAMESPACE, True)
 def train_transformer_pipeline_1n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
@@ -69,7 +69,7 @@ def train_transformer_pipeline_1n_1p(
     )
 
 
-@pipeline("test-train-pipeline-2n-2p", ARGO_NAMESPACE, True)
+@pipeline("test-train-pipeline-xn", ARGO_NAMESPACE, True)
 def train_transformer_pipeline_3n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
