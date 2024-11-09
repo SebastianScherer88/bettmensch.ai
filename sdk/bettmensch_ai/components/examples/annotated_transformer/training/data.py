@@ -1,5 +1,4 @@
 import os
-from os.path import exists
 from typing import Dict, List, Tuple
 
 import spacy
@@ -42,31 +41,44 @@ class Preprocessor(object):
         self.train, self.val, self.test = data_splits
         self.language_src = language_src
         self.language_tgt = language_tgt
-        self.tokenizer_src, self.tokenizer_tgt = self.load_tokenizers()
-        self.vocab_src, self.vocab_tgt = self.load_vocabularies()
-        self.vocab_src_size, self.vocab_tgt_size = len(self.vocab_src), len(
-            self.vocab_tgt
-        )
         self.max_padding = max_padding
 
-    def load_tokenizers(
-        self,
-    ) -> Tuple[spacy.language.Language, spacy.language.Language]:
-        """Returns spacy tokenizers for the source and target language."""
+    def download_tokenizers(self, source_path: str, target_path: str):
+        """Downloads the source and target language tokenizers into the
+        specified paths.
+
+        Args:
+            language (str): The language of the tokenizer
+            path (str): The target download path
+        """
+
+        for language, path in zip(
+            (self.language_src, self.language_tgt), (source_path, target_path)
+        ):
+            os.system(
+                f"python3 -m spacy download {self.tokenizer_map[language]}"
+            )
+            tokenizer = spacy.load(self.tokenizer_map[language])
+            tokenizer.to_disk(path)
+
+    def load_tokenizers(self, source_path: str, target_path: str):
+        """Loads spacy tokenizers for the source and target language from the
+        specified paths and attaches them to the two tokenizer attributes.
+
+        Args:
+            source_path (str): The path to the on disk location of the source
+                language tokenizer
+            target_path (str): The path to the on disk location of the target
+                language tokenizer
+        """
 
         tokenizers = []
 
-        for language in (self.language_src, self.language_tgt):
-            try:
-                tokenizer = spacy.load(self.tokenizer_map[language])
-            except IOError:
-                os.system(
-                    f"python3 -m spacy download {self.tokenizer_map[language]}"
-                )
-                tokenizer = spacy.load(self.tokenizer_map[language])
+        for path in (source_path, target_path):
+            tokenizer = spacy.load(path)
             tokenizers.append(tokenizer)
 
-        return tokenizers
+        self.tokenizer_src, self.tokenizer_tgt = tokenizers
 
     def tokenize_src(self, text: str):
         return [tok.text for tok in self.tokenizer_src.tokenizer(text)]
@@ -82,6 +94,9 @@ class Preprocessor(object):
             yield tokenizer(from_to_tuple[index])
 
     def build_vocabularies(self):
+        """Builds source and target vocabularies and attaches them to the
+        two vocabulary attributes.
+        """
 
         print(f"Building {self.language_src} Vocabulary ...")
         vocab_src = build_vocab_from_iterator(
@@ -104,18 +119,31 @@ class Preprocessor(object):
         vocab_src.set_default_index(vocab_src[SpecialTokens.unk.value])
         vocab_tgt.set_default_index(vocab_tgt[SpecialTokens.unk.value])
 
-        return vocab_src, vocab_tgt
+        self.vocab_src, self.vocab_tgt = vocab_src, vocab_tgt
 
-    def load_vocabularies(self):
-        if not exists("vocab.pt"):
-            vocab_src, vocab_tgt = self.build_vocabularies()
-            torch.save((vocab_src, vocab_tgt), "vocab.pt")
-        else:
-            vocab_src, vocab_tgt = torch.load("vocab.pt")
+    def save_vocabularies(self, path: str):
+        """Saves the source and target vocabularies in the specified path.
+
+        Args:
+            path (str): The path of the torch artifact the vocabluaries will be
+                written to.
+        """
+
+        torch.save((self.vocab_src, self.vocab_tgt), path)
+
+    def load_vocabularies(self, path: str) -> Tuple[Vocab, Vocab]:
+        """Loads the source and target vocabularies from the specified path and
+        attaches them to the two vocabulary attributes.
+
+        Args:
+            path (str): The path of the torch artifact the vocabluaries will be
+                loaded from.
+        """
+        vocab_src, vocab_tgt = torch.load(path)
         print("Finished.\nVocabulary sizes:")
         print(len(vocab_src))
         print(len(vocab_tgt))
-        return vocab_src, vocab_tgt
+        self.vocab_src, self.vocab_tgt = vocab_src, vocab_tgt
 
     def collate_batch(
         self,
@@ -187,6 +215,9 @@ def create_dataloaders(
     source_language: str,
     target_language: str,
     max_padding: int,
+    source_tokenizer_path: str,
+    target_tokenizer_path: str,
+    vocabularies_path: str,
     batch_size=12000,
 ) -> Tuple[Preprocessor, Tuple[DataLoader, DataLoader]]:
 
@@ -200,6 +231,11 @@ def create_dataloaders(
         target_language,
         max_padding,
     )
+
+    preprocessor.load_tokenizers(
+        source_path=source_tokenizer_path, target_path=target_tokenizer_path
+    )
+    preprocessor.load_vocabularies(path=vocabularies_path)
 
     # def create_dataloaders(batch_size=12000):
     def collate_fn(batch):

@@ -80,6 +80,9 @@ class TrainConfig(BaseModel):
     dataset: str = SupportedDatasets.multi30k.value
     source_language: str = SupportedLanguages.german.value
     target_language: str = SupportedLanguages.english.value
+    source_tokenizer_path: str
+    target_tokenizer_path: str
+    vocabularies_path: str
     batch_size: int = 32
     distributed: bool = False
     num_epochs: int = 8

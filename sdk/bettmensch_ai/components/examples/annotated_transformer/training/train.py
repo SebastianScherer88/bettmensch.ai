@@ -88,6 +88,9 @@ def train_worker(
         config.source_language,
         config.target_language,
         config.max_padding,
+        config.source_tokenizer_path,
+        config.target_tokenizer_path,
+        config.vocabularies_path,
         batch_size=config.batch_size // ddp_context.world_size,
     )
 
