@@ -60,7 +60,7 @@ def train_transformer_pipeline_1n_1p(
             warmup=warmup,
         )
         .set_gpus(1)
-        .set_memory("700Mi")
+        .set_memory("1000Mi")
     )
 
 
@@ -117,5 +117,5 @@ def train_transformer_pipeline_2n_2p(
             warmup=warmup,
         )
         .set_gpus(2)
-        .set_memory("1500Mi")
+        .set_memory("2000Mi")
     )
