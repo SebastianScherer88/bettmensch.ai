@@ -35,6 +35,7 @@ def get_tokenizers_and_vocabularies(
     preprocessor.download_tokenizers(
         source_tokenizer.path, target_tokenizer.path
     )
+    preprocessor.load_tokenizers(source_tokenizer.path, target_tokenizer.path)
     preprocessor.build_vocabularies()
     preprocessor.save_vocabularies(vocabularies.path)
 
