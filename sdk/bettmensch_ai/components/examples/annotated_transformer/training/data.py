@@ -122,6 +122,9 @@ class Preprocessor(object):
         vocab_tgt.set_default_index(vocab_tgt[SpecialTokens.unk.value])
 
         self.vocab_src, self.vocab_tgt = vocab_src, vocab_tgt
+        self.vocab_src_size, self.vocab_tgt_size = len(self.vocab_src), len(
+            self.vocab_tgt
+        )
 
     def save_vocabularies(self, path: str):
         """Saves the source and target vocabularies in the specified path.
@@ -142,10 +145,13 @@ class Preprocessor(object):
                 loaded from.
         """
         vocab_src, vocab_tgt = torch.load(path)
-        print("Finished.\nVocabulary sizes:")
-        print(len(vocab_src))
-        print(len(vocab_tgt))
         self.vocab_src, self.vocab_tgt = vocab_src, vocab_tgt
+        self.vocab_src_size, self.vocab_tgt_size = len(self.vocab_src), len(
+            self.vocab_tgt
+        )
+        print("Finished.\nVocabulary sizes:")
+        print(self.vocab_src_size)
+        print(self.vocab_tgt_size)
 
     def collate_batch(
         self,
