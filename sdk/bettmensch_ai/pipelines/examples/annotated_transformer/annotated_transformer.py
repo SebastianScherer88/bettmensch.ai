@@ -29,7 +29,7 @@ def train_transformer_pipeline_1n_1p(
         source_language=source_language,
         target_language=target_language,
         max_padding=max_padding,
-    ).set_memory("400Mi")
+    ).set_memory("700Mi")
 
     train_transformer = (  # noqa: F841
         train_transformer_factory(
