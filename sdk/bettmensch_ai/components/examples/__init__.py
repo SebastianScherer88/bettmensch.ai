@@ -1,3 +1,9 @@
+from bettmensch_ai.components.examples.annotated_transformer import (  # noqa: F401, E501
+    get_tokenizers_and_vocabularies,
+    get_tokenizers_and_vocabularies_factory,
+    train_transformer,
+    train_transformer_factory,
+)
 from bettmensch_ai.components.examples.basic import (  # noqa: F401; functions
     add_parameters,
     add_parameters_factory,
