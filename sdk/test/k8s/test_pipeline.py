@@ -285,7 +285,7 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
     assert torch_ddp_pipeline.registered_namespace == test_namespace
 
     torch_ddp_flow = torch_ddp_pipeline.run(
-        {"n_iter": 5, "n_seconds_sleep": 2}, wait=True
+        {"n_iter": 15, "n_seconds_sleep": 2}, wait=True
     )
 
     assert torch_ddp_flow.status.phase == "Succeeded"
@@ -358,7 +358,7 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
     assert lightning_ddp_pipeline.registered_namespace == test_namespace
 
     lightning_ddp_flow = lightning_ddp_pipeline.run(
-        {"max_time": "00:00:00:20"}, wait=True
+        {"max_time": "00:00:00:30"}, wait=True
     )
 
     assert lightning_ddp_flow.status.phase == "Succeeded"
@@ -448,6 +448,7 @@ def test_run_dpp_registered_pipelines_from_registry(
 
 @pytest.mark.standard
 @pytest.mark.ddp
+@pytest.mark.train_transformer
 @pytest.mark.delete_pipelines
 @pytest.mark.order(12)
 def test_delete_registered_pipeline(test_namespace):

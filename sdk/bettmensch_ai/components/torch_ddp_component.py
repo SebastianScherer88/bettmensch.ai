@@ -85,6 +85,8 @@ class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
         # add function definition and decoration with `torch_ddp`
         torch_ddp_decoration = [
+            "\nfrom torch.distributed.elastic.multiprocessing.errors import record\n",  # noqa: E501
+            f"{instance.source.__name__}=record({instance.source.__name__})\n"
             "\nfrom bettmensch_ai.components import torch_ddp\n",
             "torch_ddp_decorator=torch_ddp()\n",
             f"""torch_ddp_function=torch_ddp_decorator({

@@ -22,6 +22,9 @@ class COMPONENT_IMAGE(Enum):
     standard = f"{DOCKER_IMAGE_BASE}:3.11-latest"
     torch = f"{DOCKER_IMAGE_BASE}-pytorch:3.11-latest"
     lightning = f"{DOCKER_IMAGE_BASE}-pytorch-lightning:3.11-latest"
+    annotated_transformer = (
+        f"{DOCKER_IMAGE_BASE}-annotated-transformer:3.11-latest"
+    )
 
 
 INPUT_TYPE = "inputs"

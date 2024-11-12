@@ -36,7 +36,7 @@ def test_torch_distribute_decorator(
     """Test the torch_distribute decorator with 3 test functions."""
 
     torch_distribute_decorator = torch_ddp(
-        log_dir=os.path.join(test_output_dir, "logs")
+        log_dir=os.path.join(test_output_dir, "logs"), max_restarts=0
     )
     torch_distributed_function = torch_distribute_decorator(test_function)
     torch_distributed_function(*test_function_args)

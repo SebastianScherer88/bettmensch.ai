@@ -8,7 +8,7 @@ from bettmensch_ai.constants import (
 )
 from hera.workflows import Resource
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from torch.distributed.elastic.multiprocessing.api import Std
+from torch.distributed.elastic.multiprocessing.api import DefaultLogsSpecs
 from torch.distributed.launcher.api import LaunchConfig, elastic_launch
 
 
@@ -66,8 +66,8 @@ class LaunchConfigSettings(BaseSettings):
     role: str = ""
     max_restarts: int = 3
     monitor_interval: float = 30
-    redirects: str = "0"
-    tee: str = "3"
+    # redirects: Std = Std
+    # tee: Std = Std
     log_dir: Optional[str] = None
     log_line_prefix_template: Optional[str] = None
 
@@ -94,6 +94,11 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         min_nodes=launch_config_settings_from_env.min_nodes,
         max_nodes=launch_config_settings_from_env.max_nodes,
         nproc_per_node=launch_config_settings_from_env.nproc_per_node,
+        logs_specs=DefaultLogsSpecs(
+            log_dir=launch_config_settings_from_env.log_dir,
+            #  redirects=launch_config_settings_from_env.redirects,
+            #  tee=launch_config_settings_from_env.tee
+        ),
         start_method=launch_config_settings_from_env.start_method,
         rdzv_endpoint=f"{launch_config_settings_from_env.rdzv_endpoint_url}:{launch_config_settings_from_env.rdzv_endpoint_port}",  # noqa: E501
         rdzv_backend=launch_config_settings_from_env.rdzv_backend,
@@ -101,12 +106,30 @@ def get_launch_config(**config_settings_kwargs) -> LaunchConfig:
         role=launch_config_settings_from_env.role,
         max_restarts=launch_config_settings_from_env.max_restarts,
         monitor_interval=launch_config_settings_from_env.monitor_interval,
-        tee=Std.from_str(launch_config_settings_from_env.tee),
-        redirects=Std.from_str(launch_config_settings_from_env.redirects),
-        log_dir=launch_config_settings_from_env.log_dir,
-        log_line_prefix_template=launch_config_settings_from_env.log_line_prefix_template,  # noqa: E501
         rdzv_configs={"rank": launch_config_settings_from_env.node_rank},
     )
+
+
+class LaunchContext(BaseSettings):
+    """Utility to grab the DDP environment variables set by torchrun as per
+    https://pytorch.org/docs/stable/elastic/run.html#environment-variables.
+    Useful to get information from within the worker process about the devices
+    available to it."""
+
+    # local process rank & local size (i.e. within node)
+    local_rank: int
+    local_world_size: int  # equivalent to nproc_per_node
+
+    # global process rank & global size (i.e. across all nodes)
+    rank: int
+    world_size: int
+
+    # global, role scoped process rank & global, role scoped size
+    role_rank: int
+    role_world_size: int
+
+    # (global) node rank
+    group_rank: int  # same as node_rank in the LaunchConfigSettings
 
 
 def torch_ddp(**config_settings_kwargs):
