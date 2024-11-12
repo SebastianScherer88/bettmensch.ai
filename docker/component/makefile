@@ -12,6 +12,7 @@ LATEST_TAG=3.11-latest
 component.build:
 	@echo "::group::Building $(COMPONENT) component docker image"
 	@echo "::group:: Commit: $(COMMIT)"
+	mkdir -p ${LOG_DIR}
 	docker compose -f docker/component/docker-compose.yaml build $(COMPONENT) > ${LOG_DIR}/docker-build-log-$(COMPONENT).txt
 	docker tag $(DOCKER_IMAGE_BASE)-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${COMMIT_TAG}
 	docker tag ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${COMPONENT}:${LATEST_TAG}

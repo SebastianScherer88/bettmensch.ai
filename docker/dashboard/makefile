@@ -12,6 +12,7 @@ LATEST_TAG=3.11-latest
 dashboard.build:
 	@echo "::group::Building $(DASHBOARD) docker image"
 	@echo "::group:: Commit: $(COMMIT)"
+	mkdir -p ${LOG_DIR}
 	docker compose -f docker/$(DASHBOARD)/docker-compose.yaml build $(DASHBOARD) > ${LOG_DIR}/docker-build-log-${COMPONENT}.txt
 	docker tag ${DOCKER_IMAGE_BASE}-${DASHBOARD}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${DASHBOARD}:${COMMIT_TAG}
 	docker tag ${DOCKER_IMAGE_BASE}-${DASHBOARD}:${LOCAL_TAG} ${DOCKER_IMAGE_BASE}-${DASHBOARD}:${LATEST_TAG}
