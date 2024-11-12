@@ -13,6 +13,12 @@ sdk/test/k8s/outputs
 # build outputs
 build/*
 sdk/build/*
+build_logs
+
+# misc files
+*.pt
+check_manifests
+error_logs
 
 # pytorch lightning outputs
 lightning_logs/*
