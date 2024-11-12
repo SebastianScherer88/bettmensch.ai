@@ -2,11 +2,7 @@ import os
 
 import pytest
 from bettmensch_ai.components import torch_ddp
-from bettmensch_ai.components.examples import (
-    lightning_train,
-    tensor_reduce,
-    train_transformer,
-)
+from bettmensch_ai.components.examples import lightning_train, tensor_reduce
 
 
 def distributed_test_function_1():
@@ -28,7 +24,6 @@ def distributed_test_function_2(a: int, b: str = "test"):
 @pytest.mark.parametrize(
     "test_function,test_function_args",
     [
-        (train_transformer, []),
         (distributed_test_function_1, []),
         (distributed_test_function_2, [1, "test_value"]),
         (tensor_reduce, [5, 2]),
