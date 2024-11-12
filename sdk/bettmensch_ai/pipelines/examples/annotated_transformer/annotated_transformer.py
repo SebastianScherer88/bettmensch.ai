@@ -65,7 +65,7 @@ def train_transformer_pipeline_1n_1p(
         )
         .set_cpu(3.5)  # works with 3, fails with 1
         .set_gpus(1)
-        .set_memory("8Gi")  # works with 4Gi
+        .set_memory("15Gi")  # works with 4Gi
     )
 
 
@@ -127,5 +127,5 @@ def train_transformer_pipeline_3n_1p(
         )
         .set_cpu(3.5)  # works with 3, fails with 1
         .set_gpus(1)
-        .set_memory("8Gi")  # works with 4Gi
+        .set_memory("15Gi")  # works with 4Gi
     )

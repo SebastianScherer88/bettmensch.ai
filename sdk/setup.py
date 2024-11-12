@@ -27,6 +27,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         ],
         SDKExtras.pipelines.value: [
             "hera==5.15.1",
+            "GPUtil==1.4.0",
         ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
     }

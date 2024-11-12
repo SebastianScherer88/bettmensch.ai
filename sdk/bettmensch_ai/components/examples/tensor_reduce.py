@@ -14,6 +14,7 @@ def tensor_reduce(
     import time
     from datetime import datetime as dt
 
+    import GPUtil
     import torch
     import torch.distributed as dist
     from bettmensch_ai.components import LaunchContext
@@ -31,6 +32,8 @@ def tensor_reduce(
     for i in range(1, n_iter + 1):
 
         time.sleep(n_seconds_sleep)
+
+        GPUtil.showUtilization()
 
         a = torch.tensor([ddp_context.rank])
 

@@ -2,8 +2,11 @@ import os
 
 import pytest
 from bettmensch_ai.components import torch_ddp
-from bettmensch_ai.components.examples import lightning_train, tensor_reduce
-from bettmensch_ai.pipelines.examples import train_transformer
+from bettmensch_ai.components.examples import (
+    lightning_train,
+    tensor_reduce,
+    train_transformer,
+)
 
 
 def distributed_test_function_1():
