@@ -231,200 +231,204 @@ class OutputArtifact(OriginMixin, Output):
             return Artifact(name=self.name, path=self.path)
 
 
-def get_s3_client():
-    """Returns the boto3 client for the artifact repository S3 bucket"""
+class AdapterIO(object):
 
-    try:
-        import boto3
-    except ModuleNotFoundError as e:
-        print(
-            "Boto3 could not be found. Did you install the bettmensch.ai"
-            "sdk with the `pipelines-adapter` extras?"
+    s3_client: Any
+    workflow_id: str
+    external_input_parameters: str = "input_parameters.json"
+    external_output_parameters: str = "output_parameters.json"
+
+    def __init__(self, workflow_id: Optional[str] = None):
+        self.s3_client = self.get_s3_client()
+
+        # get workflow id from argo context variable - see
+        # https://argo-workflows.readthedocs.io/en/latest/variables/#global
+        if workflow_id is None:
+            workflow_id = json.loads(r"""{{workflow.uid}}""")
+
+    @staticmethod
+    def get_s3_client():
+        """Returns the boto3 client for the artifact repository S3 bucket"""
+
+        try:
+            import boto3
+        except ModuleNotFoundError as e:
+            print(
+                "Boto3 could not be found. Did you install the bettmensch.ai"
+                "sdk with the `pipelines-adapter` extras?"
+            )
+            raise e
+
+        client = boto3.client("s3")
+
+        return client
+
+    @staticmethod
+    @property
+    def hera_input_parameters() -> Dict[str, Any]:
+        return json.loads(r"""{{inputs.parameters}}""")
+
+    def upload_dict_to_s3(self, data: Dict, s3_prefix: str):
+        """Utility function to upload a dictionary as a json file to the
+        specified prefix in the artifact repository S3 bucket.
+
+        Args:
+            data (Dict): The dictionary to be uploaded
+            s3_prefix (str): The upload target s3 prefix
+        """
+        data_file = bytes(json.dumps(data).encode("UTF-8"))
+
+        self.s3_client.upload_fileobj(
+            data_file, S3_ARTIFACT_REPOSITORY_BUCKET, s3_prefix
         )
-        raise e
 
-    client = boto3.client("s3")
+    def download_dict_from_s3(self, s3_prefix: str) -> Dict:
+        """Utility function to download a json as a dictionary from the
+        specified prefix in the artifact repository S3 bucket.
 
-    return client
+        Args:
+            s3_prefix (str): The s3 source prefix of the json file
 
+        Returns:
+            Dict: The content of the remote json file
+        """
 
-def upload_dict_to_s3(data: Dict, s3_prefix: str):
-    """Utility function to upload a dictionary as a json file to the specified
-    prefix in the artifact repository S3 bucket.
+        s3_object = self.s3_client.get_object(
+            Bucket=S3_ARTIFACT_REPOSITORY_BUCKET, Key=s3_prefix
+        )
+        data_json_str = s3_object["Body"].read().decode()
+        data_dict = json.loads(data_json_str)
 
-    Args:
-        data (Dict): The dictionary to be uploaded
-        s3_prefix (str): The upload target s3 prefix
-    """
-    data_file = bytes(json.dumps(data).encode("UTF-8"))
+        return data_dict
 
-    s3_client = get_s3_client()
-    s3_client.upload_fileobj(
-        data_file, S3_ARTIFACT_REPOSITORY_BUCKET, s3_prefix
-    )
+    def get_artifact_repository_prefix(self, s3_file_name: str) -> str:
+        """Returns the artifact repository S3 prefix for the given filename.
 
+        Args:
+            s3_file_name (str): The name of the S3 artifact to be created
 
-def download_dict_from_s3(s3_prefix: str) -> Dict:
-    """Utility function to download a json as a dictionary from the specified
-    prefix in the artifact repository S3 bucket.
+        Raises:
+            e: A ModuleNotFoundError if the boto3 module is missing
 
-    Args:
-        s3_prefix (str): The s3 source prefix of the json file
+        Returns:
+            (str): The s3 prefix
+        """
 
-    Returns:
-        Dict: The content of the remote json file
-    """
+        return f"{S3_ARTIFACT_REPOSITORY_PREFIX}/{self.workflow_id}/{DDP_TASK_ALIAS}/{s3_file_name}"  # noqa: E501
 
-    s3_client = get_s3_client()
-    s3_object = s3_client.get_object(
-        Bucket=S3_ARTIFACT_REPOSITORY_BUCKET, Key=s3_prefix
-    )
-    data_json_str = s3_object["Body"].read().decode()
-    data_dict = json.loads(data_json_str)
+    def upload_artifact_to_s3(self, artifact_name: str):
+        """Utility to upload a TorchDDPComponent's specified input artifact to
+        S3. Useful for the IO pre adapter task that exposes argo inputs to the
+        DDP jobset processes via S3
 
-    return data_dict
+        Args:
+            artifact_name (str): The name of the input artifact to be uploaded.
+        """
 
+        artifact_s3_prefix = self.get_artifact_repository_prefix(artifact_name)
+        self.s3_client.upload_file(
+            artifact_name, S3_ARTIFACT_REPOSITORY_BUCKET, artifact_s3_prefix
+        )
 
-def get_artifact_repository_prefix(
-    s3_file_name: str, workflow_id: Optional[str] = None
-) -> str:
-    """Returns the artifact repository S3 prefix for the given filename.
+    def download_artifact_from_s3(
+        self,
+        artifact_name: str,
+    ):
+        """Utility to download a TorchDDPComponent's specified output artifact
+        from S3. Useful for the IO post adapter task that exposes the DDP
+        jobset outputs to argo output artifacts
 
-    Args:
-        s3_file_name (str): The name of the S3 artifact to be created
+        Args:
+            artifact_name (str): The name of the output artifact to be
+                downloaded.
+        """
 
-    Raises:
-        e: A ModuleNotFoundError if the boto3 module is missing
+        artifact_s3_prefix = self.get_artifact_repository_prefix(artifact_name)
+        self.s3_client.download_file(
+            S3_ARTIFACT_REPOSITORY_BUCKET, artifact_s3_prefix, artifact_name
+        )
 
-    Returns:
-        (str): The s3 prefix
-    """
+    def hera_input_parameters_to_s3(self):
+        """Utility to upload a TorchDDPComponent's input parameters to S3.
+        Useful for the IO pre adapter task that exposes argo inputs to the DDP
+        jobset processes via S3
 
-    # get workflow id from argo context variable - see
-    # https://argo-workflows.readthedocs.io/en/latest/variables/#global
-    if workflow_id is None:
-        workflow_id = json.loads(r"""{{workflow.uid}}""")
+        Raises:
+            e: A ModuleNotFoundError if the boto3 module is missing
+        """
 
-    return f"{S3_ARTIFACT_REPOSITORY_PREFIX}/{workflow_id}/{DDP_TASK_ALIAS}/{s3_file_name}"  # noqa: E501
+        # get input parameter values from argo context variable - see
+        # https://argo-workflows.readthedocs.io/en/latest/variables/...
+        # ...#all-templates
+        s3_prefix = self.get_artifact_repository_prefix(
+            self.external_input_parameters
+        )
+        self.upload_dict_to_s3(self.hera_input_parameters, s3_prefix)
 
+    def download_container_inputs_from_s3(
+        self, artifact_names: Tuple[str]
+    ) -> Dict[str, Any]:
+        """Utility to download input parameters and artifacts from S3. Useful
+        for the TorchDDPComponent's main containers running outside the
+        ArgoWorkflow context (requires that the IO pre adapter task has
+        completed).
 
-def upload_artifact_to_s3(
-    artifact_name: str, workflow_id: Optional[str] = None
-):
-    """Utility to upload a TorchDDPComponent's specified input artifact to S3.
-    Useful for the IO pre adapter task that exposes argo inputs to the DDP
-    jobset processes via S3
+        Args:
+            workflow_id (str): The unique id of the ArgoWorkflow that created
+            the external container/K8s JobSet
 
-    Args:
-        artifact_name (str): The name of the input artifact to be uploaded.
-    """
+        Returns:
+            Dict[str,Any]: The input parameters
+        """
 
-    s3_client = get_s3_client()
-    artifact_s3_prefix = get_artifact_repository_prefix(
-        artifact_name, workflow_id
-    )
-    s3_client.upload_file(
-        artifact_name, S3_ARTIFACT_REPOSITORY_BUCKET, artifact_s3_prefix
-    )
+        s3_prefix = self.get_artifact_repository_prefix(
+            self.external_input_parameters
+        )
+        input_parameters_dict = self.download_dict_from_s3(s3_prefix)
 
+        # artifacts
+        [
+            self.download_artifact_from_s3(artifact_name, self.workflow_id)
+            for artifact_name in artifact_names
+        ]
 
-def download_artifact_from_s3(
-    artifact_name: str, workflow_id: Optional[str] = None
-):
-    """Utility to download a TorchDDPComponent's specified output artifact from
-    S3. Useful for the IO post adapter task that exposes the DDP jobset outputs
-    to argo output artifacts
+        # parameters
 
-    Args:
-        artifact_name (str): The name of the output artifact to be downloaded.
-    """
+        return input_parameters_dict
 
-    s3_client = get_s3_client()
-    artifact_s3_prefix = get_artifact_repository_prefix(
-        artifact_name, workflow_id
-    )
-    s3_client.download_file(
-        S3_ARTIFACT_REPOSITORY_BUCKET, artifact_s3_prefix, artifact_name
-    )
+    def upload_container_outputs_to_s3(
+        self,
+        output_parameters: Dict[str, Any],
+        artifact_names: Tuple[str],
+    ):
 
+        # parameters
+        s3_prefix = self.get_artifact_repository_prefix(
+            self.external_output_parameters
+        )
+        self.upload_dict_to_s3(output_parameters, s3_prefix)
 
-def hera_input_parameters_to_s3():
-    """Utility to upload a TorchDDPComponent's input parameters to S3. Useful
-    for the IO pre adapter task that exposes argo inputs to the DDP jobset
-    processes via S3
+        # artifacts
+        [
+            self.upload_artifact_to_s3(artifact_name)
+            for artifact_name in artifact_names
+        ]
 
-    Raises:
-        e: A ModuleNotFoundError if the boto3 module is missing
-    """
+    def s3_to_hera_output_parameters(self):
+        """Utility to download a TorchDDPComponent's output parameters from S3.
+        Useful for the IO post adapter task that exposes the DDP jobset outputs
+        to argo output parameters
+        """
 
-    # get input parameter values from argo context variable - see
-    # https://argo-workflows.readthedocs.io/en/latest/variables/#all-templates
-    input_parameters_dict = json.loads(r"""{{inputs.parameters}}""")
-    s3_prefix = get_artifact_repository_prefix("input_parameters.json")
-    upload_dict_to_s3(input_parameters_dict, s3_prefix)
+        s3_prefix = self.get_artifact_repository_prefix(
+            self.external_output_parameters
+        )
+        input_parameters_dict = self.download_dict_from_s3(s3_prefix)
 
-
-def download_container_inputs_from_s3(
-    workflow_id: str, artifact_names: Tuple[str]
-) -> Dict[str, Any]:
-    """Utility to download input parameters and artifacts from S3. Useful for
-    the TorchDDPComponent's main containers running outside the ArgoWorkflow
-    context (requires that the IO pre adapter task has completed).
-
-    Args:
-        workflow_id (str): The unique id of the ArgoWorkflow that created the
-        external container/K8s JobSet
-
-    Returns:
-        Dict[str,Any]: The input parameters
-    """
-
-    s3_prefix = get_artifact_repository_prefix("input_parameters.json")
-    input_parameters_dict = download_dict_from_s3(s3_prefix)
-
-    # artifacts
-    [
-        download_artifact_from_s3(artifact_name, workflow_id)
-        for artifact_name in artifact_names
-    ]
-
-    # parameters
-
-    return input_parameters_dict
-
-
-def upload_container_outputs_to_s3(
-    workflow_id: str,
-    output_parameters: Dict[str, Any],
-    artifact_names: Tuple[str],
-):
-
-    # parameters
-    s3_prefix = get_artifact_repository_prefix(
-        "output_parameters.json", workflow_id
-    )
-    upload_dict_to_s3(output_parameters, s3_prefix)
-
-    # artifacts
-    [
-        upload_artifact_to_s3(artifact_name, workflow_id)
-        for artifact_name in artifact_names
-    ]
-
-
-def s3_to_hera_output_parameters():
-    """Utility to download a TorchDDPComponent's output parameters from S3.
-    Useful for the IO post adapter task that exposes the DDP jobset outputs to
-    argo output parameters
-    """
-
-    s3_prefix = get_artifact_repository_prefix("output_parameters.json")
-    input_parameters_dict = download_dict_from_s3(s3_prefix)
-
-    for (
-        input_parameter_name,
-        input_parameter_value,
-    ) in input_parameters_dict.items():
-        InputParameter(
-            name=input_parameter_name, value=input_parameter_value
-        ).export()
+        for (
+            input_parameter_name,
+            input_parameter_value,
+        ) in input_parameters_dict.items():
+            InputParameter(
+                name=input_parameter_name, value=input_parameter_value
+            ).export()
