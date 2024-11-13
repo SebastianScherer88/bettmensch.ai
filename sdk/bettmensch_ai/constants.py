@@ -27,6 +27,10 @@ class COMPONENT_IMAGE(Enum):
     )
 
 
+S3_ARTIFACT_REPOSITORY_BUCKET = "bettmensch-ai-artifact-repository"
+S3_ARTIFACT_REPOSITORY_PREFIX = "argo-workflows"
+DDP_TASK_ALIAS = "torch-ddp-task"
+
 INPUT_TYPE = "inputs"
 OUTPUT_TYPE = "outputs"
 
@@ -54,6 +58,12 @@ class COMPONENT_IMPLEMENTATION(Enum):
     base: str = "base"
     standard: str = "standard"
     torch_ddp: str = "torch-ddp"
+
+
+class TORCH_DDP_SCRIPT_IMPLEMENTATION(Enum):
+    pre_adapter_io: str = "pre_adapter_io"
+    torch_ddp: str = "torch_ddp"
+    post_adapter_io: str = "post_adapter_io"
 
 
 class FLOW_LABEL(Enum):
