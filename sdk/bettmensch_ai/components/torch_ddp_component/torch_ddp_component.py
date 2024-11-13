@@ -21,6 +21,8 @@ from bettmensch_ai.constants import (
 )
 from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
 from bettmensch_ai.utils import (
+    BettmenschAITorchDDPPostAdapterScript,
+    BettmenschAITorchDDPPreAdapterScript,
     BettmenschAITorchDDPScript,
     bettmensch_ai_script,
 )
@@ -33,9 +35,18 @@ from hera.workflows.models import ContainerPort, Protocol
 class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
     """
-    A customised version of the TorchComponentInlineScriptRunner that adds the
-    decoration of the callable with the
-    bettmensch_ai.torch_utils.torch_ddp decorator.
+    A custom InlineScriptRunner class to support all 3 custom script classes
+    - BettmenschAITorchDDPPreAdapterScript
+    - BettmenschAITorchDDPScript
+    - BettmenschAITorchDDPPostAdapterScript
+    by generating the code snippets for their respective tasks:
+    - input gathering and uploading to S3 code,
+    - downlaoding inputs from S3, wrapping the user defined function in a
+        torchrun context and calling it, then uploading the outputs to S3
+    - S3 download and output gathering code
+
+    Checks the `implementation` attribute of the passed Script subclass
+    instance to decide which code should be generated.
     """
 
     def generate_source(self, instance: Script) -> str:
@@ -107,7 +118,17 @@ class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
 
 
 global_config.set_class_defaults(
+    BettmenschAITorchDDPPreAdapterScript,
+    constructor=TorchDDPComponentInlineScriptRunner(),
+)
+
+global_config.set_class_defaults(
     BettmenschAITorchDDPScript,
+    constructor=TorchDDPComponentInlineScriptRunner(),
+)
+
+global_config.set_class_defaults(
+    BettmenschAITorchDDPPostAdapterScript,
     constructor=TorchDDPComponentInlineScriptRunner(),
 )
 

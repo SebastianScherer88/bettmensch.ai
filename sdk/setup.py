@@ -7,6 +7,7 @@ from setuptools import find_packages, setup
 class SDKExtras(Enum):
     dashboard: str = "dashboard"
     pipelines: str = "pipelines"
+    pipelines_adapter: str = "pipelines-adapter"
     annotated_transformer: str = "annotated-transformer"
     serving: str = "serving"
     test: str = "test"
@@ -28,6 +29,9 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         SDKExtras.pipelines.value: [
             "hera==5.15.1",
             "GPUtil==1.4.0",
+        ],
+        SDKExtras.pipelines_adapter.value: [
+            "boto3==1.35.59",
         ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
     }
