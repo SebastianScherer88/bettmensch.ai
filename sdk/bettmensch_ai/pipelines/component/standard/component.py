@@ -33,7 +33,7 @@ class Component(BaseComponent):
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood
         script_wrapper = bettmensch_ai_script(
-            script=BettmenschAIStandardScript, **script_decorator_kwargs
+            script_class=BettmenschAIStandardScript, **script_decorator_kwargs
         )
 
         task_factory = script_wrapper(func=self.func)

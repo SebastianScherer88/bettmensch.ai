@@ -7,6 +7,10 @@ from .constants import ArgumentType, IOType, ResourceType
 
 
 class IO(object):
+
+    name: str
+    value: Any
+
     def __init__(self, name: str, value: Any = None):
         self.name = name
         self.value = value
@@ -83,13 +87,9 @@ class OriginMixin(object):
         self,
         source: Union["InputParameter", "OutputParameter", "OutputArtifact"],
     ):
-        try:
-            assert source.type in (IOType.inputs.value, IOType.outputs.value)
-            assert source.argument_type in (
-                ArgumentType.parameter.value,
-                ArgumentType.artifact.value,
-            )
-        except (AttributeError, AssertionError):
+        if not isinstance(
+            source, (InputParameter, OutputParameter, OutputArtifact)
+        ):
             raise TypeError(
                 f"The specified parameter source {source} has to be one of: "
                 "(InputParameter, OutputParameter, OutputArtifact)."

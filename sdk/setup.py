@@ -59,7 +59,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
 
 setup(
     name="bettmensch_ai",
-    version="0.1.0",
+    version="0.2.0",
     author="Sebastian Scherer @ Github:SebastianScherer88",
     author_email="scherersebastian@yahoo.de",
     packages=find_packages(),

@@ -1,7 +1,11 @@
 from typing import Dict, List, Optional
 
-from bettmensch_ai.constants import ARGO_NAMESPACE, FLOW_LABEL, FLOW_PHASE
-from bettmensch_ai.pipelines.client import hera_client
+from bettmensch_ai.pipelines.constants import (
+    ARGO_NAMESPACE,
+    FLOW_LABEL,
+    FLOW_PHASE,
+)
+from bettmensch_ai.pipelines.pipeline import hera_client
 from hera.workflows import Workflow
 from hera.workflows.models import Workflow as WorkflowModel
 from hera.workflows.models import (

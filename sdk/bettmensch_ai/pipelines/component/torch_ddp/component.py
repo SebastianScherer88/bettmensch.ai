@@ -199,7 +199,8 @@ class TorchDDPComponent(BaseComponent):
             # this will invoke our custom TorchComponentInlineScriptRunner
             # under the hood
             script_wrapper = bettmensch_ai_script(
-                script=BettmenschAITorchDDPScript, **script_decorator_kwargs
+                script_class=BettmenschAITorchDDPScript,
+                **script_decorator_kwargs,
             )
 
             task_node_factory = script_wrapper(func=self.func)

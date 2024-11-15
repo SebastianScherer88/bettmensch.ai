@@ -1,23 +1,14 @@
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.pipelines.client import (
-    ArgoWorkflowsBackendConfiguration,
-    hera_client,
-)
 from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
     COMPONENT_IMPLEMENTATION,
     FLOW_LABEL,
     ResourceType,
 )
-from bettmensch_ai.pipelines.flow import Flow, list_flows
 from bettmensch_ai.pipelines.io import InputParameter, Parameter
-from bettmensch_ai.pipelines.pipeline_context import (
-    PipelineContext,
-    _pipeline_context,
-)
-from bettmensch_ai.utils import get_func_args, validate_func_args
+from bettmensch_ai.pipelines.utils import get_func_args, validate_func_args
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
 from hera.workflows import DAG, Workflow, WorkflowsService, WorkflowTemplate
@@ -29,6 +20,10 @@ from hera.workflows.models import (
 from hera.workflows.models import (
     WorkflowTemplateRef as WorkflowTemplateRefModel,
 )
+
+from .client import ArgoWorkflowsBackendConfiguration, hera_client
+from .flow import Flow, list_flows
+from .pipeline_context import PipelineContext, _pipeline_context
 
 
 class Pipeline(object):

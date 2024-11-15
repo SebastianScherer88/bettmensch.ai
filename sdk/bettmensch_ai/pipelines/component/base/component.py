@@ -7,8 +7,6 @@ from bettmensch_ai.pipelines.constants import (
     GPU_FLAG,
     GPU_TOLERATION,
     POD_RETRY_STRATEGY,
-    ArgumentType,
-    IOType,
     ResourceType,
 )
 from bettmensch_ai.pipelines.io import (
@@ -218,26 +216,17 @@ class BaseComponent(object):
                 )
 
             # assemble component input
-            if (getattr(input, "type", None) == IOType.inputs.value) and (
-                getattr(input, "argument_type", None)
-                == ArgumentType.parameter.value
-            ):
+            if isinstance(input, InputParameter):
                 # for pipeline inputs, we retain the (possible) default value.
                 # for a hardcoded component input pinning the argument of the
                 # underlying function for this component only, we set the
                 # pinned value
                 component_input = InputParameter(name=name, value=input.value)
-            elif (getattr(input, "type", None) == IOType.outputs.value) and (
-                getattr(input, "argument_type", None)
-                == ArgumentType.parameter.value
-            ):
+            elif isinstance(input, OutputParameter):
                 # a component output won't have a default value to retain. the
                 # input's value will be the hera reference expression
                 component_input = InputParameter(name=name)
-            elif (getattr(input, "type", None) == IOType.outputs.value) and (
-                getattr(input, "argument_type", None)
-                == ArgumentType.artifact.value
-            ):
+            elif isinstance(input, OutputArtifact):
                 component_input = InputArtifact(name=name)
             else:
                 raise TypeError(
