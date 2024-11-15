@@ -1,29 +1,14 @@
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.components.base_component import BaseComponent
-from bettmensch_ai.components.base_inline_script_runner import (
-    BaseComponentInlineScriptRunner,
+from bettmensch_ai.pipelines.component.base.component import BaseComponent
+from bettmensch_ai.pipelines.component.utils import bettmensch_ai_script
+from bettmensch_ai.pipelines.constants import (
+    COMPONENT_IMAGE,
+    COMPONENT_IMPLEMENTATION,
 )
-from bettmensch_ai.constants import COMPONENT_IMAGE, COMPONENT_IMPLEMENTATION
-from bettmensch_ai.utils import BettmenschAIScript, bettmensch_ai_script
-from hera.shared import global_config
 from hera.workflows import Task
 
-
-class ComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
-
-    """
-    A customised version of the InlineScriptConstructor that implements a
-    modified `_get_param_script_portion` and `generate_source` methods to
-    ensure proper handling of the SDK's I/O objects at runtime.
-    """
-
-    pass
-
-
-global_config.set_class_defaults(
-    BettmenschAIScript, constructor=ComponentInlineScriptRunner()
-)
+from .script import BettmenschAIStandardScript
 
 
 class Component(BaseComponent):
@@ -47,7 +32,9 @@ class Component(BaseComponent):
 
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood
-        script_wrapper = bettmensch_ai_script(**script_decorator_kwargs)
+        script_wrapper = bettmensch_ai_script(
+            script=BettmenschAIStandardScript, **script_decorator_kwargs
+        )
 
         task_factory = script_wrapper(func=self.func)
 
@@ -77,7 +64,7 @@ class Component(BaseComponent):
         return task
 
 
-def component(
+def as_component(
     func: Callable,
 ) -> Callable[[Callable, str, Dict, List[Any]], Component]:
     """Takes a calleable and generates a configured Component factory that will

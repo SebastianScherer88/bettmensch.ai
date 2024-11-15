@@ -11,7 +11,7 @@ from bettmensch_ai.server.pipeline import (
     ResourceTemplate,
     ScriptTemplate,
 )
-from bettmensch_ai.utils import copy_non_null_dict
+from bettmensch_ai.server.utils import copy_non_null_dict
 from hera.workflows.models import Workflow as WorkflowModel
 from pydantic import BaseModel
 

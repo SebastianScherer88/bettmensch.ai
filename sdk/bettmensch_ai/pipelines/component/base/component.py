@@ -1,30 +1,31 @@
 import inspect
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import (
+from bettmensch_ai.pipelines.constants import (
     COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
-    COMPONENT_TYPE,
     GPU_FLAG,
     GPU_TOLERATION,
-    PIPELINE_TYPE,
     POD_RETRY_STRATEGY,
+    ArgumentType,
+    IOType,
+    ResourceType,
 )
-from bettmensch_ai.io import (
+from bettmensch_ai.pipelines.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
-from bettmensch_ai.utils import get_func_args, validate_func_args
+from bettmensch_ai.pipelines.pipeline.pipeline_context import _pipeline_context
+from bettmensch_ai.pipelines.utils import get_func_args, validate_func_args
 from hera.workflows import Resources, Task, models
 from hera.workflows.models import ImagePullPolicy
 
 
 class BaseComponent(object):
 
-    type: str = COMPONENT_TYPE
+    type: str = ResourceType.component.value
     implementation: str = COMPONENT_IMPLEMENTATION.base.value
     default_image: str = COMPONENT_IMAGE.base.value
     name: str = None
@@ -69,6 +70,8 @@ class BaseComponent(object):
 
         base_name = func.__name__ if not name else name
         self.base_name = base_name.replace("_", "-")
+
+        print(f"Base Component pipeline context: {_pipeline_context}")
         _pipeline_context.add_component(self)
         validate_func_args(
             func,
@@ -102,7 +105,7 @@ class BaseComponent(object):
             task_input.source.owner.name
             for task_input in self.task_inputs.values()
             if getattr(task_input.source.owner, "type", None)
-            not in (PIPELINE_TYPE, None)
+            not in (ResourceType.pipeline.value, None)
         ]
         depends_deduped = list(set(depends))
 
@@ -215,17 +218,26 @@ class BaseComponent(object):
                 )
 
             # assemble component input
-            if isinstance(input, InputParameter):
+            if (getattr(input, "type", None) == IOType.inputs.value) and (
+                getattr(input, "argument_type", None)
+                == ArgumentType.parameter.value
+            ):
                 # for pipeline inputs, we retain the (possible) default value.
                 # for a hardcoded component input pinning the argument of the
                 # underlying function for this component only, we set the
                 # pinned value
                 component_input = InputParameter(name=name, value=input.value)
-            elif isinstance(input, OutputParameter):
+            elif (getattr(input, "type", None) == IOType.outputs.value) and (
+                getattr(input, "argument_type", None)
+                == ArgumentType.parameter.value
+            ):
                 # a component output won't have a default value to retain. the
                 # input's value will be the hera reference expression
                 component_input = InputParameter(name=name)
-            elif isinstance(input, OutputArtifact):
+            elif (getattr(input, "type", None) == IOType.outputs.value) and (
+                getattr(input, "argument_type", None)
+                == ArgumentType.artifact.value
+            ):
                 component_input = InputArtifact(name=name)
             else:
                 raise TypeError(

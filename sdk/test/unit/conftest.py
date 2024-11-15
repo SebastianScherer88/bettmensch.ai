@@ -2,7 +2,7 @@ import datetime
 import os
 
 import pytest
-from bettmensch_ai.constants import COMPONENT_TYPE, PIPELINE_TYPE
+from bettmensch_ai.pipelines.constants import ResourceType
 
 
 @pytest.fixture
@@ -13,8 +13,8 @@ def test_output_dir():
 @pytest.fixture
 def test_mock_pipeline():
     class MockPipeline:
-        type = PIPELINE_TYPE
-        io_owner_name = PIPELINE_TYPE
+        type = ResourceType.pipeline.value
+        io_owner_name = ResourceType.pipeline.value
 
     return MockPipeline()
 
@@ -22,7 +22,7 @@ def test_mock_pipeline():
 @pytest.fixture
 def test_mock_component():
     class MockComponent:
-        type = COMPONENT_TYPE
+        type = ResourceType.component.value
         name = "mock-component-0"
         io_owner_name = f"{type}.{name}"
 

@@ -1,6 +1,6 @@
 from typing import Callable, Literal, Optional
 
-from bettmensch_ai.constants import (
+from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
     COMPONENT_IMPLEMENTATION,
     DDP_PORT_NAME,

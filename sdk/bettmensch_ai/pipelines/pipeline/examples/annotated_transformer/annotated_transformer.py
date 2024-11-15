@@ -1,10 +1,10 @@
-from bettmensch_ai.components.examples.annotated_transformer import (
+from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.component.examples.annotated_transformer import (
     get_tokenizers_and_vocabularies_factory,
     train_transformer_factory,
 )
-from bettmensch_ai.constants import ARGO_NAMESPACE, COMPONENT_IMAGE
-from bettmensch_ai.io import InputParameter
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.constants import ARGO_NAMESPACE, COMPONENT_IMAGE
+from bettmensch_ai.pipelines.io import InputParameter
 
 
 @pipeline("test-train-pipeline-1n", ARGO_NAMESPACE, True)

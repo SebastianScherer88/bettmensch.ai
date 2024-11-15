@@ -1,5 +1,5 @@
 import pytest
-from bettmensch_ai.pipelines.examples import (
+from bettmensch_ai.pipelines.pipeline.examples import (
     train_transformer_pipeline_1n_1p,
     train_transformer_pipeline_3n_1p,
 )

@@ -1,5 +1,5 @@
 import pytest
-from bettmensch_ai.io import (
+from bettmensch_ai.pipelines.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,

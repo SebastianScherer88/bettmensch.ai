@@ -1,16 +1,16 @@
-from bettmensch_ai.components import Component, component
-from bettmensch_ai.components.examples import (
+from bettmensch_ai.pipelines.component import Component, as_component
+from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
     show_artifact_factory,
 )
-from bettmensch_ai.io import (
+from bettmensch_ai.pipelines.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipelines import _pipeline_context
+from bettmensch_ai.pipelines.pipeline import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
@@ -116,7 +116,7 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    test_component_factory = component(test_function)
+    test_component_factory = as_component(test_function)
 
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
@@ -205,6 +205,11 @@ def test_parameter_component_to_hera(test_output_dir, test_mock_pipeline):
     with _pipeline_context:
         _pipeline_context.clear()
 
+        print(
+            "test_parameter_component_to_hera pipeline context:"
+            f"{_pipeline_context}"
+        )
+
         # add components to pipeline context
         a_plus_b = (
             add_parameters_factory(
@@ -263,6 +268,11 @@ def test_artifact_component_to_hera(
 
     with _pipeline_context:
         _pipeline_context.clear()
+
+        print(
+            "test_artifact_component_to_hera pipeline context:"
+            f"{_pipeline_context}"
+        )
 
         # add components to pipeline context
         convert = (

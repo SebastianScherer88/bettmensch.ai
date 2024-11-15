@@ -1,11 +1,4 @@
 import pytest
-from bettmensch_ai.components.examples import (
-    lightning_train_torch_ddp_factory,
-    show_parameter_factory,
-    tensor_reduce_torch_ddp_factory,
-)
-from bettmensch_ai.constants import COMPONENT_IMAGE
-from bettmensch_ai.io import InputParameter
 from bettmensch_ai.pipelines import (
     Flow,
     Pipeline,
@@ -14,7 +7,14 @@ from bettmensch_ai.pipelines import (
     list_registered_pipelines,
     pipeline,
 )
-from bettmensch_ai.pipelines.examples import (
+from bettmensch_ai.pipelines.component.examples import (
+    lightning_train_torch_ddp_factory,
+    show_parameter_factory,
+    tensor_reduce_torch_ddp_factory,
+)
+from bettmensch_ai.pipelines.constants import COMPONENT_IMAGE
+from bettmensch_ai.pipelines.io import InputParameter
+from bettmensch_ai.pipelines.pipeline.examples import (
     adding_parameters_pipeline,
     parameter_to_artifact_pipeline,
 )

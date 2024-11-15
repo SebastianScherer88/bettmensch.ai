@@ -1,18 +1,18 @@
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.constants import (
-    ARGO_NAMESPACE,
-    COMPONENT_IMPLEMENTATION,
-    FLOW_LABEL,
-    PIPELINE_TYPE,
-)
-from bettmensch_ai.io import InputParameter, Parameter
 from bettmensch_ai.pipelines.client import (
     ArgoWorkflowsBackendConfiguration,
     hera_client,
 )
+from bettmensch_ai.pipelines.constants import (
+    ARGO_NAMESPACE,
+    COMPONENT_IMPLEMENTATION,
+    FLOW_LABEL,
+    ResourceType,
+)
 from bettmensch_ai.pipelines.flow import Flow, list_flows
+from bettmensch_ai.pipelines.io import InputParameter, Parameter
 from bettmensch_ai.pipelines.pipeline_context import (
     PipelineContext,
     _pipeline_context,
@@ -35,7 +35,7 @@ class Pipeline(object):
     """Manages the PipelineContext meta data storage utility."""
 
     _config = global_config
-    type: str = PIPELINE_TYPE
+    type: str = ResourceType.pipeline.value
     name: str = None
     _namespace: str = None
     _built: bool = False
@@ -251,6 +251,7 @@ class Pipeline(object):
         """
         # add components to the global pipeline context
         with self.context:
+            print(f"Pipeline pipeline context: {self.context}")
             if self.clear_context:
                 self.context.clear()
 

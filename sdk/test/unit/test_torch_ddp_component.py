@@ -1,16 +1,19 @@
-from bettmensch_ai.components import TorchDDPComponent, torch_ddp_component
-from bettmensch_ai.components.examples import (
+from bettmensch_ai.pipelines.component import (
+    TorchDDPComponent,
+    as_torch_ddp_component,
+)
+from bettmensch_ai.pipelines.component.examples import (
     add_parameters_torch_ddp_factory,
     convert_to_artifact_torch_ddp_factory,
     show_parameter_torch_ddp_factory,
 )
-from bettmensch_ai.io import (
+from bettmensch_ai.pipelines.io import (
     InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipelines import _pipeline_context
+from bettmensch_ai.pipelines.pipeline import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
@@ -126,7 +129,7 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    test_component_factory = torch_ddp_component(test_function)
+    test_component_factory = as_torch_ddp_component(test_function)
 
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
@@ -224,6 +227,7 @@ def test_parameter_torch_component_to_hera(
     pipeline_input_b.set_owner(test_mock_pipeline)
 
     with _pipeline_context:
+        print(_pipeline_context)
         _pipeline_context.clear()
 
         # add components to pipeline context

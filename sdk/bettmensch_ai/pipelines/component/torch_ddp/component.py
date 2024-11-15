@@ -1,135 +1,29 @@
-import copy
-import inspect
-import textwrap
 from typing import Callable, Dict, List, Optional, Union
 
-from bettmensch_ai.components.base_component import BaseComponent
-from bettmensch_ai.components.base_inline_script_runner import (
-    BaseComponentInlineScriptRunner,
-)
-from bettmensch_ai.components.torch_utils import (
+from bettmensch_ai.pipelines.component.base.component import BaseComponent
+from bettmensch_ai.pipelines.component.torch_ddp.utils import (
     LaunchConfigSettings,
     create_torch_ddp_service_template,
     delete_torch_ddp_service_template,
 )
-from bettmensch_ai.constants import (
+from bettmensch_ai.pipelines.component.utils import bettmensch_ai_script
+from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
     COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
     DDP_PORT_NAME,
     DDP_PORT_NUMBER,
 )
-from bettmensch_ai.io import InputParameter, OutputArtifact, OutputParameter
-from bettmensch_ai.utils import (
-    BettmenschAITorchDDPPostAdapterScript,
-    BettmenschAITorchDDPPreAdapterScript,
-    BettmenschAITorchDDPScript,
-    bettmensch_ai_script,
+from bettmensch_ai.pipelines.io import (
+    InputParameter,
+    OutputArtifact,
+    OutputParameter,
 )
-from hera.shared import global_config
-from hera.workflows import Env, Script, Task
-from hera.workflows._unparse import roundtrip
+from hera.workflows import Env, Task
 from hera.workflows.models import ContainerPort, Protocol
 
-
-class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
-
-    """
-    A custom InlineScriptRunner class to support all 3 custom script classes
-    - BettmenschAITorchDDPPreAdapterScript
-    - BettmenschAITorchDDPScript
-    - BettmenschAITorchDDPPostAdapterScript
-    by generating the code snippets for their respective tasks:
-    - input gathering and uploading to S3 code,
-    - downlaoding inputs from S3, wrapping the user defined function in a
-        torchrun context and calling it, then uploading the outputs to S3
-    - S3 download and output gathering code
-
-    Checks the `implementation` attribute of the passed Script subclass
-    instance to decide which code should be generated.
-    """
-
-    def generate_source(self, instance: Script) -> str:
-        """Assembles and returns a script representation of the given function.
-
-        This also assembles any extra script material prefixed to the string
-        source. The script is expected to be a callable function the client is
-        interested in submitting for execution on Argo and the `script_extra`
-        material represents the parameter loading part obtained, likely,
-        through `get_param_script_portion`.
-
-        Returns:
-        -------
-        str
-            Final formatted script.
-        """
-        if not callable(instance.source):
-            assert isinstance(instance.source, str)
-            return instance.source
-        args = inspect.getfullargspec(instance.source).args
-        script = ""
-        # Argo will save the script as a file and run it with cmd:
-        # - python /argo/staging/script
-        # However, this prevents the script from importing modules in its cwd,
-        # since it's looking for files relative to the script path.
-        # We fix this by appending the cwd path to sys:
-        if instance.add_cwd_to_sys_path or self.add_cwd_to_sys_path:
-            script = "import os\nimport sys\nsys.path.append(os.getcwd())\n"
-
-        script_extra = (
-            self._get_param_script_portion(instance) if args else None
-        )
-        if script_extra:
-            script += copy.deepcopy(script_extra)
-            script += "\n"
-
-        # We use ast parse/unparse to get the source code of the function
-        # in order to have consistent looking functions and getting rid of any
-        # comments parsing issues.
-        # See https://github.com/argoproj-labs/hera/issues/572
-        content = roundtrip(
-            textwrap.dedent(inspect.getsource(instance.source))
-        ).splitlines()
-        for i, line in enumerate(content):
-            if line.startswith("def") or line.startswith("async def"):
-                break
-
-        # add function definition and decoration with `torch_ddp`
-        torch_ddp_decoration = [
-            "\nfrom torch.distributed.elastic.multiprocessing.errors import record\n",  # noqa: E501
-            f"{instance.source.__name__}=record({instance.source.__name__})\n"
-            "\nfrom bettmensch_ai.components import torch_ddp\n",
-            "torch_ddp_decorator=torch_ddp()\n",
-            f"""torch_ddp_function=torch_ddp_decorator({
-                instance.source.__name__
-            })\n""",
-        ]
-        function_definition = content[i:]
-        s = "\n".join(function_definition + torch_ddp_decoration)
-        script += s
-
-        # add function call
-        torch_ddp_function_call = (
-            "\ntorch_ddp_function(" + ",".join(args) + ")"
-        )
-        script += torch_ddp_function_call
-
-        return textwrap.dedent(script)
-
-
-global_config.set_class_defaults(
-    BettmenschAITorchDDPPreAdapterScript,
-    constructor=TorchDDPComponentInlineScriptRunner(),
-)
-
-global_config.set_class_defaults(
+from .script import (  # BettmenschAITorchDDPPostAdapterScript,; BettmenschAITorchDDPPreAdapterScript, # noqa: E501
     BettmenschAITorchDDPScript,
-    constructor=TorchDDPComponentInlineScriptRunner(),
-)
-
-global_config.set_class_defaults(
-    BettmenschAITorchDDPPostAdapterScript,
-    constructor=TorchDDPComponentInlineScriptRunner(),
 )
 
 
@@ -305,7 +199,7 @@ class TorchDDPComponent(BaseComponent):
             # this will invoke our custom TorchComponentInlineScriptRunner
             # under the hood
             script_wrapper = bettmensch_ai_script(
-                torch_component=True, **script_decorator_kwargs
+                script=BettmenschAITorchDDPScript, **script_decorator_kwargs
             )
 
             task_node_factory = script_wrapper(func=self.func)
@@ -374,7 +268,7 @@ class TorchDDPComponent(BaseComponent):
         )
 
 
-def torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
+def as_torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
     """Takes a calleable and generates a configured TorchComponent factory that
     will generate a TorchComponent version of the callable if invoked inside an
     active PipelineContext.

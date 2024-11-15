@@ -1,5 +1,5 @@
-from bettmensch_ai.components import torch_ddp_component
-from bettmensch_ai.io import InputParameter, OutputParameter
+from bettmensch_ai.pipelines.component import as_torch_ddp_component
+from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
 
 
 def tensor_reduce(
@@ -84,7 +84,7 @@ def tensor_reduce(
         duration.assign(duration_seconds)
 
 
-tensor_reduce_torch_ddp_factory = torch_ddp_component(tensor_reduce)
+tensor_reduce_torch_ddp_factory = as_torch_ddp_component(tensor_reduce)
 
 if __name__ == "__main__":
     tensor_reduce()

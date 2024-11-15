@@ -1,5 +1,5 @@
-from bettmensch_ai.components import torch_ddp_component
-from bettmensch_ai.io import InputParameter, OutputParameter
+from bettmensch_ai.pipelines.component import as_torch_ddp_component
+from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
 
 
 def lightning_train(
@@ -69,7 +69,7 @@ def lightning_train(
         duration.assign(dt.now() - start)
 
 
-lightning_train_torch_ddp_factory = torch_ddp_component(lightning_train)
+lightning_train_torch_ddp_factory = as_torch_ddp_component(lightning_train)
 
 if __name__ == "__main__":
     lightning_train()

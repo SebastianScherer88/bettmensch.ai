@@ -1,11 +1,11 @@
-from bettmensch_ai.components.examples import (
+from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
     show_artifact_factory,
 )
-from bettmensch_ai.constants import ARGO_NAMESPACE
-from bettmensch_ai.io import InputParameter
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.constants import ARGO_NAMESPACE
+from bettmensch_ai.pipelines.io import InputParameter
 
 
 @pipeline("test-artifact-pipeline", ARGO_NAMESPACE, True)

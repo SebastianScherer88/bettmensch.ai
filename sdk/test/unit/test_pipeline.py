@@ -1,11 +1,11 @@
-from bettmensch_ai.components.examples import (
+from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     add_parameters_torch_ddp_factory,
     convert_to_artifact_torch_ddp_factory,
     show_parameter_factory,
 )
-from bettmensch_ai.io import InputParameter
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.io import InputParameter
+from bettmensch_ai.pipelines.pipeline import pipeline
 from hera.workflows import WorkflowTemplate
 
 

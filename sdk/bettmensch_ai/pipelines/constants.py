@@ -31,11 +31,27 @@ S3_ARTIFACT_REPOSITORY_BUCKET = "bettmensch-ai-artifact-repository"
 S3_ARTIFACT_REPOSITORY_PREFIX = "argo-workflows"
 DDP_TASK_ALIAS = "torch-ddp-task"
 
-INPUT_TYPE = "inputs"
-OUTPUT_TYPE = "outputs"
+# INPUT_TYPE = "inputs"
+# OUTPUT_TYPE = "outputs"
 
-PIPELINE_TYPE = "workflow"
-COMPONENT_TYPE = "tasks"
+
+class IOType(Enum):
+    inputs: str = "inputs"
+    outputs: str = "outputs"
+
+
+class ArgumentType(Enum):
+    parameter: str = "parameter"
+    artifact: str = "artifact"
+
+
+class ResourceType(Enum):
+    pipeline: str = "workflow"
+    component: str = "tasks"
+
+
+# PIPELINE_TYPE = "workflow"
+# COMPONENT_TYPE = "tasks"
 
 GPU_FLAG = "nvidia.com/gpu"
 
