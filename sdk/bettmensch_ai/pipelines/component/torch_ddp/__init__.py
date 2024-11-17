@@ -1,4 +1,4 @@
-from .component import TorchDDPComponent, as_torch_ddp_component  # noqa: F401
+from .component import TorchDDPComponent, torch_ddp_component  # noqa: F401
 from .inline_script_runner import (  # noqa: F401
     TorchDDPComponentInlineScriptRunner,
 )

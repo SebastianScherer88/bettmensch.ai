@@ -269,7 +269,7 @@ class TorchDDPComponent(BaseComponent):
         )
 
 
-def as_torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
+def torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
     """Takes a calleable and generates a configured TorchComponent factory that
     will generate a TorchComponent version of the callable if invoked inside an
     active PipelineContext.

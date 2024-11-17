@@ -7,7 +7,7 @@ from .standard import (  # noqa: F401
     BettmenschAIStandardScript,
     Component,
     ComponentInlineScriptRunner,
-    as_component,
+    component,
 )
 
 try:
@@ -19,8 +19,8 @@ try:
         LaunchConfigSettings,
         TorchDDPComponent,
         TorchDDPComponentInlineScriptRunner,
-        as_torch_ddp_component,
         torch_ddp,
+        torch_ddp_component,
     )
 except ImportError as ie:
     print(

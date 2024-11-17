@@ -1,6 +1,6 @@
 from bettmensch_ai.pipelines.component import (
     TorchDDPComponent,
-    as_torch_ddp_component,
+    torch_ddp_component,
 )
 from bettmensch_ai.pipelines.component.examples import (
     add_parameters_torch_ddp_factory,
@@ -129,7 +129,7 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    test_component_factory = as_torch_ddp_component(test_function)
+    test_component_factory = torch_ddp_component(test_function)
 
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)

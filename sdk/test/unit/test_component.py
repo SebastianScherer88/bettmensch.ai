@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines.component import Component, as_component
+from bettmensch_ai.pipelines.component import Component, component
 from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
@@ -116,7 +116,7 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
     ):
         pass
 
-    test_component_factory = as_component(test_function)
+    test_component_factory = component(test_function)
 
     test_input_a = InputParameter("fixed", 1)
     test_input_b = InputParameter("mock_pipe_in", 1)
