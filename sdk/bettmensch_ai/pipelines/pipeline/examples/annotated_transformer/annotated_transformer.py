@@ -70,7 +70,7 @@ def train_transformer_pipeline_1n_1p(
 
 
 @pipeline("test-train-pipeline-xn", ARGO_NAMESPACE, True)
-def train_transformer_pipeline_3n_1p(
+def train_transformer_pipeline_2n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
     target_language: InputParameter = "en",
@@ -103,8 +103,8 @@ def train_transformer_pipeline_3n_1p(
             hera_template_kwargs={
                 "image": COMPONENT_IMAGE.annotated_transformer.value
             },
-            n_nodes=3,
-            min_nodes=3,
+            n_nodes=2,
+            min_nodes=2,
             nproc_per_node=1,
             dataset=dataset,
             source_language=source_language,
