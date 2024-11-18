@@ -20,6 +20,7 @@ DOCKER_IMAGE_BASE = (
 class COMPONENT_IMAGE(Enum):
     base = f"{DOCKER_IMAGE_BASE}:3.11-latest"
     standard = f"{DOCKER_IMAGE_BASE}:3.11-latest"
+    adapter = f"{DOCKER_IMAGE_BASE}-adapter:3.11-latest"
     torch = f"{DOCKER_IMAGE_BASE}-pytorch:3.11-latest"
     lightning = f"{DOCKER_IMAGE_BASE}-pytorch-lightning:3.11-latest"
     annotated_transformer = (
@@ -30,9 +31,6 @@ class COMPONENT_IMAGE(Enum):
 S3_ARTIFACT_REPOSITORY_BUCKET = "bettmensch-ai-artifact-repository"
 S3_ARTIFACT_REPOSITORY_PREFIX = "argo-workflows"
 DDP_TASK_ALIAS = "torch-ddp-task"
-
-# INPUT_TYPE = "inputs"
-# OUTPUT_TYPE = "outputs"
 
 
 class IOType(Enum):
@@ -49,9 +47,6 @@ class ResourceType(Enum):
     pipeline: str = "workflow"
     component: str = "tasks"
 
-
-# PIPELINE_TYPE = "workflow"
-# COMPONENT_TYPE = "tasks"
 
 GPU_FLAG = "nvidia.com/gpu"
 
@@ -73,6 +68,9 @@ GPU_TOLERATION = Toleration(
 class COMPONENT_IMPLEMENTATION(Enum):
     base: str = "base"
     standard: str = "standard"
+    adapter_out: str = "adapter_out"
+    adapter_in: str = "adapter_in"
+    wait_on_k8s_external: str = "wait_on_k8s_external"
     torch_ddp: str = "torch-ddp"
 
 
