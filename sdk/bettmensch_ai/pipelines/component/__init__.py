@@ -1,3 +1,12 @@
+from .adapter import (  # noqa: F401
+    AdapterInComponent,
+    AdapterInInlineScriptRunner,
+    AdapterOutComponent,
+    AdapterOutInlineScriptRunner,
+    BettmenschAIAdapterInScript,
+    BettmenschAIAdapterOutScript,
+    adapter_component,
+)
 from .base import (  # noqa: F401
     BaseComponent,
     BaseComponentInlineScriptRunner,

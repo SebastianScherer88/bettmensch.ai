@@ -1,7 +1,10 @@
 from .component import (  # noqa: F401
+    AdapterInComponent,
+    AdapterOutComponent,
     BaseComponent,
     Component,
     TorchDDPComponent,
+    adapter_component,
     component,
     torch_ddp_component,
 )
