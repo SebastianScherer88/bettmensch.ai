@@ -14,40 +14,17 @@ from bettmensch_ai.pipelines.pipeline import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
-def test_component___init__(test_mock_pipeline, test_mock_component):
+def test_component___init__(test_function_and_task_inputs):
     """Tests of Component constructor."""
 
-    def test_function(
-        a: InputParameter,
-        b: InputParameter,
-        c: InputParameter,
-        d: InputArtifact,
-        a_out: OutputParameter,
-        b_out: OutputArtifact,
-    ):
-        pass
-
-    test_input_a = InputParameter("fixed", 1)
-    test_input_b = InputParameter("mock_pipe_in", 1)
-    test_input_b.set_owner(test_mock_pipeline)
-    test_input_c = OutputParameter("mock_comp_out_param")
-    test_input_c.set_owner(test_mock_component)
-    test_input_d = OutputArtifact("mock_comp_out_art")
-    test_input_d.set_owner(test_mock_component)
-
-    task_inputs = {
-        "a": test_input_a,
-        "b": test_input_b,
-        "c": test_input_c,
-        "d": test_input_d,
-    }
+    test_function, test_task_inputs = test_function_and_task_inputs
 
     with _pipeline_context:
         _pipeline_context.clear()
 
         # add components to pipeline context
         test_component = (
-            Component(func=test_function, name="test_name", **task_inputs)
+            Component(func=test_function, name="test_name", **test_task_inputs)
             .set_cpu(0.5)
             .set_memory("100Mi")
             .set_gpus(1)
@@ -80,11 +57,11 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
         )
         assert (
             test_component.task_inputs[task_input_name].source
-            is task_inputs[task_input_name]
+            is test_task_inputs[task_input_name]
         )
 
-    assert test_component.task_inputs["a"].value == task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == task_inputs["b"].value
+    assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
+    assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
     assert test_component.task_inputs["c"].value is None
 
     # validate component template_inputs
@@ -103,42 +80,21 @@ def test_component___init__(test_mock_pipeline, test_mock_component):
     assert test_component.task_factory is None
 
 
-def test_component_decorator(test_mock_pipeline, test_mock_component):
+def test_component_decorator(
+    test_function_and_task_inputs, test_mock_pipeline, test_mock_component
+):
     """Tests of Component constructor."""
 
-    def test_function(
-        a: InputParameter,
-        b: InputParameter,
-        c: InputParameter,
-        d: InputArtifact,
-        a_out: OutputParameter,
-        b_out: OutputArtifact,
-    ):
-        pass
+    test_function, test_task_inputs = test_function_and_task_inputs
 
     test_component_factory = component(test_function)
-
-    test_input_a = InputParameter("fixed", 1)
-    test_input_b = InputParameter("mock_pipe_in", 1)
-    test_input_b.set_owner(test_mock_pipeline)
-    test_input_c = OutputParameter("mock_comp_out_param")
-    test_input_c.set_owner(test_mock_component)
-    test_input_d = OutputArtifact("mock_comp_out_art")
-    test_input_d.set_owner(test_mock_component)
-
-    task_inputs = {
-        "a": test_input_a,
-        "b": test_input_b,
-        "c": test_input_c,
-        "d": test_input_d,
-    }
 
     with _pipeline_context:
         _pipeline_context.clear()
 
         # add components to pipeline context
         test_component = (
-            test_component_factory(name="test_name", **task_inputs)
+            test_component_factory(name="test_name", **test_task_inputs)
             .set_cpu(0.5)
             .set_memory("100Mi")
             .set_gpus(1)
@@ -170,11 +126,11 @@ def test_component_decorator(test_mock_pipeline, test_mock_component):
         )
         assert (
             test_component.task_inputs[task_input_name].source
-            is task_inputs[task_input_name]
+            is test_task_inputs[task_input_name]
         )
 
-    assert test_component.task_inputs["a"].value == task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == task_inputs["b"].value
+    assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
+    assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
     assert test_component.task_inputs["c"].value is None
 
     # validate component template_inputs

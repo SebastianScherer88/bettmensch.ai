@@ -3,6 +3,12 @@ import os
 
 import pytest
 from bettmensch_ai.pipelines.constants import ResourceType
+from bettmensch_ai.pipelines.io import (
+    InputArtifact,
+    InputParameter,
+    OutputArtifact,
+    OutputParameter,
+)
 
 
 @pytest.fixture
@@ -27,6 +33,36 @@ def test_mock_component():
         io_owner_name = f"{type}.{name}"
 
     return MockComponent()
+
+
+@pytest.fixture
+def test_function_and_task_inputs(test_mock_pipeline, test_mock_component):
+    def test_function(
+        a: InputParameter,
+        b: InputParameter,
+        c: InputParameter,
+        d: InputArtifact,
+        a_out: OutputParameter,
+        b_out: OutputArtifact,
+    ):
+        pass
+
+    test_input_a = InputParameter("fixed", 1)
+    test_input_b = InputParameter("mock_pipe_in", 1)
+    test_input_b.set_owner(test_mock_pipeline)
+    test_input_c = OutputParameter("mock_comp_out_param")
+    test_input_c.set_owner(test_mock_component)
+    test_input_d = OutputArtifact("mock_comp_out_art")
+    test_input_d.set_owner(test_mock_component)
+
+    task_inputs = {
+        "a": test_input_a,
+        "b": test_input_b,
+        "c": test_input_c,
+        "d": test_input_d,
+    }
+
+    return test_function, task_inputs
 
 
 @pytest.fixture
