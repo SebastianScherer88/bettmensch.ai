@@ -1,5 +1,6 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
+from bettmensch_ai.pipelines.component.base import BettmenschAIBaseScript
 from bettmensch_ai.pipelines.component.base.component import BaseComponent
 from bettmensch_ai.pipelines.component.utils import bettmensch_ai_script
 from bettmensch_ai.pipelines.constants import (
@@ -12,11 +13,16 @@ from .script import BettmenschAIStandardScript
 
 
 class Component(BaseComponent):
+    """The standard component in a bettmensch_ai pipeline. Accepts input and
+    output parameters & artifacts, and can request custom resource requirements
+    as well as hardware. Can be used for most standard tasks.
+    """
 
     implementation: str = COMPONENT_IMPLEMENTATION.standard.value
     default_image: str = COMPONENT_IMAGE.standard.value
     cpu: Optional[Union[float, int, str]] = "100m"
     memory: Optional[str] = "100Mi"
+    script: Type[BettmenschAIBaseScript] = BettmenschAIStandardScript
 
     def build_hera_task_factory(self) -> Callable:
         """Generates the task factory task_wrapper callable from the
@@ -33,7 +39,7 @@ class Component(BaseComponent):
         # this will invoke our custom ComponentInlineScriptRunner under the
         # hood
         script_wrapper = bettmensch_ai_script(
-            script_class=BettmenschAIStandardScript, **script_decorator_kwargs
+            script_class=self.script, **script_decorator_kwargs
         )
 
         task_factory = script_wrapper(func=self.func)
