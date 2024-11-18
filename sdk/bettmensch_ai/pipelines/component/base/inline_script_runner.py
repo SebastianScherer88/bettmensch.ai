@@ -1,10 +1,12 @@
 import copy
 import inspect
 import textwrap
-from typing import Optional
+from typing import Optional, Type
 
 from hera.workflows import InlineScriptConstructor, Script
 from hera.workflows._unparse import roundtrip
+
+from .script import BettmenschAIBaseScript
 
 
 class BaseComponentInlineScriptRunner(InlineScriptConstructor):
@@ -17,7 +19,9 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
 
     add_cwd_to_sys_path: Optional[bool] = None
 
-    def _get_param_script_portion(self, instance: Script) -> str:
+    def _get_param_script_portion(
+        self, instance: Type[BettmenschAIBaseScript]
+    ) -> str:
         """
         Adapted from the `_get_param_script_portion`
         method of the `InlineScriptRunner` class. Generates the code
@@ -109,12 +113,11 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
 
         # input artifact initialization to provide user access to input
         # artifact file location
-        def get_name(x):
-            return x.name
-
         if input_artifacts:
             preprocess += "\nfrom bettmensch_ai.io import InputArtifact\n"
-            for input_artifact in sorted(input_artifacts, key=get_name):
+            for input_artifact in sorted(
+                input_artifacts, key=lambda ia: ia.name
+            ):
                 preprocess += f"""{
                     input_artifact.name
                 } = InputArtifact("{
@@ -124,7 +127,9 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
         # output parameter initialization
         if output_parameters:
             preprocess += "\nfrom bettmensch_ai.io import OutputParameter\n"
-            for output_param in sorted(output_parameters, key=get_name):
+            for output_param in sorted(
+                output_parameters, key=lambda op: op.name
+            ):
                 preprocess += f"""{
                     output_param.name
                 } = OutputParameter("{
@@ -136,7 +141,7 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
         if output_artifacts:
             preprocess += "\nfrom bettmensch_ai.io import OutputArtifact\n"
             for output_artifact in sorted(
-                output_artifacts, key=lambda x: x.name
+                output_artifacts, key=lambda oa: oa.name
             ):
                 preprocess += f"""{
                     output_artifact.name
