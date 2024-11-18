@@ -94,7 +94,9 @@ class AdapterInComponent(BaseAdapterComponent):
 def adapter_component(
     adapter_type: str,
     func: Callable,
-) -> Callable[[Callable, str, Dict, List[Any]], Component]:
+) -> Callable[
+    [str, Dict, List[Any]], Union[AdapterInComponent, AdapterOutComponent]
+]:
     """Takes a calleable and generates either configured AdapterInComponent
     or AdapterOutComponent factory that will generate the respective component
     version of the callable if invoked inside an active PipelineContext.

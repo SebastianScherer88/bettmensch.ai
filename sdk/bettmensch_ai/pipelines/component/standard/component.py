@@ -72,7 +72,7 @@ class Component(BaseComponent):
 
 def component(
     func: Callable,
-) -> Callable[[Callable, str, Dict, List[Any]], Component]:
+) -> Callable[[str, Dict, List[Any]], Component]:
     """Takes a calleable and generates a configured Component factory that will
     generate a Component version of the callable if invoked inside an active
     PipelineContext.
