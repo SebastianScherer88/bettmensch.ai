@@ -7,6 +7,7 @@ from bettmensch_ai.pipelines.constants import (
     COMPONENT_IMPLEMENTATION,
 )
 from bettmensch_ai.pipelines.io import (
+    InputArtifact,
     InputParameter,
     OutputArtifact,
     OutputParameter,
@@ -28,23 +29,28 @@ class AdapterOutComponent(BaseAdapterComponent):
     easily. Logical inverse of the AdapterInComponent.
     """
 
-    implementation: COMPONENT_IMPLEMENTATION.adapter_out.value
+    implementation: str = COMPONENT_IMPLEMENTATION.adapter_out.value
     script: Type[BettmenschAIBaseScript] = BettmenschAIAdapterOutScript
 
     def __init__(
         self,
         func: Callable,
-        task_inputs: Dict[
+        name: str,
+        hera_template_kwargs: Dict = {},
+        **component_inputs_kwargs: Dict[
             str, Union[InputParameter, OutputParameter, OutputArtifact]
         ],
     ):
 
         super().__init__(
-            func, task_inputs, name=COMPONENT_IMPLEMENTATION.adapter_out
+            func,
+            f"{name}-{COMPONENT_IMPLEMENTATION.adapter_out.value}",
+            hera_template_kwargs,
+            **component_inputs_kwargs,
         )
         # overwrite template_outputs attribute that was populated in previous
-        # method call with fixed output
-        output = OutputParameter(name="s3_prefix")
+        # method call with fixed s3_prefix output
+        output = OutputArtifact(name="s3_prefix")
         output.set_owner(self)
 
         self.template_outputs = {"s3_prefix": output}
@@ -57,23 +63,29 @@ class AdapterInComponent(BaseAdapterComponent):
     Logical inverse of the AdapterOutComponent.
     """
 
-    implementation: COMPONENT_IMPLEMENTATION.adapter_in.value
+    implementation: str = COMPONENT_IMPLEMENTATION.adapter_in.value
+    non_function_inputs: str = ("s3_prefix",)
     script: Type[BettmenschAIBaseScript] = BettmenschAIAdapterInScript
 
     def __init__(
         self,
         func: Callable,
-        task_inputs: Dict[
+        name: str,
+        hera_template_kwargs: Dict = {},
+        **component_inputs_kwargs: Dict[
             str, Union[InputParameter, OutputParameter, OutputArtifact]
         ],
     ):
 
         super().__init__(
-            func, task_inputs, name=COMPONENT_IMPLEMENTATION.adapter_in
+            func,
+            f"{name}-{COMPONENT_IMPLEMENTATION.adapter_in.value}",
+            hera_template_kwargs,
+            **component_inputs_kwargs,
         )
         # overwrite template_inputs attribute that was populated in previous
-        # method call with fixed output
-        input = InputParameter(name="s3_prefix")
+        # method call with fixed s3 prefix input
+        input = InputArtifact(name="s3_prefix")
         input.set_owner(self)
 
         self.template_inputs = {"s3_prefix": input}

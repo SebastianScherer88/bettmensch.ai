@@ -37,8 +37,8 @@ class AdapterOutInlineScriptRunner(BaseComponentInlineScriptRunner):
 
         if inputs is None:
             raise ValueError(
-                "This component type requires at least 1 input of"
-                "type InputParameter or InputArtifact."
+                "This component type requires at least 1 input of type "
+                "InputParameter or InputArtifact."
             )
         else:
             s3_export = "\n# --- exporting to S3\n"
@@ -63,11 +63,11 @@ class AdapterOutInlineScriptRunner(BaseComponentInlineScriptRunner):
                 }")\n"""
 
         # --- outputs
-        # export hardcoded s3_prefix output parameter
+        # export hardcoded s3_prefix output artifact
         s3_export += (
-            "\nfrom bettmensch_ai.pipelines.io import OutputParameter\n"
+            "\nfrom bettmensch_ai.pipelines.io import OutputArtifact\n"
         )
-        s3_export += "\ns3_prefix=OutputParameter('s3_prefix')"
+        s3_export += "\ns3_prefix=OutputArtifact('s3_prefix')"
         s3_export += "\ns3_prefix.assign(adapter_io.s3_prefix)"
 
         s3_export = textwrap.dedent(s3_export)
@@ -122,7 +122,7 @@ class AdapterInInlineScriptRunner(BaseComponentInlineScriptRunner):
     gathering and downloading from S3.
     """
 
-    def _get_s3_download_code(
+    def _get_s3_upload_code(
         self, instance: BettmenschAIAdapterInScript
     ) -> str:
         """
@@ -140,17 +140,18 @@ class AdapterInInlineScriptRunner(BaseComponentInlineScriptRunner):
         # --- inputs
         # import hardcoded s3_prefix input parameter
         s3_import = "\n# --- importing from S3\n"
-        s3_import += "\nimport json\n"
-        s3_import += """try: s3_prefix = json.loads(r'''{{{{inputs.parameters.s3_prefix}}}}''')\n"""  # noqa: E501
-        s3_import += """except: s3_prefix = r'''{{{{inputs.parameters.s3_prefix}}}}'''\n"""  # noqa: E501
+        s3_import += "\nfrom bettmensch_ai.pipelines.io import InputArtifact json\n"  # noqa: E501
+        s3_import += "s3_prefix_ia = InputArtifact('s3_prefix')\n"
+        s3_import += "s3_prefix_ia.load()\n"
+        s3_import += "s3_prefix = s3_prefix_ia.value\n"
 
         # --- outputs
         outputs = instance._build_outputs()
 
         if outputs is None:
             raise ValueError(
-                "This component type requires at least 1 output of"
-                "type OutputParameter or OutputArtifact."
+                "This component type requires at least 1 output of type "
+                "OutputParameter or OutputArtifact."
             )
         else:
             s3_import += "\nfrom bettmensch_ai.pipelines.component.adapter import AdapterIO\n"  # noqa: E501

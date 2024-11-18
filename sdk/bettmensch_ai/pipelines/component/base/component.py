@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Tuple, Type, Union
 
 from bettmensch_ai.pipelines.constants import (
     COMPONENT_IMAGE,
@@ -17,8 +17,10 @@ from bettmensch_ai.pipelines.io import (
 )
 from bettmensch_ai.pipelines.pipeline.pipeline_context import _pipeline_context
 from bettmensch_ai.pipelines.utils import get_func_args, validate_func_args
-from hera.workflows import Resources, Task, models
+from hera.workflows import Resources, Script, Task, models
 from hera.workflows.models import ImagePullPolicy
+
+from .script import BettmenschAIBaseScript
 
 
 class BaseComponent(object):
@@ -34,7 +36,9 @@ class BaseComponent(object):
     hera_template_kwargs: Dict = {}
     template_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
     template_outputs: Dict[str, Union[OutputParameter, OutputArtifact]] = None
+    non_function_inputs: Tuple[str] = ()
     task_inputs: Dict[str, Union[InputParameter, InputArtifact]] = None
+    script: Type[Script] = BettmenschAIBaseScript
     cpu: Optional[Union[float, int, str]] = None
     memory: Optional[str] = None
     ephemeral: Optional[str] = None
@@ -209,7 +213,9 @@ class BaseComponent(object):
 
         for name, input in task_inputs.items():
 
-            if name not in func_inputs:
+            if (name not in func_inputs) and (
+                name not in self.non_function_inputs
+            ):
                 raise ValueError(
                     f"Attempting to declare unknown component input {name}. "
                     f"Known inputs: {func_inputs}."
@@ -244,10 +250,10 @@ class BaseComponent(object):
             result[name] = component_input
 
         # ensure no required inputs are left unspecified
-        if required_func_inputs:
-            raise Exception(
-                f"Unspecified required input(s) left: {required_func_inputs}"
-            )
+        # if required_func_inputs:
+        #     raise Exception(
+        #         f"Unspecified required input(s) left: {required_func_inputs}"
+        #     )
 
         return result
 

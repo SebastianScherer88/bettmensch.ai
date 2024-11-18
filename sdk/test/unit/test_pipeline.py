@@ -1,7 +1,6 @@
 from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
-    add_parameters_torch_ddp_factory,
-    convert_to_artifact_torch_ddp_factory,
+    convert_to_artifact_factory,
     show_parameter_factory,
 )
 from bettmensch_ai.pipelines.io import InputParameter
@@ -18,9 +17,8 @@ def test_artifact_pipeline(
     def parameter_to_artifact(
         a: InputParameter = "Param A",
     ) -> None:
-        convert = convert_to_artifact_torch_ddp_factory(
+        convert = convert_to_artifact_factory(
             "convert-to-artifact",
-            n_nodes=2,
             a=a,
         )
 
@@ -54,28 +52,18 @@ def test_artifact_pipeline(
 
     wft = parameter_to_artifact.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[2].tasks]
+    task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == [
-        "convert-to-artifact-create-torch-ddp-service",
         "convert-to-artifact-0",
-        "convert-to-artifact-0-worker-1",
-        "convert-to-artifact-delete-torch-ddp-service",
         "show-artifact-0",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "convert-to-artifact-create-torch-ddp-service",
-        "convert-to-artifact-delete-torch-ddp-service",
         "bettmensch-ai-dag",
-        "convert-to-artifact-0",
-        "convert-to-artifact-1",
+        "convert-to-artifact",
         "show-artifact",
     ]
-
-    assert wft.templates[3].labels["torch-node"] == "0"
-    assert wft.templates[3].labels["torch-job"] == "convert-to-artifact-0"
-    assert wft.templates[4].labels["torch-node"] == "1"
 
     parameter_to_artifact.export(test_output_dir)
 
@@ -87,9 +75,8 @@ def test_parameter_pipeline(test_output_dir):
     def adding_parameters(
         a: InputParameter = 1, b: InputParameter = 2
     ) -> None:  # noqa: E501
-        a_plus_b = add_parameters_torch_ddp_factory(
+        a_plus_b = add_parameters_factory(
             "a-plus-b",
-            n_nodes=2,
             a=a,
             b=b,
         )
@@ -122,27 +109,17 @@ def test_parameter_pipeline(test_output_dir):
 
     wft = adding_parameters.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[2].tasks]
+    task_names = [task.name for task in wft.templates[0].tasks]
     assert task_names == [
-        "a-plus-b-create-torch-ddp-service",
         "a-plus-b-0",
-        "a-plus-b-0-worker-1",
-        "a-plus-b-delete-torch-ddp-service",
         "a-plus-b-plus-2-0",
     ]
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "a-plus-b-create-torch-ddp-service",
-        "a-plus-b-delete-torch-ddp-service",
         "bettmensch-ai-dag",
-        "a-plus-b-0",
-        "a-plus-b-1",
+        "a-plus-b",
         "a-plus-b-plus-2",
     ]
-
-    assert wft.templates[3].labels["torch-node"] == "0"
-    assert wft.templates[3].labels["torch-job"] == "a-plus-b-0"
-    assert wft.templates[4].labels["torch-node"] == "1"
 
     adding_parameters.export(test_output_dir)

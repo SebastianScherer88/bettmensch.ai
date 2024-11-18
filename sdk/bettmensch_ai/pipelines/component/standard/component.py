@@ -20,9 +20,9 @@ class Component(BaseComponent):
 
     implementation: str = COMPONENT_IMPLEMENTATION.standard.value
     default_image: str = COMPONENT_IMAGE.standard.value
+    script: Type[BettmenschAIBaseScript] = BettmenschAIStandardScript
     cpu: Optional[Union[float, int, str]] = "100m"
     memory: Optional[str] = "100Mi"
-    script: Type[BettmenschAIBaseScript] = BettmenschAIStandardScript
 
     def build_hera_task_factory(self) -> Callable:
         """Generates the task factory task_wrapper callable from the

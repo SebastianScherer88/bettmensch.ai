@@ -30,6 +30,11 @@ class IO(object):
         with open(self.path, "w") as output_file:
             output_file.write(str(self.value))
 
+    def load(self):
+
+        with open(self.path, "r") as input_file:
+            self.value = input_file.read()
+
     def __eq__(self, other):
 
         return (
