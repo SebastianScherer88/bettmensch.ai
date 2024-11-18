@@ -1,8 +1,8 @@
 import json
+import os
 from typing import Any, Dict, Optional, Tuple
 
 from bettmensch_ai.pipelines.constants import (
-    DDP_TASK_ALIAS,
     S3_ARTIFACT_REPOSITORY_BUCKET,
     S3_ARTIFACT_REPOSITORY_PREFIX,
 )
@@ -12,17 +12,26 @@ from bettmensch_ai.pipelines.io import InputParameter
 class AdapterIO(object):
 
     s3_client: Any
-    workflow_id: str
+    s3_prefix: str
     external_input_parameters: str = "input_parameters.json"
     external_output_parameters: str = "output_parameters.json"
 
-    def __init__(self, workflow_id: Optional[str] = None):
+    def __init__(self, s3_prefix: Optional[str] = None):
         self.s3_client = self.get_s3_client()
 
-        # get workflow id from argo context variable - see
-        # https://argo-workflows.readthedocs.io/en/latest/variables/#global
-        if workflow_id is None:
-            workflow_id = json.loads(r"""{{workflow.uid}}""")
+        if s3_prefix is None:
+            # get workflow id from argo context variable - see
+            # https://argo-workflows.readthedocs.io/en/latest/variables/#global
+            workflow_name = json.loads(r"""{{workflow.name}}""")
+            # workflow_name = os.environ.get['ARGO_WORKFLOW_NAME']
+            # get task name from argo context variable - see
+            # https://argo-workflows.readthedocs.io/en/latest/variables/...
+            # ...#dag-templates
+            # task_node_id = json.loads(r"""{{task.name}}""")
+            task_node_id = os.environ.get["ARGO_NODE_ID"]
+            self.s3_prefix = f"{S3_ARTIFACT_REPOSITORY_PREFIX}/{workflow_name}/{task_node_id}"  # noqa: E501
+        else:
+            self.s3_prefix = s3_prefix
 
     @staticmethod
     def get_s3_client():
@@ -92,7 +101,7 @@ class AdapterIO(object):
             (str): The s3 prefix
         """
 
-        return f"{S3_ARTIFACT_REPOSITORY_PREFIX}/{self.workflow_id}/{DDP_TASK_ALIAS}/{s3_file_name}"  # noqa: E501
+        return f"{self.s3_prefix}/{s3_file_name}"  # noqa: E501
 
     def upload_artifact_to_s3(self, artifact_name: str):
         """Utility to upload a TorchDDPComponent's specified input artifact to
