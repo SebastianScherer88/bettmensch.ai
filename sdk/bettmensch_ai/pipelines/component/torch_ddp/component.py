@@ -22,10 +22,6 @@ from bettmensch_ai.pipelines.io import (
 from hera.workflows import Env, Task
 from hera.workflows.models import ContainerPort, Protocol
 
-from .script import (  # BettmenschAITorchDDPPostAdapterScript,; BettmenschAITorchDDPPreAdapterScript, # noqa: E501
-    BettmenschAITorchDDPScript,
-)
-
 
 class TorchDDPComponent(BaseComponent):
 
@@ -199,7 +195,7 @@ class TorchDDPComponent(BaseComponent):
             # this will invoke our custom TorchComponentInlineScriptRunner
             # under the hood
             script_wrapper = bettmensch_ai_script(
-                script_class=BettmenschAITorchDDPScript,
+                script_class=BettmenschAITorchDDPScript,  # noqa: F821
                 **script_decorator_kwargs,
             )
 
