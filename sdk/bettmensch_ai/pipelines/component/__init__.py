@@ -18,13 +18,21 @@ from .standard import (  # noqa: F401
     ComponentInlineScriptRunner,
     as_component,
 )
-from .torch_ddp import (  # noqa: F401
-    BettmenschAITorchDDPScript,
-    LaunchConfig,
-    LaunchConfigSettings,
-    LaunchContext,
-    TorchDDPComponent,
-    TorchDDPComponentInlineScriptRunner,
-    as_torch_ddp,
-    as_torch_ddp_component,
-)
+
+try:
+    from .torch_ddp import (  # noqa: F401
+        BettmenschAITorchDDPScript,
+        LaunchConfig,
+        LaunchConfigSettings,
+        LaunchContext,
+        TorchDDPComponent,
+        TorchDDPComponentInlineScriptRunner,
+        as_torch_ddp,
+        as_torch_ddp_component,
+    )
+except ImportError as ie:
+    print(
+        "WARNING. Could not import torch component assets into "
+        f"pipelines.component: {ie}. Make sure you have installed pytorch if "
+        "you want to use them."
+    )

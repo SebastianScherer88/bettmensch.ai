@@ -3,12 +3,22 @@ from .component import (  # noqa: F401
     AdapterOutComponent,
     BaseComponent,
     Component,
-    TorchDDPComponent,
     as_adapter_component,
     as_component,
-    as_torch_ddp,
-    as_torch_ddp_component,
 )
+
+try:
+    from .component import (  # noqa: F401
+        TorchDDPComponent,
+        as_torch_ddp,
+        as_torch_ddp_component,
+    )
+except ImportError as ie:
+    print(
+        "WARNING. Could not import torch component assets into pipelines "
+        f"module: {ie}. Make sure you have installed pytorch if you want to "
+        "use them."
+    )
 from .io import (  # noqa: F401
     InputArtifact,
     InputParameter,

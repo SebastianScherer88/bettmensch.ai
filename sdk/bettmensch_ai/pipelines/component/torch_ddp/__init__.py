@@ -15,6 +15,7 @@ try:
     )
 except ImportError as ie:
     print(
-        f"WARNING. Could not import torch component assets: {ie}. Make sure "
-        "you have installed pytorch if you want to use them."
+        "WARNING. Could not import torch component assets into "
+        f"pipelines.component.torch_ddp module: {ie}. Make sure you have "
+        "installed pytorch if you want to use them."
     )
