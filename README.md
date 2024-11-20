@@ -200,7 +200,7 @@ def show_artifact(a: InputArtifact) -> None:
 
     print(f"Content of input artifact a: {a_content}")
 
-@pipeline("test-artifact-pipeline", "argo", True)
+@as_pipeline("test-artifact-pipeline", "argo", True)
 def parameter_to_artifact(
     a: InputParameter = "Param A",
 ) -> None:
