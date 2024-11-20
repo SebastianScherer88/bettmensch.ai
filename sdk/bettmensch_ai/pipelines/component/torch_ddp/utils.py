@@ -132,7 +132,7 @@ class LaunchContext(BaseSettings):
     group_rank: int  # same as node_rank in the LaunchConfigSettings
 
 
-def torch_ddp(**config_settings_kwargs):
+def as_torch_ddp(**config_settings_kwargs):
     """Keyword decorator that wraps a callable in a torch distributed elastic
     launch runtime context.
 

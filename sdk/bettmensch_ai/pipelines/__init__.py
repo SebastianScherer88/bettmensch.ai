@@ -6,6 +6,7 @@ from .component import (  # noqa: F401
     TorchDDPComponent,
     as_adapter_component,
     as_component,
+    as_torch_ddp,
     as_torch_ddp_component,
 )
 from .io import (  # noqa: F401

@@ -7,5 +7,5 @@ from .utils import (  # noqa: F401
     LaunchConfig,
     LaunchConfigSettings,
     LaunchContext,
-    torch_ddp,
+    as_torch_ddp,
 )

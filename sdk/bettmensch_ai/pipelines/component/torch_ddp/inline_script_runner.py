@@ -24,8 +24,8 @@ class TorchDDPComponentInlineScriptRunner(BaseComponentInlineScriptRunner):
         decoration = [
             "\nfrom torch.distributed.elastic.multiprocessing.errors import record\n",  # noqa: E501
             f"{instance.source.__name__}=record({instance.source.__name__})\n"
-            "\nfrom bettmensch_ai.components import torch_ddp\n",
-            "torch_ddp_decorator=torch_ddp()\n",
+            "\nfrom bettmensch_ai.pipelines.component import as_torch_ddp\n",
+            "torch_ddp_decorator=as_torch_ddp()\n",
             f"""torch_ddp_function=torch_ddp_decorator({
                 instance.source.__name__
             })\n""",

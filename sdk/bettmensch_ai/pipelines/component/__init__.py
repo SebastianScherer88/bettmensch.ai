@@ -27,8 +27,8 @@ try:
         LaunchContext,
         TorchDDPComponent,
         TorchDDPComponentInlineScriptRunner,
+        as_torch_ddp,
         as_torch_ddp_component,
-        torch_ddp,
     )
 except ImportError as ie:
     print(
