@@ -18,8 +18,8 @@ DOCKER_IMAGE_BASE = (
 
 
 class COMPONENT_IMAGE(Enum):
-    base = f"{DOCKER_IMAGE_BASE}:3.11-latest"
-    standard = f"{DOCKER_IMAGE_BASE}:3.11-latest"
+    base = f"{DOCKER_IMAGE_BASE}-standard:3.11-latest"
+    standard = f"{DOCKER_IMAGE_BASE}-standard:3.11-latest"
     adapter = f"{DOCKER_IMAGE_BASE}-adapter:3.11-latest"
     torch = f"{DOCKER_IMAGE_BASE}-pytorch:3.11-latest"
     lightning = f"{DOCKER_IMAGE_BASE}-pytorch-lightning:3.11-latest"
