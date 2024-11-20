@@ -250,10 +250,10 @@ class BaseComponent(object):
             result[name] = component_input
 
         # ensure no required inputs are left unspecified
-        # if required_func_inputs:
-        #     raise Exception(
-        #         f"Unspecified required input(s) left: {required_func_inputs}"
-        #     )
+        if required_func_inputs:
+            raise Exception(
+                f"Unspecified required input(s) left: {required_func_inputs}"
+            )
 
         return result
 
