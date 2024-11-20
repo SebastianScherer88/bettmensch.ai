@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines import as_pipeline
 from bettmensch_ai.pipelines.component.examples.annotated_transformer import (
     get_tokenizers_and_vocabularies_factory,
     train_transformer_factory,
@@ -7,7 +7,7 @@ from bettmensch_ai.pipelines.constants import ARGO_NAMESPACE, COMPONENT_IMAGE
 from bettmensch_ai.pipelines.io import InputParameter
 
 
-@pipeline("test-train-pipeline-1n", ARGO_NAMESPACE, True)
+@as_pipeline("test-train-pipeline-1n", ARGO_NAMESPACE, True)
 def train_transformer_pipeline_1n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
@@ -69,7 +69,7 @@ def train_transformer_pipeline_1n_1p(
     )
 
 
-@pipeline("test-train-pipeline-xn", ARGO_NAMESPACE, True)
+@as_pipeline("test-train-pipeline-xn", ARGO_NAMESPACE, True)
 def train_transformer_pipeline_2n_1p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",

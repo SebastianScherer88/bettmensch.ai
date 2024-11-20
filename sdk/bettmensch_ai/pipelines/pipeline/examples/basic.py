@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines import as_pipeline
 from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
@@ -8,7 +8,7 @@ from bettmensch_ai.pipelines.constants import ARGO_NAMESPACE
 from bettmensch_ai.pipelines.io import InputParameter
 
 
-@pipeline("test-artifact-pipeline", ARGO_NAMESPACE, True)
+@as_pipeline("test-artifact-pipeline", ARGO_NAMESPACE, True)
 def parameter_to_artifact_pipeline(
     a: InputParameter = "Param A",
 ) -> None:
@@ -23,7 +23,7 @@ def parameter_to_artifact_pipeline(
     )
 
 
-@pipeline("test-parameter-pipeline", ARGO_NAMESPACE, True)
+@as_pipeline("test-parameter-pipeline", ARGO_NAMESPACE, True)
 def adding_parameters_pipeline(
     a: InputParameter = 1, b: InputParameter = 2
 ) -> None:

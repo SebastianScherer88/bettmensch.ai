@@ -569,7 +569,7 @@ def delete_registered_pipeline(
     return delete_response
 
 
-def pipeline(
+def as_pipeline(
     name: str, namespace: str, clear_context: bool
 ) -> Callable[[Callable], Pipeline]:
     """Module's main decorator that takes a Calleable and returns a Pipeline

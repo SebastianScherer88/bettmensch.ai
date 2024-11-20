@@ -31,6 +31,7 @@ from .pipeline import (  # noqa: F401
     Pipeline,
     PipelineContext,
     _pipeline_context,
+    as_pipeline,
     delete_flow,
     delete_registered_pipeline,
     get_flow,
@@ -38,5 +39,4 @@ from .pipeline import (  # noqa: F401
     hera_client,
     list_flows,
     list_registered_pipelines,
-    pipeline,
 )

@@ -4,7 +4,7 @@ from bettmensch_ai.pipelines.component.examples import (
     show_parameter_factory,
 )
 from bettmensch_ai.pipelines.io import InputParameter
-from bettmensch_ai.pipelines.pipeline import pipeline
+from bettmensch_ai.pipelines.pipeline import as_pipeline
 from hera.workflows import WorkflowTemplate
 
 
@@ -13,7 +13,7 @@ def test_artifact_pipeline(
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    @pipeline("test-artifact-pipeline", "argo", True)
+    @as_pipeline("test-artifact-pipeline", "argo", True)
     def parameter_to_artifact(
         a: InputParameter = "Param A",
     ) -> None:
@@ -71,7 +71,7 @@ def test_artifact_pipeline(
 def test_parameter_pipeline(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    @pipeline("test-parameter-pipeline", "argo", True)
+    @as_pipeline("test-parameter-pipeline", "argo", True)
     def adding_parameters(
         a: InputParameter = 1, b: InputParameter = 2
     ) -> None:  # noqa: E501

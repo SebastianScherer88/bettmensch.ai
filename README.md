@@ -145,11 +145,10 @@ Using `InputParameter` and `OutputParameter` for `int`, `float` or `str` type
 data:
 
 ```python
-from bettmensch_ai.io import InputParameter, OutputParameter
-from bettmensch_ai.components import component
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
+from bettmensch_ai.pipelines import pipeline, as_component
 
-@component
+@as_component
 def add(
     a: InputParameter = 1,
     b: InputParameter = 2,
@@ -158,7 +157,7 @@ def add(
 
     sum.assign(a + b)
 
-@pipeline("test-parameter-pipeline", "argo", True)
+@as_pipeline("test-parameter-pipeline", "argo", True)
 def a_plus_b_plus_2(a: InputParameter = 1, b: InputParameter = 2) -> None:
     a_plus_b = add(
         "a-plus-b",
@@ -181,11 +180,10 @@ Using `InputArtifact` and `OutputArtifact` for all other types of data,
 leveraging AWS's `S3` storage service:
 
 ```python
-from bettmensch_ai.io import InputArtifact, OutputArtifact
-from bettmensch_ai.components import component
-from bettmensch_ai.pipelines import pipeline
+from bettmensch_ai.pipelines.io import InputArtifact, OutputArtifact
+from bettmensch_ai.pipelines import as_component, pipeline
 
-@component
+@as_component
 def convert_to_artifact(
     a_param: InputParameter,
     a_art: OutputArtifact = None,
@@ -194,7 +192,7 @@ def convert_to_artifact(
     with open(a_art.path, "w") as a_art_file:
         a_art_file.write(str(a_param))
 
-@component
+@as_component
 def show_artifact(a: InputArtifact) -> None:
 
     with open(a.path, "r") as a_art_file:
@@ -222,7 +220,10 @@ parameter_to_artifact.run(a="Test value A")
 ```
 
 **NOTE**: For more examples (including cross K8s node CPU and GPU `torch.distributed` 
-processes), see this repository's [integration `test`](./sdk/test/integration/)
+processes), see 
+- the `pipelines.component.examples` module,
+- the `pipelines.pipeline.examples` module, and
+- this repository's [integration `test`](./sdk/test/integration/)
  and [k8s `test`](./sdk/test/k8s/) sections.
 
 The submitted pipelines can be viewed on the dashboard's `Pipelines` section:

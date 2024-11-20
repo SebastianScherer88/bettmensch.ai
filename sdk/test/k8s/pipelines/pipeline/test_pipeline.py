@@ -2,10 +2,10 @@ import pytest
 from bettmensch_ai.pipelines import (
     Flow,
     Pipeline,
+    as_pipeline,
     delete_registered_pipeline,
     get_registered_pipeline,
     list_registered_pipelines,
-    pipeline,
 )
 from bettmensch_ai.pipelines.component.examples import (
     lightning_train_torch_ddp_factory,
@@ -239,7 +239,7 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
     TorchDDPComponent. The pod spec patch ensures distributing replica pods of
     the TorchDDPComponent across different K8s nodes."""
 
-    @pipeline(test_pipeline_name, test_namespace, True)
+    @as_pipeline(test_pipeline_name, test_namespace, True)
     def torch_ddp_pipeline(
         n_iter: InputParameter, n_seconds_sleep: InputParameter
     ) -> None:
@@ -312,7 +312,7 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
     TorchDDPComponent. The pod spec patch ensures distributing replica pods of
     the TorchDDPComponent across different K8s nodes."""
 
-    @pipeline(test_pipeline_name, test_namespace, True)
+    @as_pipeline(test_pipeline_name, test_namespace, True)
     def lightning_ddp_pipeline(
         max_time: InputParameter,
     ) -> None:
