@@ -109,12 +109,16 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
         # technically only needed for the torch_component, but add here to
         # simplify subclassing for now
         if input_parameters:
-            preprocess += "\nfrom bettmensch_ai.io import InputParameter\n"
+            preprocess += (
+                "\nfrom bettmensch_ai.pipelines.io import InputParameter\n"
+            )
 
         # input artifact initialization to provide user access to input
         # artifact file location
         if input_artifacts:
-            preprocess += "\nfrom bettmensch_ai.io import InputArtifact\n"
+            preprocess += (
+                "\nfrom bettmensch_ai.pipelines.io import InputArtifact\n"
+            )
             for input_artifact in sorted(
                 input_artifacts, key=lambda ia: ia.name
             ):
@@ -126,7 +130,9 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
 
         # output parameter initialization
         if output_parameters:
-            preprocess += "\nfrom bettmensch_ai.io import OutputParameter\n"
+            preprocess += (
+                "\nfrom bettmensch_ai.pipelines.io import OutputParameter\n"
+            )
             for output_param in sorted(
                 output_parameters, key=lambda op: op.name
             ):
@@ -139,7 +145,9 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
         # output artifact initialization to provide user access to output
         # artifact file location
         if output_artifacts:
-            preprocess += "\nfrom bettmensch_ai.io import OutputArtifact\n"
+            preprocess += (
+                "\nfrom bettmensch_ai.pipelines.io import OutputArtifact\n"
+            )
             for output_artifact in sorted(
                 output_artifacts, key=lambda oa: oa.name
             ):
