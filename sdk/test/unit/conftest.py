@@ -1,5 +1,6 @@
 import datetime
 import os
+from typing import Callable, List
 
 import pytest
 from bettmensch_ai.pipelines.constants import ResourceType
@@ -9,6 +10,7 @@ from bettmensch_ai.pipelines.io import (
     OutputArtifact,
     OutputParameter,
 )
+from pydantic import BaseModel
 
 
 @pytest.fixture
@@ -33,6 +35,42 @@ def test_mock_component():
         io_owner_name = f"{type}.{name}"
 
     return MockComponent()
+
+
+@pytest.fixture
+def test_mock_script(test_function_and_task_inputs):
+    test_function, _ = test_function_and_task_inputs
+
+    class MockArgument(BaseModel):
+        name: str
+
+    class MockIO(BaseModel):
+        parameters: List[MockArgument]
+        artifacts: List[MockArgument]
+
+    class MockScript:
+        source: Callable = test_function
+        add_cwd_to_sys_path: bool = False
+
+        def _build_inputs(self):
+
+            return MockIO(
+                parameters=[
+                    MockArgument(name="a"),
+                    MockArgument(name="b"),
+                    MockArgument(name="c"),
+                ],
+                artifacts=[MockArgument(name="d")],
+            )
+
+        def _build_outputs(self):
+
+            return MockIO(
+                parameters=[MockArgument(name="a_out")],
+                artifacts=[MockArgument(name="b_out")],
+            )
+
+    return MockScript()
 
 
 @pytest.fixture
