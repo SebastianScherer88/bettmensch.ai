@@ -111,7 +111,10 @@ def test_parameter_adapter_component_to_hera(
         )
 
         a_plus_b_in = add_parameters_adapter_in_factory(
-            "a_plus_b", s3_prefix=a_plus_b_out.outputs["s3_prefix"]
+            "a_plus_b",
+            a=InputParameter("a"),
+            b=InputParameter("b"),
+            s3_prefix=a_plus_b_out.outputs["s3_prefix"],
         )
 
         a_plus_b_plus_2_out = add_parameters_adapter_out_factory(
@@ -122,6 +125,8 @@ def test_parameter_adapter_component_to_hera(
 
         a_plus_b_plus_2_in = add_parameters_adapter_in_factory(
             "a_plus_b_plus_2",
+            a=InputParameter("a"),
+            b=InputParameter("b"),
             s3_prefix=a_plus_b_plus_2_out.outputs["s3_prefix"],
         )
 
@@ -189,6 +194,7 @@ def test_artifact_adapter_component_to_hera(
 
         convert_in = convert_to_artifact_adapter_in_factory(
             "convert_parameters",
+            a=InputParameter("a"),
             s3_prefix=convert_out.outputs["s3_prefix"],
         )
 
@@ -199,6 +205,7 @@ def test_artifact_adapter_component_to_hera(
 
         show_in = show_artifact_adapter_in_factory(
             "show_artifacts",
+            a=InputParameter("a"),
             s3_prefix=show_out.outputs["s3_prefix"],
         )
 
