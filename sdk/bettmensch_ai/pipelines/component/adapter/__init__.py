@@ -1,7 +1,7 @@
 from .component import (  # noqa: F401
     AdapterInComponent,
     AdapterOutComponent,
-    adapter_component,
+    as_adapter_component,
 )
 from .inline_script_runner import (  # noqa: F401
     AdapterInInlineScriptRunner,

@@ -1,7 +1,7 @@
 from bettmensch_ai.pipelines.component import (  # noqa: F401
-    adapter_component,
-    component,
-    torch_ddp_component,
+    as_adapter_component,
+    as_component,
+    as_torch_ddp_component,
 )
 from bettmensch_ai.pipelines.io import (  # noqa: F401
     InputArtifact,
@@ -55,37 +55,37 @@ def show_parameter(a: InputParameter) -> None:
     print(f"Content of input parameter a is: {a}")
 
 
-convert_to_artifact_factory = component(convert_to_artifact)
-convert_to_artifact_adapter_out_factory = adapter_component(
+convert_to_artifact_factory = as_component(convert_to_artifact)
+convert_to_artifact_adapter_out_factory = as_adapter_component(
     "adapter_out", convert_to_artifact
 )
-convert_to_artifact_adapter_in_factory = adapter_component(
+convert_to_artifact_adapter_in_factory = as_adapter_component(
     "adapter_in", convert_to_artifact
 )
-convert_to_artifact_torch_ddp_factory = torch_ddp_component(
+convert_to_artifact_torch_ddp_factory = as_torch_ddp_component(
     convert_to_artifact
 )  # noqa: E501
-show_artifact_factory = component(show_artifact)
-show_artifact_adapter_out_factory = adapter_component(
+show_artifact_factory = as_component(show_artifact)
+show_artifact_adapter_out_factory = as_adapter_component(
     "adapter_out", show_artifact
 )
-show_artifact_adapter_in_factory = adapter_component(
+show_artifact_adapter_in_factory = as_adapter_component(
     "adapter_in", show_artifact
 )
-show_artifact_torch_ddp_factory = torch_ddp_component(show_artifact)
-add_parameters_factory = component(add_parameters)
-add_parameters_adapter_out_factory = adapter_component(
+show_artifact_torch_ddp_factory = as_torch_ddp_component(show_artifact)
+add_parameters_factory = as_component(add_parameters)
+add_parameters_adapter_out_factory = as_adapter_component(
     "adapter_out", add_parameters
 )
-add_parameters_adapter_in_factory = adapter_component(
+add_parameters_adapter_in_factory = as_adapter_component(
     "adapter_in", add_parameters
 )
-add_parameters_torch_ddp_factory = torch_ddp_component(add_parameters)
-show_parameter_factory = component(show_parameter)
-show_parameter_adapter_out_factory = adapter_component(
+add_parameters_torch_ddp_factory = as_torch_ddp_component(add_parameters)
+show_parameter_factory = as_component(show_parameter)
+show_parameter_adapter_out_factory = as_adapter_component(
     "adapter_out", show_parameter
 )
-show_parameter_adapter_in_factory = adapter_component(
+show_parameter_adapter_in_factory = as_adapter_component(
     "adapter_in", show_parameter
 )
-show_parameter_torch_ddp_factory = torch_ddp_component(show_parameter)
+show_parameter_torch_ddp_factory = as_torch_ddp_component(show_parameter)

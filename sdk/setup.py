@@ -42,6 +42,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
             "torch==2.3.1",
             "lightning==2.4.0",
             "numpy==1.24.1",
+            "scipy==1.14.1",
             "pytest==8.2.2",
             "pytest-order==1.2.1",
         ],

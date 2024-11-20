@@ -4,9 +4,9 @@ from .component import (  # noqa: F401
     BaseComponent,
     Component,
     TorchDDPComponent,
-    adapter_component,
-    component,
-    torch_ddp_component,
+    as_adapter_component,
+    as_component,
+    as_torch_ddp_component,
 )
 from .io import (  # noqa: F401
     InputArtifact,

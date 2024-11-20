@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines.component import Component, component
+from bettmensch_ai.pipelines.component import Component, as_component
 from bettmensch_ai.pipelines.component.examples import (
     add_parameters_factory,
     convert_to_artifact_factory,
@@ -87,7 +87,7 @@ def test_component_decorator(
 
     test_function, test_task_inputs = test_function_and_task_inputs
 
-    test_component_factory = component(test_function)
+    test_component_factory = as_component(test_function)
 
     with _pipeline_context:
         _pipeline_context.clear()

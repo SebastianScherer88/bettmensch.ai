@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines.component import torch_ddp_component
+from bettmensch_ai.pipelines.component import as_torch_ddp_component
 from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
 
 
@@ -16,7 +16,9 @@ def lightning_train(
 
     import lightning.pytorch as pl
     import torch
-    from bettmensch_ai.components.torch_utils import LaunchConfigSettings
+    from bettmensch_ai.pipelines.component.torch_ddp import (
+        LaunchConfigSettings,
+    )
     from lightning.pytorch.strategies import DDPStrategy
 
     start = dt.now()
@@ -69,7 +71,7 @@ def lightning_train(
         duration.assign(dt.now() - start)
 
 
-lightning_train_torch_ddp_factory = torch_ddp_component(lightning_train)
+lightning_train_torch_ddp_factory = as_torch_ddp_component(lightning_train)
 
 if __name__ == "__main__":
     lightning_train()

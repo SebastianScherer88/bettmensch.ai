@@ -91,7 +91,7 @@ class AdapterInComponent(BaseAdapterComponent):
         self.template_inputs = {"s3_prefix": input}
 
 
-def adapter_component(
+def as_adapter_component(
     adapter_type: str,
     func: Callable,
 ) -> Callable[

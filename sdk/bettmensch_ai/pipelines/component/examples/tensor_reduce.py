@@ -1,4 +1,4 @@
-from bettmensch_ai.pipelines.component import torch_ddp_component
+from bettmensch_ai.pipelines.component import as_torch_ddp_component
 from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
 
 
@@ -17,7 +17,7 @@ def tensor_reduce(
     import GPUtil
     import torch
     import torch.distributed as dist
-    from bettmensch_ai.components import LaunchContext
+    from bettmensch_ai.pipelines.component.torch_ddp import LaunchContext
 
     has_gpu = torch.cuda.is_available()
     ddp_context = LaunchContext()
@@ -84,7 +84,7 @@ def tensor_reduce(
         duration.assign(duration_seconds)
 
 
-tensor_reduce_torch_ddp_factory = torch_ddp_component(tensor_reduce)
+tensor_reduce_torch_ddp_factory = as_torch_ddp_component(tensor_reduce)
 
 if __name__ == "__main__":
     tensor_reduce()

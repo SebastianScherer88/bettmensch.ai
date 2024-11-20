@@ -2,7 +2,6 @@ from typing import Callable, Literal, Optional
 
 from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
-    COMPONENT_IMAGE,
     COMPONENT_IMPLEMENTATION,
     DDP_PORT_NAME,
     DDP_PORT_NUMBER,
@@ -160,102 +159,6 @@ def torch_ddp(**config_settings_kwargs):
         return wrapper
 
     return decorator
-
-
-def get_jobset_resource_template(
-    base_name: str,
-    task_name: str,
-    n_nodes: int,
-    min_nodes: int,
-    max_nodes: int,
-    n_proc_per_node: int,
-    cpu: str,
-    memory: str,
-    n_max_restarts: int = 1,
-    start_method: str = "spawn",
-    rdzv_backend: str = "static",
-    image: str = COMPONENT_IMAGE.torch.value,
-    namespace: str = ARGO_NAMESPACE,
-) -> Resource:
-
-    return Resource(
-        name=f"{base_name}-create-{COMPONENT_IMPLEMENTATION.torch_ddp.value}-jobset",  # noqa: E501
-        action="create",
-        manifest=f"""apiVersion: jobset.x-k8s.io/v1alpha2
-kind: JobSet
-metadata:
-  name: {task_name}-{{{{workflow.uid}}}}
-  labels:
-    kueue.x-k8s.io/queue-name: user-queue
-  namespace: {namespace}
-spec:
-  network:
-    enableDNSHostnames: true
-    subdomain: torch-ddp-svc
-  replicatedJobs:
-    - name: {task_name}-{{{{workflow.uid}}}}
-      replicas: 1
-      template:
-        spec:
-          parallelism: {n_nodes}
-          completions: {n_nodes}
-          backoffLimit: 0
-          template:
-            spec:
-              containers:
-                - command:
-                  - bash
-                  - -c
-                  - torchrun --rdzv_id=123 --nnodes={n_nodes} --nproc_per_node={n_proc_per_node} --master_addr=$MASTER_ADDR --master_port=$MASTER_PORT --node_rank=$JOB_COMPLETION_INDEX --role '' ./torch_ddp_test.py # noqa: E501
-                  env:
-                  - name: NCCL_DEBUG
-                    value: 'INFO'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}min_nodes # noqa: E501
-                    value: '{min_nodes}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}max_nodes # noqa: E501
-                    value: '{max_nodes}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}nproc_per_node # noqa: E501
-                    value: '{n_proc_per_node}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}n_nodes # noqa: E501
-                    value: '{n_nodes}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}node_rank # noqa: E501
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: metadata.annotations['batch.kubernetes.io/job-completion-index'] # noqa: E501
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}max_restarts # noqa: E501
-                    value: '{n_max_restarts}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}start_method # noqa: E501
-                    value: '{start_method}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}rdzv_backend # noqa: E501
-                    value: '{rdzv_backend}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_url # noqa: E501
-                    value: {task_name}-{{{{workflow.uid}}}}-{task_name}-{{{{workflow.uid}}}}-0-0.torch-ddp-svc # noqa: E501
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}rdzv_endpoint_port # noqa: E501
-                    value: '{DDP_PORT_NUMBER}'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}run_id # noqa: E501
-                    value: '1'
-                  - name: {LaunchConfigSettings.model_config['env_prefix']}tee # noqa: E501
-                    value: '0'
-                  image: {image}
-                  name: torch-ddp
-                  ports:
-                  - containerPort: {DDP_PORT_NUMBER}
-                    name: c10d
-                    protocol: TCP
-                  resources:
-                    limits:
-                      cpu: {cpu}
-                      memory: {memory}
-                    requests:
-                      cpu: {cpu}
-                      memory: {memory}
-              restartPolicy: Never
-        """,
-    )
-
-
-def get_configmap_resource_template():
-    pass
 
 
 def create_torch_ddp_service_template(

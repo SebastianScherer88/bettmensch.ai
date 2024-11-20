@@ -70,7 +70,7 @@ class Component(BaseComponent):
         return task
 
 
-def component(
+def as_component(
     func: Callable,
 ) -> Callable[[str, Dict, List[Any]], Component]:
     """Takes a calleable and generates a configured Component factory that will

@@ -5,7 +5,7 @@ from .adapter import (  # noqa: F401
     AdapterOutInlineScriptRunner,
     BettmenschAIAdapterInScript,
     BettmenschAIAdapterOutScript,
-    adapter_component,
+    as_adapter_component,
 )
 from .base import (  # noqa: F401
     BaseComponent,
@@ -16,20 +16,19 @@ from .standard import (  # noqa: F401
     BettmenschAIStandardScript,
     Component,
     ComponentInlineScriptRunner,
-    component,
+    as_component,
 )
 
 try:
     from .torch_ddp import (  # noqa: F401
-        BettmenschAITorchDDPPostAdapterScript,
-        BettmenschAITorchDDPPreAdapterScript,
         BettmenschAITorchDDPScript,
         LaunchConfig,
         LaunchConfigSettings,
+        LaunchContext,
         TorchDDPComponent,
         TorchDDPComponentInlineScriptRunner,
+        as_torch_ddp_component,
         torch_ddp,
-        torch_ddp_component,
     )
 except ImportError as ie:
     print(

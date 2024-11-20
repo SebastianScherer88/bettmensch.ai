@@ -1,5 +1,6 @@
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Type, Union
 
+from bettmensch_ai.pipelines.component.base import BettmenschAIBaseScript
 from bettmensch_ai.pipelines.component.base.component import BaseComponent
 from bettmensch_ai.pipelines.component.torch_ddp.utils import (
     LaunchConfigSettings,
@@ -22,11 +23,14 @@ from bettmensch_ai.pipelines.io import (
 from hera.workflows import Env, Task
 from hera.workflows.models import ContainerPort, Protocol
 
+from .script import BettmenschAITorchDDPScript
+
 
 class TorchDDPComponent(BaseComponent):
 
     implementation: str = COMPONENT_IMPLEMENTATION.torch_ddp.value
     default_image: str = COMPONENT_IMAGE.torch.value
+    script: Type[BettmenschAIBaseScript] = BettmenschAITorchDDPScript
     n_nodes: int
     min_nodes: int
     nproc_per_node: int
@@ -195,7 +199,7 @@ class TorchDDPComponent(BaseComponent):
             # this will invoke our custom TorchComponentInlineScriptRunner
             # under the hood
             script_wrapper = bettmensch_ai_script(
-                script_class=BettmenschAITorchDDPScript,  # noqa: F821
+                script_class=self.script,
                 **script_decorator_kwargs,
             )
 
@@ -265,7 +269,7 @@ class TorchDDPComponent(BaseComponent):
         )
 
 
-def torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
+def as_torch_ddp_component(func: Callable) -> Callable[..., TorchDDPComponent]:
     """Takes a calleable and generates a configured TorchComponent factory that
     will generate a TorchComponent version of the callable if invoked inside an
     active PipelineContext.

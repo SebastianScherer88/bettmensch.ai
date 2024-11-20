@@ -3,7 +3,7 @@ import inspect
 import textwrap
 from typing import Optional, Type
 
-from hera.workflows import InlineScriptConstructor, Script
+from hera.workflows import InlineScriptConstructor
 from hera.workflows._unparse import roundtrip
 
 from .script import BettmenschAIBaseScript
@@ -157,7 +157,58 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
 
         return preprocess
 
-    def generate_source(self, instance: Script) -> str:
+    def _get_definition_script_portion(
+        self, instance: Type[BettmenschAIBaseScript]
+    ) -> str:
+        """Utility to generate the underlying function definition script
+        segment.
+
+        Args:
+            instance (Type[BettmenschAIBaseScript]): The script instance.
+
+        Returns:
+            str: Script that contains the underlying function definition.
+        """
+
+        # We use ast parse/unparse to get the source code of the function
+        # in order to have consistent looking functions and getting rid of any
+        # comments parsing issues.
+        # See https://github.com/argoproj-labs/hera/issues/572
+        content = roundtrip(
+            textwrap.dedent(inspect.getsource(instance.source))
+        ).splitlines()
+        for i, line in enumerate(content):
+            if line.startswith("def") or line.startswith("async def"):
+                break
+
+        # add function definition
+        function_definition = "\n".join(content[i:]) + "\n"
+
+        return function_definition
+
+    def _get_invocation_script_portion(
+        self, instance: Type[BettmenschAIBaseScript]
+    ) -> str:
+        """Utility to generate the underlying function invocation script
+        segment.
+
+        Args:
+            instance (Type[BettmenschAIBaseScript]): The script instance.
+
+        Returns:
+            str: Script that contains any needed decorations of the underlying
+                function.
+        """
+
+        args = inspect.getfullargspec(instance.source).args
+
+        function_invocation = (
+            f"\n{instance.source.__name__}(" + ",".join(args) + ")"
+        )
+
+        return function_invocation + "\n"
+
+    def generate_source(self, instance: Type[BettmenschAIBaseScript]) -> str:
         """Assembles and returns a script representation of the given function.
 
         This also assembles any extra script material prefixed to the string
@@ -191,23 +242,12 @@ class BaseComponentInlineScriptRunner(InlineScriptConstructor):
             script += copy.deepcopy(script_extra)
             script += "\n"
 
-        # We use ast parse/unparse to get the source code of the function
-        # in order to have consistent looking functions and getting rid of any
-        # comments parsing issues.
-        # See https://github.com/argoproj-labs/hera/issues/572
-        content = roundtrip(
-            textwrap.dedent(inspect.getsource(instance.source))
-        ).splitlines()
-        for i, line in enumerate(content):
-            if line.startswith("def") or line.startswith("async def"):
-                break
-
         # add function definition
-        function_definition = content[i:]
-        script += "\n".join(function_definition)
+        function_definition = self._get_definition_script_portion(instance)
+        script += function_definition
 
         # add function call
-        function_call = f"\n{instance.source.__name__}(" + ",".join(args) + ")"
+        function_call = self._get_invocation_script_portion(instance)
         script += function_call
 
         return textwrap.dedent(script)
