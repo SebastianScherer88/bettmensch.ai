@@ -27,7 +27,7 @@ spec:
     cpu: 100
     memory: 1000Gi
   disruption:
-    consolidationPolicy: WhenUnderutilized | WhenEmpty
+    consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # ~5 minutes required for larger images, otherwise karpenter will deprovision before pods are running
     expireAfter: 24h
 ---
@@ -59,7 +59,7 @@ spec:
     memory: 1000Gi
     nvidia.com/gpu: 5
   disruption:
-    consolidationPolicy: WhenUnderutilized | WhenEmpty
+    consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # dont go lower to prevent decomissioning bc of image pull phase
     expireAfter: 3h # limit GPU nodes to 3 ours - enough to train annotated transformer on one GPU (~2.8h)
 ---
@@ -94,6 +94,6 @@ spec:
     memory: 2000Gi
     nvidia.com/gpu: 5
   disruption:
-    consolidationPolicy: WhenUnderutilized | WhenEmpty
+    consolidationPolicy: WhenEmpty
     consolidateAfter: 30m # larger training images take longer to pull
     expireAfter: 240h # limit GPU nodes to 12h ours
