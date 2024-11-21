@@ -7,6 +7,7 @@ from setuptools import find_packages, setup
 class SDKExtras(Enum):
     dashboard: str = "dashboard"
     pipelines: str = "pipelines"
+    pipelines_adapter: str = "pipelines-adapter"
     annotated_transformer: str = "annotated-transformer"
     serving: str = "serving"
     test: str = "test"
@@ -29,6 +30,9 @@ def get_extra_requirements() -> Dict[str, List[str]]:
             "hera==5.15.1",
             "GPUtil==1.4.0",
         ],
+        SDKExtras.pipelines_adapter.value: [
+            "boto3==1.35.59",
+        ],
         SDKExtras.serving.value: ["fastapi==0.112.0"],
     }
 
@@ -38,6 +42,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
             "torch==2.3.1",
             "lightning==2.4.0",
             "numpy==1.24.1",
+            "scipy==1.14.1",
             "pytest==8.2.2",
             "pytest-order==1.2.1",
         ],
@@ -55,7 +60,7 @@ def get_extra_requirements() -> Dict[str, List[str]]:
 
 setup(
     name="bettmensch_ai",
-    version="0.1.0",
+    version="0.2.0",
     author="Sebastian Scherer @ Github:SebastianScherer88",
     author_email="scherersebastian@yahoo.de",
     packages=find_packages(),

@@ -10,7 +10,7 @@ from bettmensch_ai.server.dag import (
     DagTaskNode,
     DagVisualizationItems,
 )
-from bettmensch_ai.utils import copy_non_null_dict
+from bettmensch_ai.server.utils import copy_non_null_dict
 from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
 
