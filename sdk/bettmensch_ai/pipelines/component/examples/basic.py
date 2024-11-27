@@ -22,7 +22,7 @@ def convert_to_artifact(
         a_art_file.write(str(a))
 
 
-def show_artifact(a: InputArtifact, b: OutputArtifact) -> None:
+def show_artifact(a: InputArtifact, b: OutputArtifact = None) -> None:
     """When decorated with the bettmensch_ai.components.component decorator,
     implements a bettmensch_ai.Component that prints the values of its
     InputArtifact."""
