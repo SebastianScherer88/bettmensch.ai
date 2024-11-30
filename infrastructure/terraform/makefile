@@ -1,6 +1,8 @@
 ## VARIABLES
 DIR?=infrastructure/terraform
 ARTIFACT_REPOSITORY_S3_BUCKET=bettmensch-ai-artifact-repository
+PYTEST_SUBPATH?=
+PYTEST_FLAGS?=
 
 platform.init:
 	@echo "::group::Initializing platform infrastructure environment"
@@ -28,7 +30,7 @@ platform.connect:
 
 platform.test:
 	@echo "::group:: Running e2e platform tests"
-	make sdk.test SUITE=k8s PYTEST_FLAGS="$(PYTEST_FLAGS)"
+	make sdk.test SUITE=k8s PYTEST_FLAGS="$(PYTEST_FLAGS)" PYTEST_SUBPATH="$(PYTEST_SUBPATH)"
 	@echo "::endgroup::"
 
 platform.delete_test_pipelines:
