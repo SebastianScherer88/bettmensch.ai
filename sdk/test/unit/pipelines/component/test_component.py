@@ -11,6 +11,7 @@ from bettmensch_ai.pipelines.io import (
     OutputParameter,
 )
 from bettmensch_ai.pipelines.pipeline import _pipeline_context
+from hera.shared.serialization import MISSING
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
@@ -62,7 +63,7 @@ def test_component___init__(test_function_and_task_inputs):
 
     assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
     assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
-    assert test_component.task_inputs["c"].value is None
+    assert test_component.task_inputs["c"].value == MISSING
 
     # validate component template_inputs
     assert list(test_component.template_inputs.keys()) == ["d"]
@@ -131,7 +132,7 @@ def test_component_decorator(
 
     assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
     assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
-    assert test_component.task_inputs["c"].value is None
+    assert test_component.task_inputs["c"].value == MISSING
 
     # validate component template_inputs
     assert list(test_component.template_inputs.keys()) == ["d"]

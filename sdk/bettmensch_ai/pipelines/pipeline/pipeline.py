@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
@@ -38,6 +38,7 @@ class Pipeline(object):
     clear_context: bool = None
     func: Callable = None
     workflow_template_inputs: Dict[str, InputParameter] = None
+    required_workflow_template_inputs: Dict[str, InputParameter] = None
     inner_dag_task_inputs: Dict[str, InputParameter] = None
     user_built_workflow_template: WorkflowTemplate = None
     registered_workflow_template: WorkflowTemplate = None
@@ -93,9 +94,10 @@ class Pipeline(object):
         self.name = name
         self._namespace = namespace
         self.func = func
-        self.workflow_template_inputs = (
-            self.build_workflow_template_inputs_from_func(func)
-        )
+        (
+            self.workflow_template_inputs,
+            self.required_workflow_template_inputs,
+        ) = self.build_workflow_template_inputs_from_func(func)
         self.inner_dag_task_inputs = self.build_dag_task_inputs()
         self.user_built_workflow_template = self.build_workflow_template()
         self._built = True
@@ -112,9 +114,10 @@ class Pipeline(object):
         """
 
         self.registered_workflow_template = registered_workflow_template
-        self.workflow_template_inputs = (
-            self.build_workflow_template_inputs_from_wft()
-        )
+        (
+            self.workflow_template_inputs,
+            self.required_workflow_template_inputs,
+        ) = self.build_workflow_template_inputs_from_wft()
         self.inner_dag_task_inputs = self.build_dag_task_inputs()
 
         self._registered = True
@@ -166,7 +169,7 @@ class Pipeline(object):
 
     def build_workflow_template_inputs_from_func(
         self, func: Callable
-    ) -> Dict[str, InputParameter]:
+    ) -> Tuple[Dict[str, InputParameter], Dict[str, InputParameter]]:
         """Generates pipeline inputs from the underlying function. Also
         - checks for correct InputParameter type annotations in the decorated
             original function
@@ -182,44 +185,34 @@ class Pipeline(object):
                 default value.
 
         Returns:
-            Dict[str,InputParameter]: The pipeline's inputs.
+            Dict[str,InputParameter]: The pipeline's inputs and the pipeline's
+                required inputs.
         """
 
         validate_func_args(func, argument_types=[InputParameter])
         func_args = get_func_args(func)
-        func_inputs = get_func_args(func, "annotation", [InputParameter])
-        non_default_args = get_func_args(func, "default", [inspect._empty])
-        required_func_inputs = dict(
-            [(k, v) for k, v in func_inputs.items() if k in non_default_args]
-        )
+        required_func_inputs = get_func_args(func, "default", [inspect._empty])
 
         workflow_template_inputs = {}
+        required_workflow_template_inputs = {}
 
-        for name in func_inputs:
+        for func_arg_name in func_args:
 
-            # assemble component input
-            default = (
-                func_args[name].default
-                if func_args[name].default != inspect._empty
-                else None
-            )
-            pipeline_input = InputParameter(name=name, value=default)
+            if func_arg_name in required_func_inputs:
+                workflow_template_input = InputParameter(name=func_arg_name)
+                required_workflow_template_inputs[
+                    func_arg_name
+                ] = workflow_template_input
+            else:
+                workflow_template_input = InputParameter(
+                    name=func_arg_name, value=func_args[func_arg_name].default
+                )
 
-            pipeline_input.set_owner(self)
+            workflow_template_input.set_owner(self)
 
-            # remove declared input from required inputs (if relevant)
-            if name in required_func_inputs:
-                del required_func_inputs[name]
+            workflow_template_inputs[func_arg_name] = workflow_template_input
 
-            workflow_template_inputs[name] = pipeline_input
-
-        # ensure no required inputs are left unspecified
-        if required_func_inputs:
-            raise Exception(
-                f"Unspecified required input(s) left: {required_func_inputs}"
-            )
-
-        return workflow_template_inputs
+        return workflow_template_inputs, required_workflow_template_inputs
 
     def build_dag_task_inputs(self) -> Dict[str, InputParameter]:
 
@@ -237,7 +230,7 @@ class Pipeline(object):
 
     def build_workflow_template_inputs_from_wft(
         self,
-    ) -> Dict[str, InputParameter]:
+    ) -> Tuple[Dict[str, InputParameter], Dict[str, InputParameter]]:
         """Generates pipeline inputs from the `registered_workflow_template`
         attribute instance. Used to populate the `inputs` attribute for
         pipelines that are built from the registry rather than the user
@@ -247,18 +240,25 @@ class Pipeline(object):
             Dict[str,InputParameter]: The pipeline's inputs.
         """
 
-        result = {}
+        workflow_template_inputs = {}
+        required_workflow_template_inputs = {}
 
-        wft_template_inputs: List[
-            Parameter
-        ] = self.registered_workflow_template.arguments.parameters
+        wft_template_inputs = (
+            self.registered_workflow_template.arguments.parameters
+        )
 
         for wft_input in wft_template_inputs:
-            result[wft_input.name] = InputParameter(
+            workflow_template_input = InputParameter(
                 name=wft_input.name, value=wft_input.value
             )
+            workflow_template_inputs[wft_input.name] = workflow_template_input
 
-        return result
+            if wft_input.value is None:
+                required_workflow_template_inputs[
+                    wft_input.name
+                ] = workflow_template_input
+
+        return workflow_template_inputs, required_workflow_template_inputs
 
     def build_inner_dag(self) -> DAG:
 
@@ -390,20 +390,25 @@ class Pipeline(object):
             )
 
         # validate inputs
-        non_default_args = dict([(p.name, p) for p in self.inputs.values()])
-        missing_inputs = [k for k in non_default_args if k not in inputs]
+        missing_inputs = [
+            v
+            for k, v in self.required_workflow_template_inputs.items()
+            if k not in inputs
+        ]
         if missing_inputs:
             raise Exception(
-                f"""The following non default inputs are missing: {
-                    missing_inputs
-                }. Pipeline inputs: {self.inputs}"""
+                f"The following required inputs are missing: {missing_inputs}"
+                f" Pipeline inputs: {self.workflow_template_inputs}. Required"
+                f" pipeline inputs: {self.required_workflow_template_inputs}."
             )
-        unknown_inputs = [k for k in inputs if k not in non_default_args]
+        unknown_inputs = [
+            k for k in inputs if k not in self.workflow_template_inputs
+        ]
         if unknown_inputs:
             raise Exception(
-                f"""The following inputs are not known for this pipeline: {
-                    unknown_inputs
-                }. Pipeline inputs: {self.inputs}"""
+                "The following inputs are not known for this pipeline:"
+                f" {unknown_inputs}. Known pipeline inputs:"
+                f" {self.workflow_template_inputs}"
             )
 
         pipeline_ref = WorkflowTemplateRefModel(name=self.registered_name)

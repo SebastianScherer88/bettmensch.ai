@@ -1,6 +1,7 @@
 import os
-from typing import Any, Union
+from typing import Any, Dict, Union
 
+from hera.shared.serialization import MISSING
 from hera.workflows import Artifact, Parameter, models
 
 from .constants import ArgumentType, IOType, ResourceType
@@ -11,7 +12,9 @@ class IO(object):
     name: str
     value: Any
 
-    def __init__(self, name: str, value: Any = None):
+    def __init__(
+        self, name: str, value: Union[str, int, float, Dict] = MISSING
+    ):
         self.name = name
         self.value = value
 
