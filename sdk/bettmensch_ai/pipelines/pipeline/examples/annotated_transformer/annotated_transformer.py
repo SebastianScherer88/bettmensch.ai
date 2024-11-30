@@ -94,6 +94,9 @@ def get_train_transformer_pipeline(
 
 
 train_transformer_pipeline_1n_1p = get_train_transformer_pipeline()
+train_transformer_pipeline_1n_2p = get_train_transformer_pipeline(
+    name="test-train-pipeline-1n-2p-", n_nodes=1, n_proc_per_node=2
+)
 train_transformer_pipeline_2n_1p = get_train_transformer_pipeline(
     name="test-train-pipeline-2n-1p-", n_nodes=2, n_proc_per_node=1
 )
