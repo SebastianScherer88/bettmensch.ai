@@ -24,7 +24,7 @@ class Component(BaseComponent):
     cpu: Optional[Union[float, int, str]] = "100m"
     memory: Optional[str] = "100Mi"
 
-    def build_hera_task_factory(self) -> Callable:
+    def build_hera_task_factory(self) -> Callable[..., Task]:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
         of an active hera context.

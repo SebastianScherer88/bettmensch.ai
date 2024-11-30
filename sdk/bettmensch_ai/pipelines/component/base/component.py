@@ -343,7 +343,9 @@ class BaseComponent(object):
 
         return script_decorator_kwargs
 
-    def build_hera_task_factory(self) -> Union[Callable, List[Callable]]:
+    def build_hera_task_factory(
+        self,
+    ) -> Union[Callable[..., Task], List[Callable[..., Task]]]:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
         of an active hera context.
