@@ -20,7 +20,7 @@ def test_get_standard_flow(test_namespace):
 @pytest.mark.ddp
 @pytest.mark.train_transformer
 @pytest.mark.delete_flows
-@pytest.mark.order(11)
+@pytest.mark.order(14)
 def test_delete(test_namespace):
     """Test the delete_flow function"""
 

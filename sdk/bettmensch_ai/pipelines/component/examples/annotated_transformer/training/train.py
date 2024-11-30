@@ -1,3 +1,4 @@
+import os
 import time
 
 import GPUtil
@@ -79,7 +80,22 @@ def train_worker(
     config: TrainConfig,
 ):
     ddp_context = LaunchContext()
-    dist.init_process_group("nccl")
+    print(f"Torch distributed context: {ddp_context.model_dump()}")
+    dist.init_process_group(
+        "nccl"
+    )  # this works for single-node+single-gpu and multi-node+single-gpu and
+    # multi-node+multi-gpu
+
+    # make sure model artifact export directory exists
+    if (
+        not os.path.exists(config.output_directory)
+        and ddp_context.is_local_main_process
+    ):
+        os.makedirs(config.output_directory)
+
+    file_prefix = os.path.join(
+        config.output_directory, f"{config.dataset}_model_"
+    )
 
     # data
     preprocessor, (train_dataloader, valid_dataloader) = create_dataloaders(
@@ -109,7 +125,6 @@ def train_worker(
     model.cuda(ddp_context.local_rank)
     model = DDP(model, device_ids=[ddp_context.local_rank])
     module = model.module
-    is_main_process = ddp_context.rank == 0
 
     criterion = LabelSmoothing(
         size=preprocessor.vocab_tgt_size, padding_idx=pad_idx, smoothing=0.1
@@ -148,8 +163,8 @@ def train_worker(
         )
 
         GPUtil.showUtilization()
-        if is_main_process:
-            file_path = f"{config.file_prefix}{epoch}.pt"
+        if ddp_context.is_global_main_process:
+            file_path = f"{file_prefix}{epoch}.pt"
             torch.save(module.state_dict(), file_path)
         torch.cuda.empty_cache()
 
@@ -169,6 +184,6 @@ def train_worker(
         print(sloss)
         torch.cuda.empty_cache()
 
-    if is_main_process:
-        file_path = f"{config.file_prefix}final.pt"
+    if ddp_context.is_global_main_process:
+        file_path = f"{file_prefix}final.pt"
         torch.save(module.state_dict(), file_path)
