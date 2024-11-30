@@ -3,8 +3,8 @@ import time
 import GPUtil
 import torch
 import torch.distributed as dist
-from bettmensch_ai.components import LaunchContext
-from bettmensch_ai.components.examples.annotated_transformer.architecture import (  # noqa: E501
+from bettmensch_ai.pipelines.component import LaunchContext
+from bettmensch_ai.pipelines.component.examples.annotated_transformer.architecture import (  # noqa: E501
     EncoderDecoder,
     make_model,
 )

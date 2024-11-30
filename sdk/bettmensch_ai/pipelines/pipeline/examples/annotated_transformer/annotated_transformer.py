@@ -70,7 +70,7 @@ def train_transformer_pipeline_1n_1p(
 
 
 @as_pipeline("test-train-pipeline-xn", ARGO_NAMESPACE, True)
-def train_transformer_pipeline_2n_1p(
+def train_transformer_pipeline_2n_2p(
     dataset: InputParameter = "multi30k",
     source_language: InputParameter = "de",
     target_language: InputParameter = "en",
@@ -105,7 +105,7 @@ def train_transformer_pipeline_2n_1p(
             },
             n_nodes=2,
             min_nodes=2,
-            nproc_per_node=1,
+            nproc_per_node=2,
             dataset=dataset,
             source_language=source_language,
             target_language=target_language,
@@ -126,6 +126,6 @@ def train_transformer_pipeline_2n_1p(
             warmup=warmup,
         )
         .set_cpu(3.5)  # works with 3, fails with 1
-        .set_gpus(1)
+        .set_gpus(2)
         .set_memory("15Gi")  # works with 4Gi
     )
