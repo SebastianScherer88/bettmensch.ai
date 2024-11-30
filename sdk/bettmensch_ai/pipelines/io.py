@@ -122,6 +122,18 @@ class InputParameter(OriginMixin, Input):
 
         return hera_expression
 
+    @property
+    def template_id(self) -> str:
+        """Utility method to generate a template input reference.
+
+        Returns:
+            str: The hera template input reference expression
+        """
+
+        hera_expression = "{{" + f"inputs.parameters.{self.name}" + "}}"
+
+        return hera_expression
+
     def to_hera(self) -> Parameter:
         # PipelineInput annotated function arguments' default values are
         # retained by the Pipeline class. We only include a default value
@@ -130,27 +142,41 @@ class InputParameter(OriginMixin, Input):
         owner = getattr(self, "owner", None)
         owner_type = getattr(owner, "type", None)
         source_owner = getattr(self.source, "owner", None)
+        source_owner_type = getattr(source_owner, "type", None)
 
-        if owner_type == ResourceType.pipeline.value:
-            # Pipeline owned InputParameters dont reference anything, so its
-            # enough to pass name and value (which might be none)
-            return Parameter(name=self.name, value=self.value)
-        elif owner_type == ResourceType.component.value:
-            # Component owned InputParameters are not always
-            # referencing another InputParameter, so
-            # we reference the source parameter's `id` '{{...}}' expression
-            # only if the provided source has a non-trivial owner. In that
-            # case, the value will be the hera expression referencing the
-            # source argument. If the provided source has no owner, we are
-            # dealing with a hardcoded template function argument spec for this
-            # component, and retain the value (which could be None). This
-            # allows us to hardcode an input to a Component in a Pipeline that
-            # is different to the Component's template function's default value
-            # for that argument, without having to create a PipelineInput.
-            if source_owner is not None:
-                return Parameter(name=self.name, value=self.source.id)
-            else:
+        # If the parameter has a source with an owner, we reference the
+        # source's id.
+        # If the parameter has a source with an owner of type pipeline, and is
+        # owned by a component itself, we reference the source's template_id.
+        # If the parameter has a source with no owner, we are dealing with a
+        # hardcoded task input for this component, and retain the value (which
+        # could be None). This allows us to hardcode an input to a Component in
+        # a Pipeline that is different to the Component's template function's
+        # default value for that argument, without having to create a
+        # PipelineInput.
+        # If the parameter has no source, we simply reference the parameter's
+        # own value
+
+        if self.source is not None:
+            if source_owner is None:
                 return Parameter(name=self.name, value=self.value)
+            if (source_owner_type == ResourceType.pipeline.value) and (
+                owner_type == ResourceType.component.value
+            ):
+                return Parameter(name=self.name, value=self.source.template_id)
+            else:
+                return Parameter(name=self.name, value=self.source.id)
+        else:
+            if owner_type in (
+                ResourceType.pipeline.value,
+                ResourceType.component.value,
+            ):
+                return Parameter(name=self.name, value=self.value)
+            else:
+                raise ValueError(
+                    "Only Pipeline and Component type owners are "
+                    f"supported: {owner_type}"
+                )
 
 
 class OutputParameter(OriginMixin, Output):
@@ -206,14 +232,14 @@ class InputArtifact(OriginMixin, Input):
         if template:
             return Artifact(name=self.name, path=self.path)
         else:
-            source_owner = getattr(self.source, "owner", None)
-            if source_owner is not None:
-                return Artifact(name=self.name, from_=self.source.id)
-            else:
+            if self.source is None:
                 raise ValueError(
                     "InputArtifact must be associated with a source that is "
                     "owned either by a Pipeline or another Component"
                 )
+            source_owner = getattr(self.source, "owner", None)
+            if source_owner is not None:
+                return Artifact(name=self.name, from_=self.source.id)
 
 
 class OutputArtifact(OriginMixin, Output):

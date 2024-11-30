@@ -32,18 +32,25 @@ def test_artifact_pipeline(
     assert parameter_to_artifact.registered_id is None
     assert parameter_to_artifact.registered_name is None
     assert parameter_to_artifact.registered_namespace is None
-    assert set(parameter_to_artifact.inputs.keys()) == {"a"}
+    assert set(parameter_to_artifact.workflow_template_inputs.keys()) == {"a"}
+    assert set(parameter_to_artifact.inner_dag_task_inputs.keys()) == {"a"}
     for pipeline_input_name, pipeline_input_default in (("a", "Param A"),):
         assert (
-            parameter_to_artifact.inputs[pipeline_input_name].name
+            parameter_to_artifact.workflow_template_inputs[
+                pipeline_input_name
+            ].name
             == pipeline_input_name
         )
         assert (
-            parameter_to_artifact.inputs[pipeline_input_name].owner
+            parameter_to_artifact.workflow_template_inputs[
+                pipeline_input_name
+            ].owner
             == parameter_to_artifact
         )
         assert (
-            parameter_to_artifact.inputs[pipeline_input_name].value
+            parameter_to_artifact.workflow_template_inputs[
+                pipeline_input_name
+            ].value
             == pipeline_input_default
         )
     assert isinstance(
@@ -60,9 +67,10 @@ def test_artifact_pipeline(
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "bettmensch-ai-dag",
+        "bettmensch-ai-inner-dag",
         "convert-to-artifact",
         "show-artifact",
+        "bettmensch-ai-outer-dag",
     ]
 
     parameter_to_artifact.export(test_output_dir)
@@ -92,18 +100,25 @@ def test_parameter_pipeline(test_output_dir):
     assert adding_parameters.registered_id is None
     assert adding_parameters.registered_name is None
     assert adding_parameters.registered_namespace is None
-    assert set(adding_parameters.inputs.keys()) == {"a", "b"}
+    assert set(adding_parameters.workflow_template_inputs.keys()) == {"a", "b"}
+    assert set(adding_parameters.inner_dag_task_inputs.keys()) == {"a", "b"}
     for pipeline_input_name, pipeline_input_default in (("a", 1), ("b", 2)):
         assert (
-            adding_parameters.inputs[pipeline_input_name].name
+            adding_parameters.workflow_template_inputs[
+                pipeline_input_name
+            ].name
             == pipeline_input_name
         )
         assert (
-            adding_parameters.inputs[pipeline_input_name].owner
+            adding_parameters.workflow_template_inputs[
+                pipeline_input_name
+            ].owner
             == adding_parameters
         )
         assert (
-            adding_parameters.inputs[pipeline_input_name].value
+            adding_parameters.workflow_template_inputs[
+                pipeline_input_name
+            ].value
             == pipeline_input_default
         )
 
@@ -117,9 +132,10 @@ def test_parameter_pipeline(test_output_dir):
 
     script_template_names = [template.name for template in wft.templates]
     assert script_template_names == [
-        "bettmensch-ai-dag",
+        "bettmensch-ai-inner-dag",
         "a-plus-b",
         "a-plus-b-plus-2",
+        "bettmensch-ai-outer-dag",
     ]
 
     adding_parameters.export(test_output_dir)
