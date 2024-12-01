@@ -7,8 +7,21 @@ from bettmensch_ai.pipelines.constants import (
     FLOW_LABEL,
     ResourceType,
 )
-from bettmensch_ai.pipelines.io import InputParameter, Parameter
-from bettmensch_ai.pipelines.utils import get_func_args, validate_func_args
+from bettmensch_ai.pipelines.io import (
+    InputParameter,
+    OutputArtifact,
+    OutputParameter,
+    Parameter,
+)
+from bettmensch_ai.pipelines.pipeline_context import (
+    PipelineContext,
+    _pipeline_context,
+)
+from bettmensch_ai.pipelines.utils import (
+    build_container_ios,
+    get_func_args,
+    validate_func_args,
+)
 from hera.auth import ArgoCLITokenGenerator
 from hera.shared import global_config
 from hera.workflows import DAG, Workflow, WorkflowsService, WorkflowTemplate
@@ -23,7 +36,6 @@ from hera.workflows.models import (
 
 from .client import ArgoWorkflowsBackendConfiguration, hera_client
 from .flow import Flow, list_flows
-from .pipeline_context import PipelineContext, _pipeline_context
 
 
 class Pipeline(object):
@@ -37,8 +49,11 @@ class Pipeline(object):
     _registered: bool = False
     clear_context: bool = None
     func: Callable = None
-    workflow_template_inputs: Dict[str, InputParameter] = None
-    required_workflow_template_inputs: Dict[str, InputParameter] = None
+    inner_dag_template_inputs: Dict[str, InputParameter] = None
+    required_inner_dag_template_inputs: Dict[str, InputParameter] = None
+    inner_dag_template_outputs: Dict[
+        str, Union[OutputArtifact, OutputParameter]
+    ] = None
     inner_dag_task_inputs: Dict[str, InputParameter] = None
     user_built_workflow_template: WorkflowTemplate = None
     registered_workflow_template: WorkflowTemplate = None
@@ -95,9 +110,12 @@ class Pipeline(object):
         self._namespace = namespace
         self.func = func
         (
-            self.workflow_template_inputs,
-            self.required_workflow_template_inputs,
-        ) = self.build_workflow_template_inputs_from_func(func)
+            self.inner_dag_template_inputs,
+            self.required_inner_dag_template_inputs,
+        ) = self.build_inner_dag_template_inputs_from_func(func)
+        self.inner_dag_template_outputs = (
+            self.build_inner_dag_template_outputs_from_func(func)
+        )
         self.inner_dag_task_inputs = self.build_dag_task_inputs()
         self.user_built_workflow_template = self.build_workflow_template()
         self._built = True
@@ -115,9 +133,12 @@ class Pipeline(object):
 
         self.registered_workflow_template = registered_workflow_template
         (
-            self.workflow_template_inputs,
-            self.required_workflow_template_inputs,
-        ) = self.build_workflow_template_inputs_from_wft()
+            self.inner_dag_template_inputs,
+            self.required_inner_dag_template_inputs,
+        ) = self.build_inner_dag_template_inputs_from_wft()
+        self.inner_dag_template_outputs = (
+            self.build_inner_dag_template_outputs_from_wft()
+        )
         self.inner_dag_task_inputs = self.build_dag_task_inputs()
 
         self._registered = True
@@ -167,7 +188,7 @@ class Pipeline(object):
 
         return self.registered_workflow_template.namespace
 
-    def build_workflow_template_inputs_from_func(
+    def build_inner_dag_template_inputs_from_func(
         self, func: Callable
     ) -> Tuple[Dict[str, InputParameter], Dict[str, InputParameter]]:
         """Generates pipeline inputs from the underlying function. Also
@@ -189,18 +210,23 @@ class Pipeline(object):
                 required inputs.
         """
 
-        validate_func_args(func, argument_types=[InputParameter])
-        func_args = get_func_args(func)
-        required_func_inputs = get_func_args(func, "default", [inspect._empty])
+        validate_func_args(
+            func,
+            argument_types=(InputParameter, OutputArtifact, OutputParameter),
+        )
+        func_args = get_func_args(func, "annotation", (InputParameter,))
+        required_func_inputs = get_func_args(
+            func, "default", (inspect._empty,)
+        )
 
-        workflow_template_inputs = {}
-        required_workflow_template_inputs = {}
+        inner_dag_template_inputs = {}
+        required_inner_dag_template_inputs = {}
 
         for func_arg_name in func_args:
 
             if func_arg_name in required_func_inputs:
                 workflow_template_input = InputParameter(name=func_arg_name)
-                required_workflow_template_inputs[
+                required_inner_dag_template_inputs[
                     func_arg_name
                 ] = workflow_template_input
             else:
@@ -210,25 +236,44 @@ class Pipeline(object):
 
             workflow_template_input.set_owner(self)
 
-            workflow_template_inputs[func_arg_name] = workflow_template_input
+            inner_dag_template_inputs[func_arg_name] = workflow_template_input
 
-        return workflow_template_inputs, required_workflow_template_inputs
+        return inner_dag_template_inputs, required_inner_dag_template_inputs
+
+    def build_inner_dag_template_outputs_from_func(
+        self, func: Callable
+    ) -> Dict[str, Union[OutputParameter, OutputArtifact]]:
+        """Generate a dictionary with all the pipeline's outputs. To be used
+        when defining the template of the inner DAG.
+
+        Args:
+            func (Callable): _description_
+
+        Returns:
+            Dict[str,Union[OutputParameter,OutputArtifact]]: _description_
+        """
+
+        return build_container_ios(
+            self, func, annotation_types=(OutputArtifact, OutputParameter)
+        )
 
     def build_dag_task_inputs(self) -> Dict[str, InputParameter]:
 
         dag_inputs = {}
-        for workflow_template_input in self.workflow_template_inputs.values():
-            dag_input = InputParameter(
-                name=workflow_template_input.name,
-                value=workflow_template_input.value,
+        for (
+            inner_dag_template_input
+        ) in self.inner_dag_template_inputs.values():
+            dag_task_input = InputParameter(
+                name=inner_dag_template_input.name,
+                value=inner_dag_template_input.value,
             )
-            dag_input.set_source(workflow_template_input)
-            dag_input.set_owner(self)
-            dag_inputs[dag_input.name] = dag_input
+            dag_task_input.set_source(inner_dag_template_input)
+            dag_task_input.set_owner(self)
+            dag_inputs[dag_task_input.name] = dag_task_input
 
         return dag_inputs
 
-    def build_workflow_template_inputs_from_wft(
+    def build_inner_dag_template_inputs_from_wft(
         self,
     ) -> Tuple[Dict[str, InputParameter], Dict[str, InputParameter]]:
         """Generates pipeline inputs from the `registered_workflow_template`
@@ -240,25 +285,32 @@ class Pipeline(object):
             Dict[str,InputParameter]: The pipeline's inputs.
         """
 
-        workflow_template_inputs = {}
-        required_workflow_template_inputs = {}
+        inner_dag_template_inputs = {}
+        required_inner_dag_template_inputs = {}
 
         wft_template_inputs = (
             self.registered_workflow_template.arguments.parameters
         )
 
         for wft_input in wft_template_inputs:
-            workflow_template_input = InputParameter(
+            inner_dag_template_input = InputParameter(
                 name=wft_input.name, value=wft_input.value
             )
-            workflow_template_inputs[wft_input.name] = workflow_template_input
+            inner_dag_template_inputs[
+                wft_input.name
+            ] = inner_dag_template_input
 
             if wft_input.value is None:
-                required_workflow_template_inputs[
+                required_inner_dag_template_inputs[
                     wft_input.name
-                ] = workflow_template_input
+                ] = inner_dag_template_input
 
-        return workflow_template_inputs, required_workflow_template_inputs
+        return inner_dag_template_inputs, required_inner_dag_template_inputs
+
+    def build_inner_dag_template_outputs_from_wft(
+        self,
+    ) -> Dict[str, Union[OutputParameter, OutputArtifact]]:
+        return {}
 
     def build_inner_dag(self) -> DAG:
 
@@ -276,7 +328,10 @@ class Pipeline(object):
             name="bettmensch-ai-inner-dag",
             inputs=[
                 dag_input.to_hera()
-                for dag_input in self.workflow_template_inputs.values()
+                for dag_input in self.inner_dag_template_inputs.values()
+            ],
+            outputs=[
+                dag_output.to_hera() for dag_output in self.context.outputs
             ],
         ) as inner_dag:
             for component in self.context.components:
@@ -297,7 +352,12 @@ class Pipeline(object):
             if self.clear_context:
                 self.context.clear()
 
-            self.func(**self.workflow_template_inputs)
+            self.func(
+                **{
+                    **self.inner_dag_template_inputs,
+                    **self.inner_dag_template_outputs,
+                }
+            )
 
         # build task factories
         for component in self.context.components:
@@ -311,7 +371,7 @@ class Pipeline(object):
             namespace=self._namespace,
             arguments=[
                 workflow_template_input.to_hera()
-                for workflow_template_input in self.workflow_template_inputs.values()  # noqa: E501
+                for workflow_template_input in self.inner_dag_template_inputs.values()  # noqa: E501
             ],
         ) as wft:
 

@@ -5,6 +5,7 @@ from hera.shared.serialization import MISSING
 from hera.workflows import Artifact, Parameter, models
 
 from .constants import ArgumentType, IOType, ResourceType
+from .pipeline_context import _pipeline_context
 
 
 class IO(object):
@@ -106,7 +107,35 @@ class OriginMixin(object):
         self.source = source
 
 
-class InputParameter(OriginMixin, Input):
+class OriginInput(OriginMixin, Input):
+    pass
+
+
+class OriginOutput(OriginMixin, Output):
+    def set_source(
+        self,
+        source: Union["InputParameter", "OutputParameter", "OutputArtifact"],
+    ):
+        """Extend the OriginMixin's `set_source` method with the appending to
+        the global pipeline context's `outputs` attribute, but only if the IO
+        instance is owned by a Pipeline.
+
+        Args:
+            source (Union[InputParameter, OutputParameter, OutputArtifact]):
+                The source IO instance.
+        """
+        super().set_source(source)
+
+        owner = getattr(self, "owner", None)
+        owner_type = getattr(owner, "type", None)
+
+        if owner is None:
+            raise ValueError("Owner has not been set yet.")
+        elif owner_type == ResourceType.pipeline.value:
+            _pipeline_context.add_output(self)
+
+
+class InputParameter(OriginInput):
 
     argument_type: str = ArgumentType.parameter.value
 
@@ -182,7 +211,7 @@ class InputParameter(OriginMixin, Input):
                 )
 
 
-class OutputParameter(OriginMixin, Output):
+class OutputParameter(OriginOutput):
 
     argument_type: str = ArgumentType.parameter.value
 
@@ -207,24 +236,33 @@ class OutputParameter(OriginMixin, Output):
 
         owner = getattr(self, "owner", None)
         owner_type = getattr(owner, "type", None)
+        source_owner = getattr(self.source, "owner", None)
+        source_owner_type = getattr(source_owner, "type", None)
 
         if owner_type == ResourceType.pipeline.value:
-            # Pipeline owned InputParameters dont reference anything, so its
-            # enough to pass name and value (which might be none)
-            raise NotImplementedError(
-                "Pipeline owned OutputParameters are not" " supported yet."
-            )
+            if source_owner_type == ResourceType.component.value:
+                return Parameter(name=self.name, value=self.source.id)
+            else:
+                raise TypeError(
+                    f"Invalid type for owner of source parameter:"
+                    f" {source_owner_type}. The owner for the source of a"
+                    " Pipeline owned OutputParameter must be a Component"
+                    " instance."
+                )
         elif owner_type == ResourceType.component.value:
+            # Component owned OutputParameters need to read their values from
+            # the same path that was written to in its `assign` method.
             return Parameter(
                 name=self.name, value_from=models.ValueFrom(path=self.path)
             )
-        raise TypeError(
-            f"The specified parameter owner {owner} has to be one of: "
-            "(Component, TorchDDComponent)."
-        )
+        else:
+            raise TypeError(
+                f"Invalid OutputParameter owner type {owner_type}. Owner has"
+                " be instance of: (Pipeline, Component, TorchDDComponent)."
+            )
 
 
-class InputArtifact(OriginMixin, Input):
+class InputArtifact(OriginInput):
 
     argument_type: str = ArgumentType.artifact.value
 
@@ -245,7 +283,7 @@ class InputArtifact(OriginMixin, Input):
                 return Artifact(name=self.name, from_=self.source.id)
 
 
-class OutputArtifact(OriginMixin, Output):
+class OutputArtifact(OriginOutput):
 
     argument_type: str = ArgumentType.artifact.value
 
@@ -270,12 +308,18 @@ class OutputArtifact(OriginMixin, Output):
 
         owner = getattr(self, "owner", None)
         owner_type = getattr(owner, "type", None)
+        source_owner = getattr(self.source, "owner", None)
+        source_owner_type = getattr(source_owner, "type", None)
 
         if owner_type == ResourceType.pipeline.value:
-            # OutputArtifacts dont reference anything, so its
-            # enough to pass name and path
-            raise NotImplementedError(
-                "Pipeline owned OutputArtifacts are not" " supported yet."
-            )
+            if source_owner_type == ResourceType.component.value:
+                return Artifact(name=self.name, from_=self.source.id)
+            else:
+                raise TypeError(
+                    f"Invalid type for owner of source artifact:"
+                    f" {source_owner_type}. The owner for the source of a"
+                    " Pipeline owned OutputArtifact must be a Component"
+                    " instance."
+                )
         elif owner_type == ResourceType.component.value:
             return Artifact(name=self.name, path=self.path)

@@ -7,4 +7,3 @@ from .pipeline import (  # noqa: F401
     get_registered_pipeline,
     list_registered_pipelines,
 )
-from .pipeline_context import PipelineContext, _pipeline_context  # noqa: F401

@@ -1,5 +1,7 @@
 import inspect
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Union
+
+from .io import InputArtifact, InputParameter, OutputArtifact, OutputParameter
 
 
 def get_func_args(
@@ -61,3 +63,54 @@ def validate_func_args(func: Callable, argument_types: List[type]):
             f"{invalid_func_args}. All function arguments need to be annotated"
             f"with one of {argument_types} types."
         )
+
+
+def build_container_ios(
+    container: Union["Component", "Pipeline"],  # noqa: F821
+    func: Callable,
+    annotation_types: List[
+        Union[InputParameter, InputArtifact, OutputParameter, OutputArtifact]
+    ],
+) -> Dict[str, Union[InputArtifact, OutputParameter, OutputArtifact]]:
+    """Builds the container's template's inputs/outputs based on the
+    underlying function's arguments annotated with the
+    - InputParameter for the template inputs or
+    - OutputsParameter or the
+    - OutputArtifact
+    for the template outputs. To be used in the `build_task_factory`
+    method.
+
+    Note that InputParameter type arguments dont need to be passed
+    explicitly to hera's  @script decorator since they are inferred from
+    the decorated function's argument spec automatically.
+
+    Args:
+        func (Callable): For a Component type contaienr, the function the
+            we want to wrap. For a Pipeline type container, the function
+            that defines the pipeline's DAG.
+        annotation_types:
+            List[Union[InputArtifact,OutputParameter,OutputArtifact]]: The
+            annotation types to extract.
+    Returns:
+        Dict[str,Union[
+                InputParameter,
+                InputArtifact,
+                OutputParameter,
+                OutputArtifact
+                ]
+            ]: For a Copmonent type container, its template's
+            inputs/outputs. For a Pipeline type container, its DAG's
+            inputs/outputs.
+    """
+
+    func_ios = get_func_args(func, "annotation", annotation_types)
+
+    template_ios = {}
+
+    for io_name, io_param in func_ios.items():
+        template_io = io_param.annotation(name=io_name)
+        template_io.set_owner(container)
+
+        template_ios[io_name] = template_io
+
+    return template_ios

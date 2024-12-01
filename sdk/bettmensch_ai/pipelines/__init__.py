@@ -29,8 +29,6 @@ from .io import (  # noqa: F401
 from .pipeline import (  # noqa: F401
     Flow,
     Pipeline,
-    PipelineContext,
-    _pipeline_context,
     as_pipeline,
     delete_flow,
     delete_registered_pipeline,

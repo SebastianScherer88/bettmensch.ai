@@ -1,11 +1,18 @@
-from typing import List
+from typing import List, Union
+
+# from bettmensch_ai.pipelines.constants import ResourceType
 
 
 class PipelineContext(object):
     """Globally accessible pipeline meta data storage utility."""
 
     _active: bool = False
-    components: List = []
+    components: List[
+        Union["Component", "TorchDDPComponent"]  # noqa: F821
+    ] = []
+    outputs: List[
+        Union["OutputParameter", "OutputArtifact"]  # noqa: F821
+    ] = []
 
     @property
     def active(self):
@@ -40,7 +47,9 @@ class PipelineContext(object):
 
         return counter
 
-    def add_component(self, component):
+    def add_component(
+        self, component: Union["Component", "TorchDDPComponent"]  # noqa: F821
+    ):
         """Adds the specified Component instance to the global PipelineContext.
 
         Args:
@@ -64,6 +73,43 @@ class PipelineContext(object):
                 "context is not active."
             )
 
+    def validate_output(
+        self, output: Union["OutputParameter", "OutputArtifact"]  # noqa: F821
+    ):
+        """Utility to validate the suggested output about to be added to the
+        global pipeline context.
+
+        Args:
+            output (Union[OutputParameter, OutputArtifact]): The output about
+            to be added.
+        """
+
+        # validate global uniqueness of pipeline output
+        present_names = [output.name for output in self.outputs]
+        assert output.name not in present_names, (
+            f"Output with name {output.name} already present in global"
+            " pipeline context."
+        )
+
+    def add_output(
+        self, output: Union["OutputParameter", "OutputArtifact"]  # noqa: F821
+    ):
+        """Addes the specified output instance to the global PipelineContext
+
+        Args:
+            output (Union[OutputParameter, OutputArtifact]): A Pipeline owned
+                output instance that will be added.
+        """
+
+        if self.active:
+            self.validate_output(output)
+            self.outputs.append(output)
+        else:
+            raise Exception(
+                f"Unable to add output {output.name}: {output} - pipeline"
+                " context is not active."
+            )
+
     def clear(self):
         """Removes all components from the active PipelineContext. Useful when
         defining a (new) Pipeline and you want to ensure a clean slate.
@@ -74,10 +120,11 @@ class PipelineContext(object):
         """
         if self.active:
             self.components = []
+            self.outputs = []
         else:
             raise Exception(
-                "Unable to clear components from context - pipeline context "
-                "is not active."
+                "Unable to clear components and outputs from context -"
+                " pipeline context is not active."
             )
 
     def __enter__(self):
