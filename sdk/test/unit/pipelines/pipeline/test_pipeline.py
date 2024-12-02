@@ -3,7 +3,7 @@ from bettmensch_ai.pipelines.pipeline.examples import (
     adding_parameters_pipeline,
     parameter_to_artifact_pipeline,
 )
-from hera.workflows import Artifact, Parameter
+from hera.workflows import Artifact, Parameter, models
 
 
 def test_artifact_pipeline(
@@ -132,7 +132,9 @@ def test_parameter_pipeline(test_output_dir):
     assert inner_dag_template.outputs == [
         Parameter(
             name="sum",
-            value="{{tasks.a-plus-b-plus-2-0.outputs.parameters.sum}}",
+            value_from=models.ValueFrom(
+                parameter="{{tasks.a-plus-b-plus-2-0.outputs.parameters.sum}}"
+            ),
         ),
     ]
     inner_dag_template_tasks = inner_dag_template.tasks

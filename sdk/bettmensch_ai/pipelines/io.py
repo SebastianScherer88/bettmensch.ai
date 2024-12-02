@@ -247,7 +247,10 @@ class OutputParameter(OriginOutput):
 
         if owner_type == ResourceType.pipeline.value:
             if source_owner_type == ResourceType.component.value:
-                return Parameter(name=self.name, value=self.source.id)
+                return Parameter(
+                    name=self.name,
+                    value_from=models.ValueFrom(parameter=self.source.id),
+                )
             else:
                 raise TypeError(
                     f"Invalid type for owner of source parameter:"
