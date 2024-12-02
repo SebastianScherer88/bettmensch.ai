@@ -143,12 +143,21 @@ def test_input_artifact_to_hera(
             ),
         ),
         (
-            "test_mock_component",
+            "test_mock_pipeline",
             InputParameter("test_source_name"),
             "test_mock_pipeline",
             Parameter(
                 name="test_name",
                 value="{{workflow.parameters.test_source_name}}",
+            ),
+        ),
+        (
+            "test_mock_component",
+            InputParameter("test_source_name"),
+            "test_mock_pipeline",
+            Parameter(
+                name="test_name",
+                value="{{inputs.parameters.test_source_name}}",
             ),
         ),
     ],

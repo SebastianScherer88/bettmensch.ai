@@ -16,7 +16,7 @@ from bettmensch_ai.pipelines.io import (
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipelines.pipeline import _pipeline_context
+from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 

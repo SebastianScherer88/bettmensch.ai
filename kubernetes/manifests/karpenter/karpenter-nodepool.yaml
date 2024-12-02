@@ -49,7 +49,7 @@ spec:
           values: ["2"]
         - key: karpenter.sh/capacity-type
           operator: In
-          values: ["on-demand"]
+          values: ["spot","on-demand"]
       taints:
         - key: nvidia.com/gpu
           value: "true"
@@ -57,7 +57,7 @@ spec:
   limits:
     cpu: 100
     memory: 1000Gi
-    nvidia.com/gpu: 5
+    nvidia.com/gpu: 8
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # dont go lower to prevent decomissioning bc of image pull phase
@@ -92,7 +92,7 @@ spec:
   limits:
     cpu: 200
     memory: 2000Gi
-    nvidia.com/gpu: 5
+    nvidia.com/gpu: 8
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 30m # larger training images take longer to pull

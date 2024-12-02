@@ -78,26 +78,13 @@ def train_transformer(
     base_lr: InputParameter = 1.0,
     max_padding: InputParameter = 72,
     warmup: InputParameter = 3000,
-    trained_transformer: OutputArtifact = None,
+    model_checkpoints: OutputArtifact = None,
     training_config: OutputParameter = None,
 ):
-    import os
-
     from bettmensch_ai.pipelines.component.examples.annotated_transformer.training import (  # noqa: E501
         TrainConfig,
         train_worker,
     )
-
-    # make sure model artifact export directory exists
-    if trained_transformer is not None:
-        if not os.path.exists(trained_transformer.path):
-            os.makedirs(trained_transformer.path)
-
-        file_prefix = os.path.join(
-            trained_transformer.path, f"{dataset}_model_"
-        )
-    else:
-        file_prefix = os.path.join(".", f"{dataset}_model_")
 
     config = TrainConfig(
         dataset=dataset,
@@ -113,13 +100,12 @@ def train_transformer(
         base_lr=base_lr,
         max_padding=max_padding,
         warmup=warmup,
-        file_prefix=file_prefix,
+        output_directory=model_checkpoints.path,
     )
 
     train_worker(config)
 
-    if training_config is not None:
-        training_config.assign(config)
+    training_config.assign(config)
 
 
 get_tokenizers_and_vocabularies_factory = as_component(

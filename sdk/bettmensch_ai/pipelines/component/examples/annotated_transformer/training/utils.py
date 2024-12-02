@@ -90,7 +90,7 @@ class TrainConfig(BaseModel):
     base_lr: float = 1.0
     max_padding: int = 72
     warmup: int = 3000
-    file_prefix: str = "model_"
+    output_directory: str = "."
 
     @validator("dataset")
     def check_languages(v):

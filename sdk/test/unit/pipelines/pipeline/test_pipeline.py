@@ -1,11 +1,9 @@
-from bettmensch_ai.pipelines.component.examples import (
-    add_parameters_factory,
-    convert_to_artifact_factory,
-    show_parameter_factory,
-)
 from bettmensch_ai.pipelines.io import InputParameter
-from bettmensch_ai.pipelines.pipeline import as_pipeline
-from hera.workflows import WorkflowTemplate
+from bettmensch_ai.pipelines.pipeline.examples import (
+    adding_parameters_pipeline,
+    parameter_to_artifact_pipeline,
+)
+from hera.workflows import Artifact, Parameter, models
 
 
 def test_artifact_pipeline(
@@ -13,113 +11,162 @@ def test_artifact_pipeline(
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
-    @as_pipeline("test-artifact-pipeline", "argo", True)
-    def parameter_to_artifact(
-        a: InputParameter = "Param A",
-    ) -> None:
-        convert = convert_to_artifact_factory(
-            "convert-to-artifact",
-            a=a,
-        )
+    # export pipeline to allow for manual checks
+    parameter_to_artifact_pipeline.export(test_output_dir)
 
-        show_parameter_factory(
-            "show-artifact",
-            a=convert.outputs["a_art"],
-        )
+    # --- validate pipeline instance's basic attributes
+    assert parameter_to_artifact_pipeline.built
+    assert not parameter_to_artifact_pipeline.registered
+    assert parameter_to_artifact_pipeline.registered_id is None
+    assert parameter_to_artifact_pipeline.registered_name is None
+    assert parameter_to_artifact_pipeline.registered_namespace is None
 
-    assert parameter_to_artifact.built
-    assert not parameter_to_artifact.registered
-    assert parameter_to_artifact.registered_id is None
-    assert parameter_to_artifact.registered_name is None
-    assert parameter_to_artifact.registered_namespace is None
-    assert set(parameter_to_artifact.inputs.keys()) == {"a"}
-    for pipeline_input_name, pipeline_input_default in (("a", "Param A"),):
-        assert (
-            parameter_to_artifact.inputs[pipeline_input_name].name
-            == pipeline_input_name
-        )
-        assert (
-            parameter_to_artifact.inputs[pipeline_input_name].owner
-            == parameter_to_artifact
-        )
-        assert (
-            parameter_to_artifact.inputs[pipeline_input_name].value
-            == pipeline_input_default
-        )
-    assert isinstance(
-        parameter_to_artifact.user_built_workflow_template, WorkflowTemplate
-    )
+    # --- validate pipeline instance's io attributes
+    # test outputs of `build_inputs_from_func`
+    assert parameter_to_artifact_pipeline.inputs == {
+        "a": InputParameter(name="a", value="Param A").set_owner(
+            parameter_to_artifact_pipeline
+        ),
+    }
+    assert parameter_to_artifact_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_func`
+    # we dont have access to the output's Component type owner, so can only
+    # verify the name here.
+    assert list(parameter_to_artifact_pipeline.outputs.keys()) == [
+        "b",
+    ]
+    # test outputs of `build_task_inputs`
+    assert parameter_to_artifact_pipeline.task_inputs == {
+        "a": InputParameter(name="a")
+        .set_owner(parameter_to_artifact_pipeline)
+        .set_source(parameter_to_artifact_pipeline.inputs["a"]),
+    }
 
-    wft = parameter_to_artifact.user_built_workflow_template
+    # --- validate pipeline instance's `user_built_workflow_template` attribute
+    wft = parameter_to_artifact_pipeline.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == [
+    # validate spec
+    assert wft.entrypoint == "bettmensch-ai-outer-dag"
+    assert wft.arguments == [Parameter(name="a", value="Param A")]
+
+    # validate inner dag template
+    inner_dag_template = wft.templates[0]
+    assert inner_dag_template.name == "bettmensch-ai-inner-dag"
+    assert inner_dag_template.inputs == [
+        Parameter(name="a", value="Param A"),
+    ]
+    assert inner_dag_template.outputs == [
+        Artifact(
+            name="b", from_="{{tasks.show-artifact-0.outputs.artifacts.b}}"
+        ),
+    ]
+    inner_dag_template_tasks = inner_dag_template.tasks
+    assert [task.name for task in inner_dag_template_tasks] == [
         "convert-to-artifact-0",
         "show-artifact-0",
     ]
 
-    script_template_names = [template.name for template in wft.templates]
+    # validate script templates
+    script_template_names = [template.name for template in wft.templates[1:-1]]
     assert script_template_names == [
-        "bettmensch-ai-dag",
         "convert-to-artifact",
         "show-artifact",
     ]
 
-    parameter_to_artifact.export(test_output_dir)
+    # validate outer dag template
+    outer_dag_template = wft.templates[-1]
+    assert outer_dag_template.name == "bettmensch-ai-outer-dag"
+    outer_dag_template_task = outer_dag_template.tasks[0]
+    assert outer_dag_template_task.name == "bettmensch-ai-inner-dag"
+    assert outer_dag_template_task.arguments == [
+        Parameter(name="a", value="{{workflow.parameters.a}}"),
+    ]
 
 
 def test_parameter_pipeline(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    @as_pipeline("test-parameter-pipeline", "argo", True)
-    def adding_parameters(
-        a: InputParameter = 1, b: InputParameter = 2
-    ) -> None:  # noqa: E501
-        a_plus_b = add_parameters_factory(
-            "a-plus-b",
-            a=a,
-            b=b,
-        )
+    # export pipeline to allow for manual checks
+    adding_parameters_pipeline.export(test_output_dir)
 
-        add_parameters_factory(
-            "a-plus-b-plus-2",
-            a=a_plus_b.outputs["sum"],
-            b=InputParameter("two", 2),
-        )
+    # --- validate pipeline instance's basic attributes
+    assert adding_parameters_pipeline.built
+    assert not adding_parameters_pipeline.registered
+    assert adding_parameters_pipeline.registered_id is None
+    assert adding_parameters_pipeline.registered_name is None
+    assert adding_parameters_pipeline.registered_namespace is None
 
-    assert adding_parameters.built
-    assert not adding_parameters.registered
-    assert adding_parameters.registered_id is None
-    assert adding_parameters.registered_name is None
-    assert adding_parameters.registered_namespace is None
-    assert set(adding_parameters.inputs.keys()) == {"a", "b"}
-    for pipeline_input_name, pipeline_input_default in (("a", 1), ("b", 2)):
-        assert (
-            adding_parameters.inputs[pipeline_input_name].name
-            == pipeline_input_name
-        )
-        assert (
-            adding_parameters.inputs[pipeline_input_name].owner
-            == adding_parameters
-        )
-        assert (
-            adding_parameters.inputs[pipeline_input_name].value
-            == pipeline_input_default
-        )
+    # --- validate pipeline instance's io attributes
+    # test outputs of `build_inputs_from_func`
+    assert adding_parameters_pipeline.inputs == {
+        "a": InputParameter(name="a", value=1).set_owner(
+            adding_parameters_pipeline
+        ),
+        "b": InputParameter(name="b", value=2).set_owner(
+            adding_parameters_pipeline
+        ),
+    }
+    assert adding_parameters_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_func`
+    # we dont have access to the output's Component type owner, so can only
+    # verify the name here.
+    assert list(adding_parameters_pipeline.outputs.keys()) == [
+        "sum",
+    ]
+    # test outputs of `build_task_inputs`
+    assert adding_parameters_pipeline.task_inputs == {
+        "a": InputParameter(name="a")
+        .set_owner(adding_parameters_pipeline)
+        .set_source(adding_parameters_pipeline.inputs["a"]),
+        "b": InputParameter(name="b")
+        .set_owner(adding_parameters_pipeline)
+        .set_source(adding_parameters_pipeline.inputs["b"]),
+    }
 
-    wft = adding_parameters.user_built_workflow_template
+    # --- validate pipeline instance's `user_built_workflow_template` attribute
+    wft = adding_parameters_pipeline.user_built_workflow_template
 
-    task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == [
+    # validate spec
+    assert wft.entrypoint == "bettmensch-ai-outer-dag"
+    assert wft.arguments == [
+        Parameter(name="a", value=1),
+        Parameter(name="b", value=2),
+    ]
+
+    # validate inner dag template
+    inner_dag_template = wft.templates[0]
+    assert inner_dag_template.name == "bettmensch-ai-inner-dag"
+    assert inner_dag_template.inputs == [
+        Parameter(name="a", value=1),
+        Parameter(name="b", value=2),
+    ]
+    assert inner_dag_template.outputs == [
+        Parameter(
+            name="sum",
+            value_from=models.ValueFrom(
+                parameter="{{tasks.a-plus-b-plus-2-0.outputs.parameters.sum}}"
+            ),
+        ),
+    ]
+    inner_dag_template_tasks = inner_dag_template.tasks
+    assert [task.name for task in inner_dag_template_tasks] == [
         "a-plus-b-0",
         "a-plus-b-plus-2-0",
     ]
 
-    script_template_names = [template.name for template in wft.templates]
+    # validate script templates
+    script_template_names = [template.name for template in wft.templates[1:-1]]
     assert script_template_names == [
-        "bettmensch-ai-dag",
         "a-plus-b",
         "a-plus-b-plus-2",
     ]
 
-    adding_parameters.export(test_output_dir)
+    # validate outer dag template
+    outer_dag_template = wft.templates[-1]
+    assert outer_dag_template.name == "bettmensch-ai-outer-dag"
+    outer_dag_template_task = outer_dag_template.tasks[0]
+    assert outer_dag_template_task.name == "bettmensch-ai-inner-dag"
+    assert outer_dag_template_task.arguments == [
+        Parameter(name="a", value="{{workflow.parameters.a}}"),
+        Parameter(name="b", value="{{workflow.parameters.b}}"),
+    ]

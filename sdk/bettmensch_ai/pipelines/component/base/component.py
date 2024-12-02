@@ -15,8 +15,12 @@ from bettmensch_ai.pipelines.io import (
     OutputArtifact,
     OutputParameter,
 )
-from bettmensch_ai.pipelines.pipeline.pipeline_context import _pipeline_context
-from bettmensch_ai.pipelines.utils import get_func_args, validate_func_args
+from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
+from bettmensch_ai.pipelines.utils import (
+    build_container_ios,
+    get_func_args,
+    validate_func_args,
+)
 from hera.workflows import Resources, Script, Task, models
 from hera.workflows.models import ImagePullPolicy
 
@@ -84,9 +88,11 @@ class BaseComponent(object):
                 OutputArtifact,
             ],
         )
-        self.template_inputs = self.build_template_ios(func, (InputArtifact,))
-        self.template_outputs = self.build_template_ios(
-            func, (OutputParameter, OutputArtifact)
+        self.template_inputs = build_container_ios(
+            self, func, (InputArtifact,)
+        )
+        self.template_outputs = build_container_ios(
+            self, func, (OutputParameter, OutputArtifact)
         )
         self.task_inputs = self.build_task_inputs(func, task_inputs)
 
@@ -122,52 +128,6 @@ class BaseComponent(object):
         context wide unique identifier for the task node."""
 
         return f"{self.base_name}-{n}"
-
-    def build_template_ios(
-        self,
-        func: Callable,
-        annotation_types: List[
-            Union[InputArtifact, OutputParameter, OutputArtifact]
-        ],
-    ) -> Dict[str, Union[InputArtifact, OutputParameter, OutputArtifact]]:
-        """Builds the Component's template's inputs/outputs based on the
-        underlying function's arguments annotated with the
-        - InputParameter for the template inputs or
-        - OutputsParameter or the
-        - OutputArtifact
-        for the template outputs. To be used in the `build_task_factory`
-        method.
-
-        Note that InputParameter type arguments dont need to be passed
-        explicitly to hera's  @script decorator since they are inferred from
-        the decorated function's argument spec automatically.
-
-        Args:
-            func (Callable): The function the we want to wrap in a Component.
-            annotation_types:
-                List[Union[InputArtifact,OutputParameter,OutputArtifact]]: The
-                annotation types to extract.
-        Returns:
-            Dict[str,Union[
-                    InputParameter,
-                    InputArtifact,
-                    OutputParameter,
-                    OutputArtifact
-                    ]
-                ]: The component's template's inputs/outputs.
-        """
-
-        func_ios = get_func_args(func, "annotation", annotation_types)
-
-        template_ios = {}
-
-        for io_name, io_param in func_ios.items():
-            template_io = io_param.annotation(name=io_name)
-            template_io.set_owner(self)
-
-            template_ios[io_name] = template_io
-
-        return template_ios
 
     def build_task_inputs(
         self,
@@ -343,7 +303,9 @@ class BaseComponent(object):
 
         return script_decorator_kwargs
 
-    def build_hera_task_factory(self) -> Union[Callable, List[Callable]]:
+    def build_hera_task_factory(
+        self,
+    ) -> Union[Callable[..., Task], List[Callable[..., Task]]]:
         """Generates the task factory task_wrapper callable from the
         hera.workflows.script decorator definition. Needs to be called outide
         of an active hera context.

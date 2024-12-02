@@ -131,6 +131,14 @@ class LaunchContext(BaseSettings):
     # (global) node rank
     group_rank: int  # same as node_rank in the LaunchConfigSettings
 
+    @property
+    def is_local_main_process(self) -> bool:
+        return self.local_rank == 0
+
+    @property
+    def is_global_main_process(self) -> bool:
+        return self.rank == 0
+
 
 def as_torch_ddp(**config_settings_kwargs):
     """Keyword decorator that wraps a callable in a torch distributed elastic
