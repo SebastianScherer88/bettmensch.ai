@@ -452,7 +452,7 @@ class Pipeline(object):
         inputs: Dict[str, Any],
         wait: bool = False,
         poll_interval: int = 5,
-    ) -> WorkflowModel:
+    ) -> Flow:
         """Run a Flow using the registered Pipeline instance and user specified
         inputs.
 
@@ -461,9 +461,8 @@ class Pipeline(object):
                 yet.
 
         Returns:
-            WorkflowModel: The return of the Workflow.create class method call.
-                Note that this is not the same as the hera.workflows.Workflow
-                class.
+            Flow: The Flow obtained from the argo Workflow that was created by
+                running the pipeline.
         """
 
         # validate registration status of pipeline
@@ -514,7 +513,7 @@ class Pipeline(object):
             wait=wait, poll_interval=poll_interval
         )
 
-        return registered_workflow
+        return Flow.from_workflow_model(registered_workflow)
 
     @classmethod
     def from_workflow_template(

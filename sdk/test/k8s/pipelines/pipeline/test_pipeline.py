@@ -11,7 +11,7 @@ from bettmensch_ai.pipelines.component.examples import (
     show_parameter_factory,
     tensor_reduce_torch_ddp_factory,
 )
-from bettmensch_ai.pipelines.constants import COMPONENT_IMAGE
+from bettmensch_ai.pipelines.constants import COMPONENT_IMAGE, FLOW_PHASE
 from bettmensch_ai.pipelines.io import InputParameter
 from bettmensch_ai.pipelines.pipeline.examples import (
     adding_parameters_pipeline,
@@ -63,7 +63,7 @@ def test_artifact_pipeline_decorator_and_register_and_run(
         wait=True,
     )
 
-    assert parameter_to_artifact_flow.status.phase == "Succeeded"
+    assert parameter_to_artifact_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.standard
@@ -108,7 +108,7 @@ def test_parameter_pipeline_decorator_and_register_and_run(
         {"a": -100, "b": 100}, wait=True
     )
 
-    assert adding_parameters_flow.status.phase == "Succeeded"
+    assert adding_parameters_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.standard
@@ -166,9 +166,9 @@ def test_list_registered_standard_pipelines(
             {"workflows.argoproj.io/completed": "true"},
             1,
         ),
-        ("test-artifact-pipeline-", "Succeeded", {}, 1),
+        ("test-artifact-pipeline-", FLOW_PHASE.succeeded.value, {}, 1),
         ("test-artifact-pipeline-", None, {"invalid-label": "test"}, 0),
-        ("test-artifact-pipeline-", "Failed", {}, 0),
+        ("test-artifact-pipeline-", FLOW_PHASE.failed.value, {}, 0),
         ("test-parameter-pipeline-", None, {}, 1),
     ],
 )
@@ -239,7 +239,7 @@ def test_run_standard_registered_pipelines_from_registry(
     assert registered_pipeline.registered_namespace == test_namespace
 
     flow = registered_pipeline.run(test_pipeline_inputs, wait=True)
-    assert flow.status.phase == "Succeeded"
+    assert flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.ddp
@@ -312,7 +312,7 @@ def test_torch_ddp_pipeline_decorator_and_register_and_run(
         {"n_iter": 15, "n_seconds_sleep": 2}, wait=True
     )
 
-    assert torch_ddp_flow.status.phase == "Succeeded"
+    assert torch_ddp_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.ddp
@@ -385,7 +385,7 @@ def test_lightning_ddp_pipeline_decorator_and_register_and_run(
         {"max_time": "00:00:00:30"}, wait=True
     )
 
-    assert lightning_ddp_flow.status.phase == "Succeeded"
+    assert lightning_ddp_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.ddp
@@ -467,7 +467,7 @@ def test_run_dpp_registered_pipelines_from_registry(
     assert registered_pipeline.registered_namespace == test_namespace
 
     flow = registered_pipeline.run(test_pipeline_inputs, wait=True)
-    assert flow.status.phase == "Succeeded"
+    assert flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.standard
