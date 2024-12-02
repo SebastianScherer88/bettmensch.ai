@@ -57,6 +57,20 @@ def get_train_transformer_pipeline(
                 )
             ]
 
+        if n_nodes > 1:
+            # force different k8s nodes where applicable to ensure a multi-node
+            # run is genuinely multi-node not just at the torchrun level but
+            # also at the k8s level. For testing coverage purposes only
+            hera_template_kwargs[
+                "pod_spec_patch"
+            ] = """topologySpreadConstraints:
+- maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: DoNotSchedule
+  labelSelector:
+    matchExpressions:
+      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}"""
+
         train_transformer = (  # noqa: F841
             train_transformer_factory(
                 "train-transformer",
