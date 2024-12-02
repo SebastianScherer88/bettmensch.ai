@@ -4,7 +4,6 @@ from bettmensch_ai.pipelines import (
     Pipeline,
     as_pipeline,
     delete_registered_pipeline,
-    get_registered_pipeline,
     list_registered_pipelines,
 )
 from bettmensch_ai.pipelines.component.examples import (
@@ -43,6 +42,20 @@ def test_artifact_pipeline_decorator_and_register_and_run(
         parameter_to_artifact_pipeline.registered_namespace == test_namespace
     )  # noqa: E501
 
+    # test outputs of `build_inputs_from_wft`
+    assert parameter_to_artifact_pipeline.inputs == {
+        "a": InputParameter(name="a", value="Param A").set_owner(
+            parameter_to_artifact_pipeline
+        ),
+    }
+    assert parameter_to_artifact_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_wft`
+    # we dont have access to the output's Component type owner, so can only
+    # verify the name here.
+    assert list(parameter_to_artifact_pipeline.outputs.keys()) == [
+        "b",
+    ]
+
     parameter_to_artifact_flow = parameter_to_artifact_pipeline.run(
         {
             "a": "First integration test value a",
@@ -73,6 +86,23 @@ def test_parameter_pipeline_decorator_and_register_and_run(
         f"pipeline-{adding_parameters_pipeline.name}-"
     )
     assert adding_parameters_pipeline.registered_namespace == test_namespace
+
+    # test outputs of `build_inputs_from_wft`
+    assert adding_parameters_pipeline.inputs == {
+        "a": InputParameter(name="a", value=1).set_owner(
+            adding_parameters_pipeline
+        ),
+        "b": InputParameter(name="b", value=2).set_owner(
+            adding_parameters_pipeline
+        ),
+    }
+    assert adding_parameters_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_wft`
+    # we dont have access to the output's Component type owner, so can only
+    # verify the name here.
+    assert list(adding_parameters_pipeline.outputs.keys()) == [
+        "sum",
+    ]
 
     adding_parameters_flow = adding_parameters_pipeline.run(
         {"a": -100, "b": 100}, wait=True
@@ -197,7 +227,7 @@ def test_run_standard_registered_pipelines_from_registry(
         registered_name_pattern=test_registered_pipeline_name_pattern,
     )[0].registered_name
 
-    registered_pipeline = get_registered_pipeline(
+    registered_pipeline = Pipeline.from_registry(
         registered_pipeline_name, test_namespace
     )
 
@@ -425,7 +455,7 @@ def test_run_dpp_registered_pipelines_from_registry(
         registered_name_pattern=test_registered_pipeline_name_pattern,
     )[0].registered_name
 
-    registered_pipeline = get_registered_pipeline(
+    registered_pipeline = Pipeline.from_registry(
         registered_pipeline_name, test_namespace
     )
 

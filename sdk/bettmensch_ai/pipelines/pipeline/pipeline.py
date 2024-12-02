@@ -279,9 +279,9 @@ class Pipeline(object):
         inner_dag_template_inputs = {}
         required_inner_dag_template_inputs = {}
 
-        wft_template_inputs = (
-            self.registered_workflow_template.arguments.parameters
-        )
+        wft_template_inputs = self.registered_workflow_template.templates[
+            0
+        ].inputs.parameters
 
         for wft_input in wft_template_inputs:
             inner_dag_template_input = InputParameter(
@@ -301,7 +301,30 @@ class Pipeline(object):
     def build_outputs_from_wft(
         self,
     ) -> Dict[str, Union[OutputParameter, OutputArtifact]]:
-        return {}
+
+        inner_dag_template_outputs = {}
+
+        wft_template_output_parameters = (
+            self.registered_workflow_template.templates[0].outputs.parameters
+        )
+
+        wft_template_output_artifacts = (
+            self.registered_workflow_template.templates[0].outputs.artifacts
+        )
+
+        for wft_output_parameter in wft_template_output_parameters:
+            inner_dag_template_outputs[
+                wft_output_parameter.name
+            ] = OutputParameter(name=wft_output_parameter.name,).set_owner(
+                self
+            )
+
+        for wft_output_artifact in wft_template_output_artifacts:
+            inner_dag_template_outputs[
+                wft_output_artifact.name
+            ] = OutputArtifact(name=wft_output_artifact.name,).set_owner(self)
+
+        return inner_dag_template_outputs
 
     def build_inner_dag(self) -> DAG:
 

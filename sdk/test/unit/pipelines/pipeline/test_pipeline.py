@@ -22,17 +22,20 @@ def test_artifact_pipeline(
     assert parameter_to_artifact_pipeline.registered_namespace is None
 
     # --- validate pipeline instance's io attributes
+    # test outputs of `build_inputs_from_func`
     assert parameter_to_artifact_pipeline.inputs == {
         "a": InputParameter(name="a", value="Param A").set_owner(
             parameter_to_artifact_pipeline
         ),
     }
     assert parameter_to_artifact_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_func`
     # we dont have access to the output's Component type owner, so can only
     # verify the name here.
     assert list(parameter_to_artifact_pipeline.outputs.keys()) == [
         "b",
     ]
+    # test outputs of `build_task_inputs`
     assert parameter_to_artifact_pipeline.task_inputs == {
         "a": InputParameter(name="a")
         .set_owner(parameter_to_artifact_pipeline)
@@ -94,6 +97,7 @@ def test_parameter_pipeline(test_output_dir):
     assert adding_parameters_pipeline.registered_namespace is None
 
     # --- validate pipeline instance's io attributes
+    # test outputs of `build_inputs_from_func`
     assert adding_parameters_pipeline.inputs == {
         "a": InputParameter(name="a", value=1).set_owner(
             adding_parameters_pipeline
@@ -103,11 +107,13 @@ def test_parameter_pipeline(test_output_dir):
         ),
     }
     assert adding_parameters_pipeline.required_inputs == {}
+    # test outputs of `build_outputs_from_func`
     # we dont have access to the output's Component type owner, so can only
     # verify the name here.
     assert list(adding_parameters_pipeline.outputs.keys()) == [
         "sum",
     ]
+    # test outputs of `build_task_inputs`
     assert adding_parameters_pipeline.task_inputs == {
         "a": InputParameter(name="a")
         .set_owner(adding_parameters_pipeline)
