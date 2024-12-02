@@ -219,16 +219,16 @@ class Pipeline(object):
         for func_arg_name in func_args:
 
             if func_arg_name in required_func_inputs:
-                workflow_template_input = InputParameter(name=func_arg_name)
+                workflow_template_input = InputParameter(
+                    name=func_arg_name
+                ).set_owner(self)
                 required_inner_dag_template_inputs[
                     func_arg_name
                 ] = workflow_template_input
             else:
                 workflow_template_input = InputParameter(
                     name=func_arg_name, value=func_args[func_arg_name].default
-                )
-
-            workflow_template_input.set_owner(self)
+                ).set_owner(self)
 
             inner_dag_template_inputs[func_arg_name] = workflow_template_input
 
@@ -284,17 +284,26 @@ class Pipeline(object):
         ].inputs.parameters
 
         for wft_input in wft_template_inputs:
-            inner_dag_template_input = InputParameter(
-                name=wft_input.name, value=wft_input.value
-            )
-            inner_dag_template_inputs[
-                wft_input.name
-            ] = inner_dag_template_input
 
             if wft_input.value is None:
+                inner_dag_template_input = InputParameter(
+                    name=wft_input.name
+                ).set_owner(self)
                 required_inner_dag_template_inputs[
                     wft_input.name
                 ] = inner_dag_template_input
+            else:
+                try:
+                    input_value = float(wft_input.value)
+                except (ValueError, TypeError):
+                    input_value = str(wft_input.value)
+                inner_dag_template_input = InputParameter(
+                    name=wft_input.name, value=input_value
+                ).set_owner(self)
+
+            inner_dag_template_inputs[
+                wft_input.name
+            ] = inner_dag_template_input
 
         return inner_dag_template_inputs, required_inner_dag_template_inputs
 
@@ -312,17 +321,21 @@ class Pipeline(object):
             self.registered_workflow_template.templates[0].outputs.artifacts
         )
 
-        for wft_output_parameter in wft_template_output_parameters:
-            inner_dag_template_outputs[
-                wft_output_parameter.name
-            ] = OutputParameter(name=wft_output_parameter.name,).set_owner(
-                self
-            )
+        if wft_template_output_parameters is not None:
+            for wft_output_parameter in wft_template_output_parameters:
+                inner_dag_template_outputs[
+                    wft_output_parameter.name
+                ] = OutputParameter(name=wft_output_parameter.name,).set_owner(
+                    self
+                )
 
-        for wft_output_artifact in wft_template_output_artifacts:
-            inner_dag_template_outputs[
-                wft_output_artifact.name
-            ] = OutputArtifact(name=wft_output_artifact.name,).set_owner(self)
+        if wft_template_output_artifacts is not None:
+            for wft_output_artifact in wft_template_output_artifacts:
+                inner_dag_template_outputs[
+                    wft_output_artifact.name
+                ] = OutputArtifact(name=wft_output_artifact.name,).set_owner(
+                    self
+                )
 
         return inner_dag_template_outputs
 
