@@ -1,4 +1,5 @@
 import pytest
+from bettmensch_ai.pipelines.constants import FLOW_PHASE
 from bettmensch_ai.pipelines.pipeline.examples import (
     train_transformer_pipeline_1n_1p,
     train_transformer_pipeline_1n_2p,
@@ -40,7 +41,7 @@ def test_train_transformer_pipeline_1n_1p_decorator_and_register_and_run(
         wait=True,
     )
 
-    assert train_transformer_flow.status.phase == "Succeeded"
+    assert train_transformer_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.train_transformer
@@ -82,7 +83,7 @@ def test_train_transformer_pipeline_1n_2p_decorator_and_register_and_run(
         wait=True,
     )
 
-    assert train_transformer_flow.status.phase == "Succeeded"
+    assert train_transformer_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.train_transformer
@@ -124,7 +125,7 @@ def test_train_transformer_pipeline_2n_1p_decorator_and_register_and_run(
         wait=True,
     )
 
-    assert train_transformer_flow.status.phase == "Succeeded"
+    assert train_transformer_flow.phase == FLOW_PHASE.succeeded.value
 
 
 @pytest.mark.train_transformer
@@ -166,4 +167,4 @@ def test_train_transformer_pipeline_2n_2p_decorator_and_register_and_run(
         wait=True,
     )
 
-    assert train_transformer_flow.status.phase == "Succeeded"
+    assert train_transformer_flow.phase == FLOW_PHASE.succeeded.value
