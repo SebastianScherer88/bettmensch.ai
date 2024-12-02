@@ -42,10 +42,10 @@ class IO(object):
     def __eq__(self, other):
 
         return (
-            self.name == other.name
-            and self.value == other.value
-            and self.source == other.source
-            and self.owner == other.owner
+            getattr(self, "name", None) == getattr(other, "name", None)
+            and getattr(self, "value", None) == getattr(other, "value", None)
+            and getattr(self, "source", None) == getattr(other, "source", None)
+            and getattr(self, "owner", None) == getattr(other, "owner", None)
         )
 
     def __repr__(self):
@@ -78,7 +78,9 @@ class OriginMixin(object):
     source: Union["InputParameter", "OutputParameter", "OutputArtifact"] = None
     id: str = None
 
-    def set_owner(self, owner: Union["Component", "Pipeline"]):  # noqa: F821
+    def set_owner(
+        self, owner: Union["Component", "Pipeline"]  # noqa: F821
+    ) -> "OriginMixin":
         try:
             assert owner.type in (
                 ResourceType.component.value,
@@ -92,10 +94,12 @@ class OriginMixin(object):
 
         self.owner = owner
 
+        return self
+
     def set_source(
         self,
         source: Union["InputParameter", "OutputParameter", "OutputArtifact"],
-    ):
+    ) -> "OriginMixin":
         if not isinstance(
             source, (InputParameter, OutputParameter, OutputArtifact)
         ):
@@ -105,6 +109,8 @@ class OriginMixin(object):
             )
 
         self.source = source
+
+        return self
 
 
 class OriginInput(OriginMixin, Input):
