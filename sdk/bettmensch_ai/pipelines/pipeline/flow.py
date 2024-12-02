@@ -1,12 +1,14 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
     FLOW_LABEL,
     FLOW_PHASE,
+    IOType,
 )
 from bettmensch_ai.pipelines.pipeline.client import hera_client
 from hera.workflows import Workflow
+from hera.workflows.models import Inputs, NodeStatus, Outputs
 from hera.workflows.models import Workflow as WorkflowModel
 from hera.workflows.models import (
     WorkflowDeleteResponse as WorkflowDeleteResponseModel,
@@ -16,10 +18,50 @@ from hera.workflows.models import (
 class Flow(object):
 
     registered_flow: Workflow
+    flow_node: Dict[str, NodeStatus]
+    inputs: Inputs
+    outputs: Outputs
 
     def __init__(self, registered_flow: Workflow):
 
         self.registered_flow = registered_flow
+        self.flow_nodes = self.get_node_dict()
+        self.inputs: Inputs = self.get_node_io(io_type=IOType.inputs.value)
+        self.outputs: Outputs = self.get_node_io(io_type=IOType.outputs.value)
+
+    def get_node_dict(self) -> Dict[str, NodeStatus]:
+        """Retrieve a dictionary of NodeStatus instances, where the keys are
+        the name of the node's template.
+
+        Returns:
+            node_dict (Dict[str,NodeStatus]): A dictionary of NodeStatus
+                instances.
+        """
+
+        nodes_list = list(self.registered_flow.status.nodes.values())
+        node_dict = dict([(node.template_name, node) for node in nodes_list])
+
+        return node_dict
+
+    def get_node_io(
+        self,
+        node: str = "bettmensch-ai-inner-dag",
+        io_type: IOType = IOType.inputs.value,
+    ) -> Union[Inputs, Outputs]:
+        """Helper function to retrieve inputs/outputs from the inner dag node.
+
+        Args:
+            node (str, optional): The template name. Defaults to
+                "bettmensch-ai-inner-dag".
+            io_type (IOType, optional): The IO type spec. Defaults to
+                IOType.inputs.value.
+
+        Returns:
+            Union[Inputs,Outputs]: The specified flow node's IO parameters.
+        """
+
+        inner_dag_node = self.flow_nodes[node]
+        return getattr(inner_dag_node, io_type)
 
     @property
     def registered_name(self) -> str:
