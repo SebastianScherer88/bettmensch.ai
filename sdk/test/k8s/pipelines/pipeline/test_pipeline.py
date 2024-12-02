@@ -28,6 +28,10 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     """Registers and runs an example Pipeline passing artifacts across
     components."""
 
+    # export pipeline to allow for manual checks
+    parameter_to_artifact_pipeline.export(test_output_dir)
+
+    # register workflow template with argo server on k8s cluster
     parameter_to_artifact_pipeline.register()
 
     assert parameter_to_artifact_pipeline.registered
@@ -57,6 +61,10 @@ def test_parameter_pipeline_decorator_and_register_and_run(
     """Registers and runs an example Pipeline passing parameters across
     components."""
 
+    # export pipeline to allow for manual checks
+    adding_parameters_pipeline.export(test_output_dir)
+
+    # register workflow template with argo server on k8s cluster
     adding_parameters_pipeline.register()
 
     assert adding_parameters_pipeline.registered

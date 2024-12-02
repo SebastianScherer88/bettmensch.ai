@@ -11,13 +11,17 @@ def test_artifact_pipeline(
 ):
     """Declaration of Pipeline using InputArtifact and OutputArtifact"""
 
+    # export pipeline to allow for manual checks
+    parameter_to_artifact_pipeline.export(test_output_dir)
+
+    # --- validate pipeline instance's basic attributes
     assert parameter_to_artifact_pipeline.built
     assert not parameter_to_artifact_pipeline.registered
     assert parameter_to_artifact_pipeline.registered_id is None
     assert parameter_to_artifact_pipeline.registered_name is None
     assert parameter_to_artifact_pipeline.registered_namespace is None
 
-    # --- validate class' io attributes
+    # --- validate pipeline instance's io attributes
     assert parameter_to_artifact_pipeline.inputs == {
         "a": InputParameter(name="a", value="Param A").set_owner(
             parameter_to_artifact_pipeline
@@ -35,7 +39,7 @@ def test_artifact_pipeline(
         .set_source(parameter_to_artifact_pipeline.inputs["a"]),
     }
 
-    # --- validate class' `user_built_workflow_template` attribute
+    # --- validate pipeline instance's `user_built_workflow_template` attribute
     wft = parameter_to_artifact_pipeline.user_built_workflow_template
 
     # validate spec
@@ -75,20 +79,21 @@ def test_artifact_pipeline(
         Parameter(name="a", value="{{workflow.parameters.a}}"),
     ]
 
-    parameter_to_artifact_pipeline.export(test_output_dir)
-
 
 def test_parameter_pipeline(test_output_dir):
     """Declaration of Pipeline using InputParameter and OutputParameter"""
 
-    # --- validate class' basic attributes
+    # export pipeline to allow for manual checks
+    adding_parameters_pipeline.export(test_output_dir)
+
+    # --- validate pipeline instance's basic attributes
     assert adding_parameters_pipeline.built
     assert not adding_parameters_pipeline.registered
     assert adding_parameters_pipeline.registered_id is None
     assert adding_parameters_pipeline.registered_name is None
     assert adding_parameters_pipeline.registered_namespace is None
 
-    # --- validate class' io attributes
+    # --- validate pipeline instance's io attributes
     assert adding_parameters_pipeline.inputs == {
         "a": InputParameter(name="a", value=1).set_owner(
             adding_parameters_pipeline
@@ -112,7 +117,7 @@ def test_parameter_pipeline(test_output_dir):
         .set_source(adding_parameters_pipeline.inputs["b"]),
     }
 
-    # --- validate class' `user_built_workflow_template` attribute
+    # --- validate pipeline instance's `user_built_workflow_template` attribute
     wft = adding_parameters_pipeline.user_built_workflow_template
 
     # validate spec
@@ -159,5 +164,3 @@ def test_parameter_pipeline(test_output_dir):
         Parameter(name="a", value="{{workflow.parameters.a}}"),
         Parameter(name="b", value="{{workflow.parameters.b}}"),
     ]
-
-    adding_parameters_pipeline.export(test_output_dir)

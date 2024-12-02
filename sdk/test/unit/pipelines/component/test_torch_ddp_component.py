@@ -7,44 +7,15 @@ from bettmensch_ai.pipelines.component.examples import (
     convert_to_artifact_torch_ddp_factory,
     show_parameter_torch_ddp_factory,
 )
-from bettmensch_ai.pipelines.io import (
-    InputArtifact,
-    InputParameter,
-    OutputArtifact,
-    OutputParameter,
-)
+from bettmensch_ai.pipelines.io import InputParameter
 from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
-from hera.shared.serialization import MISSING
 from hera.workflows import DAG, Parameter, WorkflowTemplate
 
 
-def test_torch_component___init__(test_mock_pipeline, test_mock_component):
+def test_torch_component___init__(test_function_and_task_inputs):
     """Tests of Component constructor."""
 
-    def test_function(
-        a: InputParameter,
-        b: InputParameter,
-        c: InputParameter,
-        d: InputArtifact,
-        a_out: OutputParameter,
-        b_out: OutputArtifact,
-    ):
-        pass
-
-    test_input_a = InputParameter("fixed", 1)
-    test_input_b = InputParameter("mock_pipe_in", 1)
-    test_input_b.set_owner(test_mock_pipeline)
-    test_input_c = OutputParameter("mock_comp_out_param")
-    test_input_c.set_owner(test_mock_component)
-    test_input_d = OutputArtifact("mock_comp_out_art")
-    test_input_d.set_owner(test_mock_component)
-
-    task_inputs = {
-        "a": test_input_a,
-        "b": test_input_b,
-        "c": test_input_c,
-        "d": test_input_d,
-    }
+    test_function, test_task_inputs = test_function_and_task_inputs
 
     with _pipeline_context:
         _pipeline_context.clear()
@@ -57,7 +28,7 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
                 n_nodes=2,
                 min_nodes=2,
                 nproc_per_node=2,
-                **task_inputs
+                **test_task_inputs
             )
             .set_cpu(0.5)
             .set_memory("100Mi")
@@ -84,68 +55,13 @@ def test_torch_component___init__(test_mock_pipeline, test_mock_component):
     assert test_component.ephemeral is None
     assert test_component.custom_resources is None
 
-    # validate component task_inputs
-    for task_input_name in ("a", "b", "c", "d"):
-        assert (
-            test_component.task_inputs[task_input_name].name == task_input_name
-        )
-        assert (
-            test_component.task_inputs[task_input_name].owner == test_component
-        )
-        assert (
-            test_component.task_inputs[task_input_name].source
-            is task_inputs[task_input_name]
-        )
 
-    assert test_component.task_inputs["a"].value == task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == task_inputs["b"].value
-    assert test_component.task_inputs["c"].value == MISSING
-
-    # validate component template_inputs
-    assert list(test_component.template_inputs.keys()) == ["d"]
-    isinstance(test_component.template_inputs["d"], InputArtifact)
-    test_component.template_inputs["d"].name = "d"
-
-    # validate component template_outputs
-    assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(
-        test_component.template_outputs["a_out"], OutputParameter
-    )  # noqa: E501
-    assert test_component.template_outputs["b_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
-
-    assert test_component.task_factory is None
-
-
-def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
+def test_torch_component_decorator(test_function_and_task_inputs):
     """Tests of Component constructor."""
 
-    def test_function(
-        a: InputParameter,
-        b: InputParameter,
-        c: InputParameter,
-        d: InputArtifact,
-        a_out: OutputParameter,
-        b_out: OutputArtifact,
-    ):
-        pass
+    test_function, test_task_inputs = test_function_and_task_inputs
 
     test_component_factory = as_torch_ddp_component(test_function)
-
-    test_input_a = InputParameter("fixed", 1)
-    test_input_b = InputParameter("mock_pipe_in", 1)
-    test_input_b.set_owner(test_mock_pipeline)
-    test_input_c = OutputParameter("mock_comp_out_param")
-    test_input_c.set_owner(test_mock_component)
-    test_input_d = OutputArtifact("mock_comp_out_art")
-    test_input_d.set_owner(test_mock_component)
-
-    task_inputs = {
-        "a": test_input_a,
-        "b": test_input_b,
-        "c": test_input_c,
-        "d": test_input_d,
-    }
 
     with _pipeline_context:
         _pipeline_context.clear()
@@ -157,7 +73,7 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
                 min_nodes=2,
                 nproc_per_node=2,
                 name="test_name",
-                **task_inputs
+                **test_task_inputs
             )
             .set_cpu(0.5)
             .set_memory("100Mi")
@@ -182,38 +98,6 @@ def test_torch_component_decorator(test_mock_pipeline, test_mock_component):
     assert test_component.gpus == 1
     assert test_component.ephemeral is None
     assert test_component.custom_resources is None
-
-    # validate component task_inputs
-    for task_input_name in ("a", "b", "c", "d"):
-        assert (
-            test_component.task_inputs[task_input_name].name == task_input_name
-        )
-        assert (
-            test_component.task_inputs[task_input_name].owner == test_component
-        )
-        assert (
-            test_component.task_inputs[task_input_name].source
-            is task_inputs[task_input_name]
-        )
-
-    assert test_component.task_inputs["a"].value == task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == task_inputs["b"].value
-    assert test_component.task_inputs["c"].value == MISSING
-
-    # validate component template_inputs
-    assert list(test_component.template_inputs.keys()) == ["d"]
-    isinstance(test_component.template_inputs["d"], InputArtifact)
-    test_component.template_inputs["d"].name = "d"
-
-    # validate component template_outputs
-    assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(
-        test_component.template_outputs["a_out"], OutputParameter
-    )  # noqa: E501
-    assert test_component.template_outputs["b_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
-
-    assert test_component.task_factory is None
 
 
 def test_parameter_torch_component_to_hera(

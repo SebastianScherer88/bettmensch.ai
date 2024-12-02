@@ -11,8 +11,7 @@ from bettmensch_ai.pipelines.io import (
     OutputParameter,
 )
 from bettmensch_ai.pipelines.pipeline_context import _pipeline_context
-from hera.shared.serialization import MISSING
-from hera.workflows import DAG, Parameter, WorkflowTemplate
+from hera.workflows import DAG, Artifact, Parameter, WorkflowTemplate, models
 
 
 def test_component___init__(test_function_and_task_inputs):
@@ -31,10 +30,10 @@ def test_component___init__(test_function_and_task_inputs):
             .set_gpus(1)
         )
 
-    # validate addition of component to pipeline context
+    # --- validate addition of component to pipeline context
     assert test_component == _pipeline_context.components[0]
 
-    # validate component attributes
+    # --- validate component instance's attributes
     assert isinstance(test_component, Component)
     assert test_component.implementation == "standard"
     assert test_component.base_name == "test-name"
@@ -48,41 +47,39 @@ def test_component___init__(test_function_and_task_inputs):
     assert test_component.custom_resources is None
     assert test_component.depends == "mock-component-0"
 
-    # validate component task_inputs
-    for task_input_name in ("a", "b", "c", "d"):
-        assert (
-            test_component.task_inputs[task_input_name].name == task_input_name
-        )
-        assert (
-            test_component.task_inputs[task_input_name].owner == test_component
-        )
-        assert (
-            test_component.task_inputs[task_input_name].source
-            is test_task_inputs[task_input_name]
-        )
+    # --- validate component instance's io attributes
+    # note that InputParameter type argument are automatically injected by
+    # hera's script's `build_inputs` method, so arent being constructed here
+    # explicitly
+    assert test_component.template_inputs == {
+        "d": InputArtifact(name="d").set_owner(test_component),
+    }
 
-    assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
-    assert test_component.task_inputs["c"].value == MISSING
+    assert test_component.template_outputs == {
+        "a_out": OutputParameter(name="a_out").set_owner(test_component),
+        "b_out": OutputArtifact(name="b_out").set_owner(test_component),
+    }
 
-    # validate component template_inputs
-    assert list(test_component.template_inputs.keys()) == ["d"]
-    isinstance(test_component.template_inputs["d"], InputArtifact)
-    test_component.template_inputs["d"].name = "d"
-
-    # validate component template_outputs
-    assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(
-        test_component.template_outputs["a_out"], OutputParameter
-    )  # noqa: E501
-    assert test_component.template_outputs["b_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
+    assert test_component.task_inputs == {
+        "a": InputParameter(name="a", value=1)
+        .set_owner(test_component)
+        .set_source(test_task_inputs["a"]),
+        "b": InputParameter(name="b", value=1)
+        .set_owner(test_component)
+        .set_source(test_task_inputs["b"]),
+        "c": InputParameter(name="c")
+        .set_owner(test_component)
+        .set_source(test_task_inputs["c"]),
+        "d": InputArtifact(name="d")
+        .set_owner(test_component)
+        .set_source(test_task_inputs["d"]),
+    }
 
     assert test_component.task_factory is None
 
 
 def test_component_decorator(
-    test_function_and_task_inputs, test_mock_pipeline, test_mock_component
+    test_function_and_task_inputs,
 ):
     """Tests of Component constructor."""
 
@@ -104,7 +101,7 @@ def test_component_decorator(
     # validate addition of component to pipeline context
     assert test_component == _pipeline_context.components[0]
 
-    # validate component attributes
+    # --- validate component instance's attributes
     assert isinstance(test_component, Component)
     assert test_component.implementation == "standard"
     assert test_component.base_name == "test-name"
@@ -116,36 +113,35 @@ def test_component_decorator(
     assert test_component.gpus == 1
     assert test_component.ephemeral is None
     assert test_component.custom_resources is None
+    assert test_component.depends == "mock-component-0"
 
-    # validate component task_inputs
-    for task_input_name in ("a", "b", "c", "d"):
-        assert (
-            test_component.task_inputs[task_input_name].name == task_input_name
-        )
-        assert (
-            test_component.task_inputs[task_input_name].owner == test_component
-        )
-        assert (
-            test_component.task_inputs[task_input_name].source
-            is test_task_inputs[task_input_name]
-        )
+    # --- validate component instance's io attributes
+    # note that InputParameter type argument are automatically injected by
+    # hera's script's `build_inputs` method, so arent being constructed here
+    # explicitly
+    assert test_component.template_inputs == {
+        "d": InputArtifact(name="d").set_owner(test_component),
+    }
 
-    assert test_component.task_inputs["a"].value == test_task_inputs["a"].value
-    assert test_component.task_inputs["b"].value == test_task_inputs["b"].value
-    assert test_component.task_inputs["c"].value == MISSING
+    assert test_component.template_outputs == {
+        "a_out": OutputParameter(name="a_out").set_owner(test_component),
+        "b_out": OutputArtifact(name="b_out").set_owner(test_component),
+    }
 
-    # validate component template_inputs
-    assert list(test_component.template_inputs.keys()) == ["d"]
-    isinstance(test_component.template_inputs["d"], InputArtifact)
-    test_component.template_inputs["d"].name = "d"
-
-    # validate component template_outputs
-    assert test_component.template_outputs["a_out"].owner == test_component
-    assert isinstance(
-        test_component.template_outputs["a_out"], OutputParameter
-    )  # noqa: E501
-    assert test_component.template_outputs["b_out"].owner == test_component
-    assert isinstance(test_component.template_outputs["b_out"], OutputArtifact)
+    assert test_component.task_inputs == {
+        "a": InputParameter(name="a", value=1)
+        .set_owner(test_component)
+        .set_source(test_task_inputs["a"]),
+        "b": InputParameter(name="b", value=1)
+        .set_owner(test_component)
+        .set_source(test_task_inputs["b"]),
+        "c": InputParameter(name="c")
+        .set_owner(test_component)
+        .set_source(test_task_inputs["c"]),
+        "d": InputArtifact(name="d")
+        .set_owner(test_component)
+        .set_source(test_task_inputs["d"]),
+    }
 
     assert test_component.task_factory is None
 
@@ -207,11 +203,52 @@ def test_parameter_component_to_hera(test_output_dir, test_mock_pipeline):
 
     wft.to_file(test_output_dir)
 
-    task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == ["a-plus-b-0", "a-plus-b-plus-2-0"]
+    # --- validate `to_hera` outputs via argo.workflows.WorkflowTemplate
+    # instance
 
-    script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["a-plus-b", "a-plus-b-plus-2"]
+    # validate tasks
+    first_task = wft.templates[0].tasks[0]
+    assert first_task.name == "a-plus-b-0"
+    assert first_task.template.name == "a-plus-b"
+    assert first_task.arguments == [
+        Parameter(name="a", value="{{inputs.parameters.a}}"),
+        Parameter(name="b", value="{{inputs.parameters.b}}"),
+    ]
+    assert first_task.depends == ""
+
+    second_task = wft.templates[0].tasks[1]
+    assert second_task.name == "a-plus-b-plus-2-0"
+    assert second_task.template.name == "a-plus-b-plus-2"
+    assert second_task.arguments == [
+        Parameter(
+            name="a", value="{{tasks.a-plus-b-0.outputs.parameters.sum}}"
+        ),
+        Parameter(name="b", value=2),
+    ]
+    assert second_task.depends == "a-plus-b-0"
+
+    # validate script templates
+    first_script_template = wft.templates[1]
+    first_script_template.name == "a-plus-b"
+    first_script_template.inputs == [
+        Parameter(name="a", value=1),
+        Parameter(name="b", value=2),
+        Parameter(name="sum", value=None),
+    ]
+    first_script_template.outputs == [
+        Parameter(name="sum", value_from=models.ValueFrom(path="sum")),
+    ]
+
+    second_script_template = wft.templates[2]
+    second_script_template.name == "a-plus-b-plus-2"
+    second_script_template.inputs == [
+        Parameter(name="a", value=1),
+        Parameter(name="b", value=2),
+        Parameter(name="sum", value=None),
+    ]
+    second_script_template.outputs == [
+        Parameter(name="sum", value_from=models.ValueFrom(path="sum")),
+    ]
 
 
 def test_artifact_component_to_hera(
@@ -268,8 +305,46 @@ def test_artifact_component_to_hera(
 
     wft.to_file(test_output_dir)
 
-    task_names = [task.name for task in wft.templates[0].tasks]
-    assert task_names == ["convert-parameters-0", "show-artifacts-0"]
+    # --- validate `to_hera` outputs via argo.workflows.WorkflowTemplate
+    # instance
 
-    script_template_names = [template.name for template in wft.templates[1:]]
-    assert script_template_names == ["convert-parameters", "show-artifacts"]
+    # validate tasks
+    first_task = wft.templates[0].tasks[0]
+    assert first_task.name == "convert-parameters-0"
+    assert first_task.template.name == "convert-parameters"
+    assert first_task.arguments == [
+        Parameter(name="a", value="{{inputs.parameters.a}}"),
+    ]
+    assert first_task.depends == ""
+
+    second_task = wft.templates[0].tasks[1]
+    assert second_task.name == "show-artifacts-0"
+    assert second_task.template.name == "show-artifacts"
+    assert second_task.arguments == [
+        Artifact(
+            name="a",
+            from_="{{tasks.convert-parameters-0.outputs.artifacts.a_art}}",
+        ),
+    ]
+    assert second_task.depends == "convert-parameters-0"
+
+    # validate script templates
+    first_script_template = wft.templates[1]
+    first_script_template.name == "convert-parameters"
+    first_script_template.inputs == [
+        Parameter(name="a"),
+        Parameter(name="a_art", value=None),
+    ]
+    first_script_template.outputs == [
+        Artifact(name="a_art", path="a_art"),
+    ]
+
+    second_script_template = wft.templates[2]
+    second_script_template.name == "show-artifacts"
+    second_script_template.inputs == [
+        Artifact(name="a", path="a"),
+        Parameter(name="b", value=None),
+    ]
+    second_script_template.outputs == [
+        Artifact(name="b", path="sum"),
+    ]
