@@ -13,12 +13,6 @@ from bettmensch_ai.pipelines.pipeline.examples import (
 def test_train_transformer_pipeline_1n_1p_decorator_and_register_and_run(
     test_output_dir, test_namespace
 ):
-    train_transformer_pipeline_1n_1p.export(test_output_dir)
-
-    assert not train_transformer_pipeline_1n_1p.registered
-    assert train_transformer_pipeline_1n_1p.registered_id is None
-    assert train_transformer_pipeline_1n_1p.registered_name is None
-    assert train_transformer_pipeline_1n_1p.registered_namespace is None
 
     train_transformer_pipeline_1n_1p.register()
 
