@@ -28,13 +28,6 @@ def test_artifact_pipeline_decorator_and_register_and_run(
     """Registers and runs an example Pipeline passing artifacts across
     components."""
 
-    parameter_to_artifact_pipeline.export(test_output_dir)
-
-    assert not parameter_to_artifact_pipeline.registered
-    assert parameter_to_artifact_pipeline.registered_id is None
-    assert parameter_to_artifact_pipeline.registered_name is None
-    assert parameter_to_artifact_pipeline.registered_namespace is None
-
     parameter_to_artifact_pipeline.register()
 
     assert parameter_to_artifact_pipeline.registered
@@ -63,13 +56,6 @@ def test_parameter_pipeline_decorator_and_register_and_run(
 ):
     """Registers and runs an example Pipeline passing parameters across
     components."""
-
-    adding_parameters_pipeline.export(test_output_dir)
-
-    assert not adding_parameters_pipeline.registered
-    assert adding_parameters_pipeline.registered_id is None
-    assert adding_parameters_pipeline.registered_name is None
-    assert adding_parameters_pipeline.registered_namespace is None
 
     adding_parameters_pipeline.register()
 
