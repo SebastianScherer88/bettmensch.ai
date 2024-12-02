@@ -5,7 +5,7 @@ from bettmensch_ai.pipelines.constants import (
     FLOW_LABEL,
     FLOW_PHASE,
 )
-from bettmensch_ai.pipelines.pipeline import hera_client
+from bettmensch_ai.pipelines.pipeline.client import hera_client
 from hera.workflows import Workflow
 from hera.workflows.models import Workflow as WorkflowModel
 from hera.workflows.models import (
@@ -87,16 +87,19 @@ class Flow(object):
         return self.registered_flow.status.finished_at
 
     @classmethod
-    def from_workflow(cls, workflow: Workflow) -> "Flow":
-        """Class method to initialize a Flow instance from a
-        Workflow instance.
+    def from_workflow_model(cls, workflow_model: WorkflowModel) -> "Flow":
+        """Class method to initialize a Flow instance from a WorkflowModel
+        instance.
 
         Args:
-            workflow (Workflow): An instance of hera's Workflow class
+            workflow_model (WorkflowModel): An instance of hera's WorkflowModel
+                class
 
         Returns:
             Flow: The (registered) Flow instance.
         """
+
+        workflow: Workflow = Workflow.from_dict(workflow_model.dict())
 
         return cls(registered_flow=workflow)
 
@@ -119,9 +122,7 @@ def get_flow(
         namespace=registered_namespace, name=registered_name
     )
 
-    workflow: Workflow = Workflow.from_dict(workflow_model.dict())
-
-    flow: Flow = Flow.from_workflow(workflow)
+    flow: Flow = Flow.from_workflow_model(workflow_model)
 
     return flow
 
@@ -190,13 +191,9 @@ def list_flows(
     )
 
     if response.items is not None:
-        workflows: List[Workflow] = [
-            Workflow.from_dict(workflow_model.dict())
-            for workflow_model in response.items
-        ]
-
         flows: List[Flow] = [
-            Flow.from_workflow(workflow) for workflow in workflows
+            Flow.from_workflow_model(workflow_model)
+            for workflow_model in response.items
         ]
     else:
         flows = []
