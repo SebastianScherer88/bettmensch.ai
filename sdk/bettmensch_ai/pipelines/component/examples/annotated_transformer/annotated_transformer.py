@@ -78,7 +78,7 @@ def train_transformer(
     base_lr: InputParameter = 1.0,
     max_padding: InputParameter = 72,
     warmup: InputParameter = 3000,
-    trained_transformer: OutputArtifact = None,
+    model_checkpoints: OutputArtifact = None,
     training_config: OutputParameter = None,
 ):
     from bettmensch_ai.pipelines.component.examples.annotated_transformer.training import (  # noqa: E501
@@ -100,7 +100,7 @@ def train_transformer(
         base_lr=base_lr,
         max_padding=max_padding,
         warmup=warmup,
-        output_directory=trained_transformer.path,
+        output_directory=model_checkpoints.path,
     )
 
     train_worker(config)

@@ -4,7 +4,11 @@ from bettmensch_ai.pipelines.component.examples.annotated_transformer import (
     train_transformer_factory,
 )
 from bettmensch_ai.pipelines.constants import ARGO_NAMESPACE, COMPONENT_IMAGE
-from bettmensch_ai.pipelines.io import InputParameter
+from bettmensch_ai.pipelines.io import (
+    InputParameter,
+    OutputArtifact,
+    OutputParameter,
+)
 from hera.workflows import EmptyDirVolume
 
 
@@ -24,6 +28,8 @@ def get_train_transformer_pipeline(
         base_lr: InputParameter = 1.0,
         max_padding: InputParameter = 72,
         warmup: InputParameter = 3000,
+        trained_transformer_checkpoints: OutputArtifact = None,
+        training_config: OutputParameter = None,
     ):
 
         # preprocessing component
@@ -102,6 +108,13 @@ def get_train_transformer_pipeline(
             .set_memory(
                 f"{int(4 * n_proc_per_node)}Gi"
             )  # works with 4Gi per process
+        )
+
+        trained_transformer_checkpoints.set_source(
+            train_transformer.outputs["model_checkpoints"]
+        )
+        training_config.set_source(
+            train_transformer.outputs["training_config"]
         )
 
     return train_transformer_pipeline
