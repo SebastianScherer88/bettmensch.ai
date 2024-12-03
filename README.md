@@ -173,7 +173,7 @@ def a_plus_b_plus_2(a: InputParameter = 1, b: InputParameter = 2) -> None:
 
 a_plus_b_plus_2.export(test_output_dir)
 a_plus_b_plus_2.register()
-a_plus_b_plus_2.run(a=3, b=2)
+a_plus_b_plus_2.run(inputs={'a':3,'b':2})
 ```
 
 Using `InputArtifact` and `OutputArtifact` for all other types of data, 
@@ -216,7 +216,7 @@ def parameter_to_artifact(
 
 parameter_to_artifact.export(test_output_dir)
 parameter_to_artifact.register()
-parameter_to_artifact.run(a="Test value A")
+parameter_to_artifact.run(inputs={'a':"Test value A"})
 ```
 
 **NOTE**: For more examples (including cross K8s node CPU and GPU `torch.distributed` 
