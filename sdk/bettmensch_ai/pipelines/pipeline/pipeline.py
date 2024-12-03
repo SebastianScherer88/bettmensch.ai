@@ -5,6 +5,7 @@ from bettmensch_ai.pipelines.constants import (
     ARGO_NAMESPACE,
     COMPONENT_IMPLEMENTATION,
     FLOW_LABEL,
+    PipelineDagTemplate,
     ResourceType,
 )
 from bettmensch_ai.pipelines.io import (
@@ -279,9 +280,12 @@ class Pipeline(object):
         inner_dag_template_inputs = {}
         required_inner_dag_template_inputs = {}
 
-        wft_template_inputs = self.registered_workflow_template.templates[
-            0
-        ].inputs.parameters
+        inner_dag_template = [
+            template
+            for template in self.registered_workflow_template.templates
+            if template.name == PipelineDagTemplate.inner.value
+        ][0]
+        wft_template_inputs = inner_dag_template.inputs.parameters
 
         for wft_input in wft_template_inputs:
 
@@ -352,7 +356,7 @@ class Pipeline(object):
                 )
 
         with DAG(
-            name="bettmensch-ai-inner-dag",
+            name=PipelineDagTemplate.inner.value,
             inputs=[dag_input.to_hera() for dag_input in self.inputs.values()],
             outputs=[
                 dag_output.to_hera() for dag_output in self.context.outputs
@@ -391,7 +395,7 @@ class Pipeline(object):
         # WorkflowTemplate & DAG context
         with WorkflowTemplate(
             generate_name=f"pipeline-{self.name}-",
-            entrypoint="bettmensch-ai-outer-dag",
+            entrypoint=PipelineDagTemplate.outer.value,
             namespace=self._namespace,
             arguments=[
                 workflow_template_input.to_hera()
@@ -401,7 +405,7 @@ class Pipeline(object):
 
             inner_dag = self.build_inner_dag()
 
-            with DAG(name="bettmensch-ai-outer-dag"):
+            with DAG(name=PipelineDagTemplate.outer.value):
                 inner_dag(
                     arguments=[
                         dag_input.to_hera()

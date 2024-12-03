@@ -71,7 +71,12 @@ class COMPONENT_IMPLEMENTATION(Enum):
     adapter_out: str = "adapter_out"
     adapter_in: str = "adapter_in"
     wait_on_k8s_external: str = "wait_on_k8s_external"
-    torch_ddp: str = "torch-ddp"
+    torch_ddp: str = "torch_ddp"
+
+
+class PipelineDagTemplate(Enum):
+    inner: str = "bettmensch-ai-inner-dag"
+    outer: str = "bettmensch-ai-outer-dag"
 
 
 class TORCH_DDP_SCRIPT_IMPLEMENTATION(Enum):
