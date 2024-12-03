@@ -11,6 +11,13 @@ from bettmensch_ai.server.dag import (
     DagVisualizationItems,
 )
 from bettmensch_ai.server.utils import copy_non_null_dict
+from hera.workflows.models import Artifact as ArtifactModel
+from hera.workflows.models import DAGTask as DAGTaskModel
+from hera.workflows.models import Metadata as PodMetadataModel
+from hera.workflows.models import Parameter as ParameterModel
+from hera.workflows.models import Template as TemplateModel
+from hera.workflows.models import WorkflowMetadata as WorkflowMetadataModel
+from hera.workflows.models import WorkflowSpec as WorkflowSpecModel
 from hera.workflows.models import WorkflowTemplate as WorkflowTemplateModel
 from pydantic import BaseModel
 
@@ -25,6 +32,9 @@ PIPELINE_NODE_EMOJI_MAP = {
     "artifacts": "📂",  # :open_file_folder:
 }
 
+INNER_PIPELINE_DAG = "bettmensch-ai-inner-dag"
+OUTER_PIPELINE_DAG = "bettmensch-ai-outer-dag"
+
 
 # --- PipelineMetadata
 class WorkflowTemplateMetadata(BaseModel):
@@ -37,8 +47,8 @@ class WorkflowTemplateMetadata(BaseModel):
 
 class PipelineMetadata(BaseModel):
     pipeline: WorkflowTemplateMetadata
-    flow: Optional[Dict] = None
-    component: Optional[Dict] = None
+    flow: Optional[WorkflowMetadataModel] = None
+    component: Optional[PodMetadataModel] = None
 
 
 # --- ScriptTemplate
@@ -108,13 +118,6 @@ class ResourceTemplate(BaseModel):
     resource: Resource
 
 
-# --- PipelineInput
-class PipelineInputParameter(BaseModel):
-    name: str
-    value: Optional[str] = None
-    default: Optional[Any] = None
-
-
 # --- PipelineNode
 # inputs
 class NodeInputSource(BaseModel):
@@ -171,10 +174,50 @@ class PipelineNode(BaseModel):
 
 
 # --- Pipeline
+# inputs
+class PipelineParameterInput(BaseModel):
+    name: str
+    value: Optional[str] = None
+    default: Optional[Any] = None
+
+
+class PipelineInputs(BaseModel):
+    parameters: List[PipelineParameterInput] = []
+
+
+# outputs
+# class NodeInputSource(BaseModel):
+#     node: str
+#     output_name: str
+#     output_type: Literal["parameters", "artifacts"]
+
+
+# class NodeInput(BaseModel):
+#     name: str
+#     source: Optional[NodeInputSource] = None
+
+
+# class NodeParameterInput(NodeInput):
+#     value: Optional[str] = None
+#     value_from: Optional[Union[str, Dict]] = None
+class PipelineParameterOutput(NodeParameterOutput):
+    pass
+
+
+class PipelineArtifactOutput(NodeArtifactInput):
+    pass
+
+
+class PipelineOutputs(BaseModel):
+    parameters: List[PipelineParameterOutput] = []
+    artifacts: List[PipelineArtifactOutput] = []
+
+
 class Pipeline(BaseModel):
     metadata: PipelineMetadata
     templates: List[Union[ScriptTemplate, ResourceTemplate]]
-    inputs: List[PipelineInputParameter] = []
+    inputs: Optional[PipelineInputs] = None
+    outputs: Optional[PipelineOutputs] = None
     dag: List[PipelineNode]
 
     def get_template(self, name: str) -> ScriptTemplate:
@@ -188,7 +231,11 @@ class Pipeline(BaseModel):
         return [task for task in self.dag if task.name == name][0]
 
     @staticmethod
-    def resolve_value_expression(expression: str) -> Tuple[str, str, str]:
+    def contains_parameter_reference(value: str) -> bool:
+        return "{{" in value
+
+    @staticmethod
+    def resolve_parameter_reference(reference: str) -> Tuple[str, str, str]:
         """Utility to resolve a node argument's value expression to the node
         and output references.
 
@@ -208,7 +255,7 @@ class Pipeline(BaseModel):
         # '{{workflow.parameters.coin}}' -> 'workflow.parameters.coin'
         # '{{tasks.Set-a-coin.outputs.parameters.coin}}' ->
         #   'tasks.Set-a-coin.outputs.parameters.coin'
-        expression_content = expression.replace("{{", "").replace("}}", "")
+        expression_content = reference.replace("{{", "").replace("}}", "")
 
         # 'workflow.parameters.coin' -> ['workflow','parameters','coin']
         # 'tasks.Set-a-coin.outputs.parameters.coin' ->
@@ -225,112 +272,320 @@ class Pipeline(BaseModel):
             raise ValueError(f"First token {tokens[0]} not supported.")
 
     @classmethod
-    def build_dag(cls, workflow_template_spec: Dict) -> List[PipelineNode]:
+    def get_relevant_templates(
+        cls, workflow_template_spec: WorkflowSpecModel
+    ) -> Tuple[TemplateModel, Dict[str, TemplateModel]]:
+        """Converts a workflow template spec instance into a tuple with the
+        inner dag template in the first entry, and a template.name -> template
+        dictionary in the second entry.
+
+        Args:
+            workflow_template_spec (WorkflowSpecModel): The workflow template
+                spec.
+
+        Returns:
+            Tuple[TemplateModel, Dict[str,TemplateModel]]: The inner dag
+                template and a dict with the remaining templates (excluding the
+                outer dag template).
+        """
+
+        component_templates_dict = dict(
+            [
+                (template.name, template)
+                for template in workflow_template_spec.templates
+            ]
+        )
+
+        # remove outer dag template
+        inner_dag_template = component_templates_dict.pop(INNER_PIPELINE_DAG)
+
+        return inner_dag_template, component_templates_dict
+
+    @classmethod
+    def build_pipeline_output_parameter(
+        cls, output_parameter: ParameterModel
+    ) -> PipelineParameterOutput:
+        """Builds and returns a PipelineParameterOutput instance from the
+        provided ParameterModel instance. Checks for source parameter
+        references and resolves them into a NodeInputSource attribute on the
+        return.
+
+        Raises a ValueError if no such reference can be found.
+
+        Args:
+            output_parameter (ParameterModel): The output parameter
+        Returns:
+            PipelineParameterOutput: The assembled pipeline parameter
+                output.
+        """
+
+        output_parameter_value_from = getattr(
+            output_parameter, "valueFrom", None
+        )
+        output_parameter_value_from_parameter = getattr(
+            output_parameter_value_from, "parameter", None
+        )
+
+        if cls.contains_parameter_reference(
+            output_parameter_value_from_parameter
+        ):
+            raise ValueError(
+                "Pipeline parameter output must provide a"
+                " source via its `valueFrom.parameter` attribute,"
+                " but seems to be missing:"
+                f"{output_parameter_value_from_parameter}"
+            )
+        (
+            upstream_node,
+            output_type,
+            output_name,
+        ) = cls.resolve_parameter_reference(
+            output_parameter_value_from_parameter
+        )
+        return PipelineParameterOutput(
+            name=output_parameter.name,
+            source=NodeInputSource(
+                node=upstream_node,
+                output_name=output_name,
+                output_type=output_type,
+            ),
+        )
+
+    @classmethod
+    def build_pipeline_node_output_artifact(
+        cls, output_artifact: ArtifactModel
+    ) -> PipelineArtifactOutput:
+        """Builds and returns a PipelineArtifactOutput instance from the
+        provided ArtifactModel instance. Checks for source artifact references
+        and  resolves them into a NodeInputSource attribute on the return.
+
+        Raises a ValueError if no such reference can be found.
+
+        Args:
+            output_artifact (ArtifactModel): The output artifact
+
+        Returns:
+            PipelineArtifactOutput: The assembled pipeline artifact output.
+        """
+
+        output_artifact_from_ = getattr(output_artifact, "from_", None)
+
+        if cls.contains_parameter_reference(output_artifact_from_):
+            raise ValueError(
+                "Pipeline artifact input must provide a"
+                " source via its `from_` attribute, but seems to"
+                f" be missing: {output_artifact_from_}"
+            )
+
+        (
+            upstream_node,
+            output_type,
+            output_name,
+        ) = cls.resolve_parameter_reference(output_artifact_from_)
+        return PipelineArtifactOutput(
+            name=output_artifact.name,
+            source=NodeInputSource(
+                node=upstream_node,
+                output_name=output_name,
+                output_type=output_type,
+            ),
+        )
+
+    @classmethod
+    def build_io(
+        cls, workflow_template_spec: WorkflowSpecModel
+    ) -> Tuple[PipelineInputs, PipelineOutputs]:
+
+        inner_dag_template, _ = cls.get_relevant_templates(
+            workflow_template_spec
+        )
+
+        # add pipeline inputs directly from inner dag template
+        pipeline_inputs = PipelineInputs(
+            parameters=[
+                PipelineParameterInput(dag_input_parameter)
+                for dag_input_parameter in inner_dag_template.inputs.parameters
+            ]
+        )
+
+        pipeline_outputs = {"parameters": [], "artifacts": []}
+
+        output_parameters = inner_dag_template.outputs.parameters
+
+        if output_parameters is not None:
+            for output_parameter in output_parameters:
+                pipeline_output_parameter = (
+                    cls.build_pipeline_output_parameter(output_parameter)
+                )
+                pipeline_outputs["parameters"].append(
+                    pipeline_output_parameter
+                )
+
+        output_artifacts = inner_dag_template.outputs.artifacts
+
+        if output_artifacts is not None:
+            for output_artifact in output_artifacts:
+                pipeline_output_artifact = (
+                    cls.build_pipeline_node_output_artifact(output_artifact)
+                )
+                pipeline_outputs["artifacts"].append(pipeline_output_artifact)
+
+        pipeline_outputs = PipelineOutputs.model_validate(pipeline_outputs)
+
+        return pipeline_inputs, pipeline_outputs
+
+    @classmethod
+    def build_pipeline_node_input_parameter(
+        cls, input_parameter: ParameterModel
+    ) -> NodeParameterInput:
+        """Builds and returns a NodeParameterInput instance from the provided
+        ParameterModel instance. Checks for source parameter references and
+        resolves them into a NodeInputSource attribute on the return when
+        needed.
+
+        Args:
+            input_parameter (ParameterModel): The input parameter
+
+        Returns:
+            NodeParameterInput: The assembled pipeline node parameter input.
+        """
+
+        input_parameter_value = getattr(input_parameter, "value", None)
+
+        if cls.contains_parameter_reference(input_parameter_value):
+            return NodeParameterInput(**input_parameter)
+        else:
+            (
+                upstream_node,
+                output_type,
+                output_name,
+            ) = cls.resolve_parameter_reference(input_parameter_value)
+            return NodeParameterInput(
+                name=input_parameter.name,
+                source=NodeInputSource(
+                    node=upstream_node,
+                    output_name=output_name,
+                    output_type=output_type,
+                ),
+            )
+
+    @classmethod
+    def build_pipeline_node_input_artifact(
+        cls, input_artifact: ArtifactModel
+    ) -> NodeArtifactInput:
+        """Builds and returns a NodeArtifactInput instance from the provided
+        ArtifactModel instance. Checks for source artifact references and
+        resolves them into a NodeInputSource attribute on the return.
+
+        Raises a ValueErro if no such reference could be found.
+
+        Args:
+            input_artifact (ArtifactModel): The input artifact
+
+        Returns:
+            NodeArtifactInput: The assembled pipeline node artifact input.
+        """
+
+        input_artifact_from_ = getattr(input_artifact, "from_", None)
+
+        if cls.contains_parameter_reference(input_artifact_from_):
+            raise ValueError(
+                "Pipeline node artifact input must provide a"
+                " source via its `from_` attribute, but seems to"
+                f" be missing: {input_artifact_from_}"
+            )
+
+        (
+            upstream_node,
+            output_type,
+            output_name,
+        ) = cls.resolve_parameter_reference(input_artifact_from_)
+        return NodeArtifactInput(
+            name=input_artifact.name,
+            source=NodeInputSource(
+                node=upstream_node,
+                output_name=output_name,
+                output_type=output_type,
+            ),
+        )
+
+    @classmethod
+    def build_pipeline_node(
+        cls,
+        task: DAGTaskModel,
+        component_templates_dict: Dict[str, TemplateModel],
+    ) -> PipelineNode:
+
+        # initialize pipeline node dict container with basic attributes
+        pipeline_node = {
+            "name": task.name,
+            "template": task.template,
+            "depends": task.depends.split(" && ")
+            if task.depends is not None
+            else [],
+        }
+
+        # add node outputs directly from template
+        pipeline_node["outputs"] = NodeOutputs(
+            **copy_non_null_dict(
+                component_templates_dict[pipeline_node["template"]].outputs
+            )
+        )
+
+        # add node inputs from task arguments; resolve any source references
+        # into custom NodeInputSource
+        pipeline_node["inputs"] = {"parameters": [], "artifacts": []}
+
+        input_parameters = task.arguments.parameters
+
+        if input_parameters is not None:
+            for input_parameter in input_parameters:
+                pipeline_node_input_parameter = (
+                    cls.build_pipeline_node_input_parameter(input_parameter)
+                )
+                pipeline_node["inputs"]["parameters"].append(
+                    pipeline_node_input_parameter
+                )
+
+        input_artifacts = task.arguments.artifacts
+        if input_artifacts is not None:
+            for input_artifact in input_artifacts:
+                pipeline_node_input_artifact = (
+                    cls.build_pipeline_node_input_artifact(input_artifact)
+                )
+                pipeline_node["inputs"]["artifacts"].append(
+                    pipeline_node_input_artifact
+                )
+
+        return PipelineNode.model_validate(pipeline_node)
+
+    @classmethod
+    def build_dag(
+        cls, workflow_template_spec: WorkflowSpecModel
+    ) -> List[PipelineNode]:
         """Utility to build the Pipeline class' dag attribute.
 
         Args:
-            workflow_template_spec (Dict): The spec field of a dict-ified
+            workflow_template_spec (WorkflowSpecModel): The spec field of a
                 hera.workflows.WorkflowTemplate class instance
 
         Returns:
             List[PipelineNode]: The constructed dag attribute of a Pipeline
                 instance.
         """
+
+        (
+            inner_dag_template,
+            component_templates_dict,
+        ) = cls.get_relevant_templates(workflow_template_spec)
+
         dag = []
-        templates_dict = dict(
-            [
-                (template["name"], template)
-                for template in workflow_template_spec["templates"]
-            ]
-        )
-        entrypoint_template = templates_dict.pop(
-            workflow_template_spec["entrypoint"]
-        )
-        tasks = entrypoint_template["dag"]["tasks"]
 
-        for task in tasks:
-            # assemble task data structure: name, template and depends can be
-            # copied straight from the task entry of the dag template
-            pipeline_node = {
-                "name": task["name"],
-                "template": task["template"],
-                "depends": task["depends"].split(" && ")
-                if task["depends"] is not None
-                else [],
-            }
-            # the outputs can be obtained from the reference template's outputs
-            pipeline_node["outputs"] = NodeOutputs(
-                **copy_non_null_dict(
-                    templates_dict[pipeline_node["template"]]["outputs"]
-                )
+        for task in inner_dag_template.dag.tasks:
+            pipeline_node = cls.build_pipeline_node(
+                task, component_templates_dict
             )
-
-            # the inputs need to resolve the expressions to either the pipeline
-            # or reference task in the expression if no expression is used, the
-            # argument spec can be directly appended to the corresponding
-            # parameters/artifacts list
-            pipeline_node_inputs = {"parameters": [], "artifacts": []}
-            # try:
-            #     node_input_parameters = task["arguments"]["parameters"]
-            # except KeyError:
-            #     node_input_parameters = []
-            if task["arguments"]["parameters"] is not None:
-                node_input_parameters = task["arguments"]["parameters"]
-            else:
-                node_input_parameters = []
-
-            # try:
-            #     node_input_artifacts = task["arguments"]["artifacts"]
-            # except KeyError:
-            #     node_input_artifacts = []
-            if task["arguments"]["artifacts"] is not None:
-                node_input_artifacts = task["arguments"]["artifacts"]
-            else:
-                node_input_artifacts = []
-
-            # build parameter inputs
-            for node_argument in node_input_parameters:
-                if "{{" not in node_argument["value"]:
-                    pipeline_node_inputs["parameters"].append(
-                        NodeParameterInput(**node_argument)
-                    )
-                elif node_argument.get("value") is not None:
-                    (
-                        upstream_node,
-                        output_type,
-                        output_name,
-                    ) = cls.resolve_value_expression(node_argument["value"])
-                    pipeline_node_inputs["parameters"].append(
-                        NodeParameterInput(
-                            name=node_argument["name"],
-                            source=NodeInputSource(
-                                node=upstream_node,
-                                output_name=output_name,
-                                output_type=output_type,
-                            ),
-                        )
-                    )
-
-            # build artifact inputs
-            for node_argument in node_input_artifacts:
-                (
-                    upstream_node,
-                    output_type,
-                    output_name,
-                ) = cls.resolve_value_expression(node_argument["from_"])
-                pipeline_node_inputs["artifacts"].append(
-                    NodeArtifactInput(
-                        name=node_argument["name"],
-                        source=NodeInputSource(
-                            node=upstream_node,
-                            output_name=output_name,
-                            output_type=output_type,
-                        ),
-                    )
-                )
-
-            pipeline_node["inputs"] = pipeline_node_inputs
-            dag.append(PipelineNode.model_validate(pipeline_node))
+            dag.append(pipeline_node)
 
         return dag
 
@@ -355,39 +610,38 @@ class Pipeline(BaseModel):
             Pipeline: A Pipeline class instance.
         """
 
-        workflow_template_dict = workflow_template_resource.dict()
-        workflow_template_spec = workflow_template_dict["spec"].copy()
+        workflow_template_spec: WorkflowSpecModel = (
+            workflow_template_resource.spec
+        )
 
         # metadata
         metadata = PipelineMetadata(
-            pipeline=workflow_template_dict["metadata"],
-            flow=workflow_template_spec.get("workflow_metadata", None),
-            component=workflow_template_spec.get("pod_metadata", None),
+            pipeline=workflow_template_resource.metadata.model_dump(),
+            flow=getattr(workflow_template_spec, "workflow_metadata", None),
+            component=getattr(workflow_template_spec, "pod_metadata", None),
         )
 
         # templates
-        entrypoint_template = workflow_template_spec["entrypoint"]
         templates = []
-        for template in workflow_template_spec["templates"]:
-            # we are not interested in the entrypoint template
-            if template["name"] == entrypoint_template:
-                continue
-            elif template["script"] is not None:
+        for template in workflow_template_spec.templates:
+            # we are only interested in Script and Resource type templates
+            if template.script is not None:
                 templates.append(ScriptTemplate.model_validate(template))
-            elif template["resource"] is not None:
+            elif template.resource is not None:
                 templates.append(ResourceTemplate.model_validate(template))
 
-        # inputs
-        inputs = [
-            PipelineInputParameter(**parameter)
-            for parameter in workflow_template_spec["arguments"]["parameters"]
-        ]
+        # io
+        inputs, outputs = cls.build_io(workflow_template_spec)
 
         # dag
         dag = cls.build_dag(workflow_template_spec)
 
         return cls(
-            metadata=metadata, templates=templates, inputs=inputs, dag=dag
+            metadata=metadata,
+            templates=templates,
+            inputs=inputs,
+            outputs=outputs,
+            dag=dag,
         )
 
     @classmethod
