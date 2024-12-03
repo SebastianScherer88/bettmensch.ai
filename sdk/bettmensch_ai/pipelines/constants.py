@@ -68,10 +68,10 @@ GPU_TOLERATION = Toleration(
 class COMPONENT_IMPLEMENTATION(Enum):
     base: str = "base"
     standard: str = "standard"
-    adapter_out: str = "adapter_out"
-    adapter_in: str = "adapter_in"
-    wait_on_k8s_external: str = "wait_on_k8s_external"
-    torch_ddp: str = "torch_ddp"
+    adapter_out: str = "adapter-out"
+    adapter_in: str = "adapter-in"
+    wait_on_k8s_external: str = "wait-on-k8s-external"
+    torch_ddp: str = "torch-ddp"
 
 
 class PipelineDagTemplate(Enum):
