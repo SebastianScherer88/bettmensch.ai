@@ -38,7 +38,7 @@ def test_adapter_out_component___init__(test_function_and_task_inputs):
 
     # validate component attributes
     assert isinstance(test_component, AdapterOutComponent)
-    assert test_component.implementation == "adapter_out"
+    assert test_component.implementation == "adapter-out"
     assert test_component.base_name == "test-name-adapter-out"
     assert test_component.name == "test-name-adapter-out-0"
     assert test_component.depends == "mock-component-0"
@@ -68,7 +68,7 @@ def test_adapter_in_component___init__(test_function_and_task_inputs):
 
     # validate component attributes
     assert isinstance(test_component, AdapterInComponent)
-    assert test_component.implementation == "adapter_in"
+    assert test_component.implementation == "adapter-in"
     assert test_component.base_name == "test-name-adapter-in"
     assert test_component.name == "test-name-adapter-in-0"
     assert test_component.depends == "mock-component-0"
