@@ -521,6 +521,7 @@ def display_selected_pipeline(
                                     "type",
                                     "argument_type",
                                     "value_from",
+                                    "value",
                                 ],
                                 axis=1,
                             ),
@@ -532,7 +533,6 @@ def display_selected_pipeline(
                     ).rename(
                         columns={
                             "name": "Name",
-                            "value": "Default",
                             "node_name": "Upstream Task",
                             "io_type": "Upstream I/O type",
                             "io_argument_type": "Upstream I/O Argument Type",
