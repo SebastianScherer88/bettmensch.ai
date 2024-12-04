@@ -289,7 +289,13 @@ def display_pipeline_dag_selection(
                         task_inputs_parameters_formatted_df = pd.concat(
                             [
                                 task_inputs_parameters_df.drop(
-                                    ["source", "value_from"], axis=1
+                                    [
+                                        "source",
+                                        "type",
+                                        "argument_type",
+                                        "value_from",
+                                    ],
+                                    axis=1,
                                 ),
                                 task_inputs_parameters_df["source"].apply(
                                     pd.Series
@@ -300,9 +306,10 @@ def display_pipeline_dag_selection(
                             columns={
                                 "name": "Name",
                                 "value": "Default",
-                                "node": "Upstream Task",
-                                "output_name": "Upstream I/O",
-                                "output_type": "Upstream Type",
+                                "node_name": "Upstream Task",
+                                "io_type": "Upstream I/O type",
+                                "io_argument_type": "Upstream I/O Argument Type",  # noqa: E501
+                                "io_name": "Upstream I/O",
                             },
                             inplace=False,
                         )
@@ -317,7 +324,12 @@ def display_pipeline_dag_selection(
                         task_inputs_artifacts_formatted_df = pd.concat(
                             [
                                 task_inputs_artifacts_df.drop(
-                                    ["source"], axis=1
+                                    [
+                                        "source",
+                                        "type",
+                                        "argument_type",
+                                    ],
+                                    axis=1,
                                 ),
                                 task_inputs_artifacts_df["source"].apply(
                                     pd.Series
@@ -327,9 +339,11 @@ def display_pipeline_dag_selection(
                         ).rename(
                             columns={
                                 "name": "Name",
-                                "node": "Upstream Task",
-                                "output_name": "Upstream I/O",
-                                "output_type": "Upstream Type",
+                                "value": "Default",
+                                "node_name": "Upstream Task",
+                                "io_type": "Upstream I/O type",
+                                "io_argument_type": "Upstream I/O Argument Type",  # noqa: E501
+                                "io_name": "Upstream I/O",
                             },
                             inplace=False,
                         )
@@ -354,7 +368,7 @@ def display_pipeline_dag_selection(
                         )
                         task_outputs_parameters_formatted_df = (
                             task_outputs_parameters_df.drop(
-                                "value_from", axis=1
+                                ["value_from", "type", "argument_type"], axis=1
                             ).rename(
                                 columns={
                                     "name": "Name",
@@ -372,7 +386,7 @@ def display_pipeline_dag_selection(
                         )
                         task_outputs_artifacts_formatted_df = (
                             task_outputs_artifacts_df.drop(
-                                "path", axis=1
+                                ["path", "type", "argument_type"], axis=1
                             ).rename(
                                 columns={
                                     "name": "Name",
@@ -476,13 +490,15 @@ def display_selected_pipeline(
                 pipeline_inputs = formatted_pipeline_data["inputs"][
                     selected_pipeline
                 ]["parameters"]
-                pipeline_inputs_formatted_df = pd.DataFrame(
-                    pipeline_inputs
-                ).rename(
-                    columns={
-                        "name": "Name",
-                        "value": "Default",
-                    }
+                pipeline_inputs_formatted_df = (
+                    pd.DataFrame(pipeline_inputs)
+                    .drop(["type", "argument_type"], axis=1)
+                    .rename(
+                        columns={
+                            "name": "Name",
+                            "value": "Default",
+                        }
+                    )
                 )
                 st.write(":page_with_curl: Parameters")
                 st.dataframe(pipeline_inputs_formatted_df, hide_index=True)
@@ -500,7 +516,13 @@ def display_selected_pipeline(
                     pipeline_outputs_parameters_formatted_df = pd.concat(
                         [
                             pipeline_outputs_parameters_df.drop(
-                                ["source", "value_from"], axis=1
+                                [
+                                    "source",
+                                    "type",
+                                    "argument_type",
+                                    "value_from",
+                                ],
+                                axis=1,
                             ),
                             pipeline_outputs_parameters_df["source"].apply(
                                 pd.Series
@@ -511,9 +533,10 @@ def display_selected_pipeline(
                         columns={
                             "name": "Name",
                             "value": "Default",
-                            "node": "Upstream Task",
-                            "output_name": "Upstream I/O",
-                            "output_type": "Upstream Type",
+                            "node_name": "Upstream Task",
+                            "io_type": "Upstream I/O type",
+                            "io_argument_type": "Upstream I/O Argument Type",
+                            "io_name": "Upstream I/O",
                         },
                         inplace=False,
                     )
@@ -531,7 +554,12 @@ def display_selected_pipeline(
                     pipeline_outputs_artifacts_formatted_df = pd.concat(
                         [
                             pipeline_outputs_artifacts_df.drop(
-                                ["source"], axis=1
+                                [
+                                    "source",
+                                    "type",
+                                    "argument_type",
+                                ],
+                                axis=1,
                             ),
                             pipeline_outputs_artifacts_df["source"].apply(
                                 pd.Series
@@ -541,9 +569,11 @@ def display_selected_pipeline(
                     ).rename(
                         columns={
                             "name": "Name",
-                            "node": "Upstream Task",
-                            "output_name": "Upstream I/O",
-                            "output_type": "Upstream Type",
+                            "value": "Default",
+                            "node_name": "Upstream Task",
+                            "io_type": "Upstream I/O type",
+                            "io_argument_type": "Upstream I/O Argument Type",
+                            "io_name": "Upstream I/O",
                         },
                         inplace=False,
                     )

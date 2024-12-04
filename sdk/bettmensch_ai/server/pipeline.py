@@ -121,23 +121,26 @@ class ResourceTemplate(BaseModel):
 # --- PipelineNode
 # inputs
 class NodeInputSource(BaseModel):
-    node: str
-    output_name: str
-    output_type: Literal["parameters", "artifacts"]
+    node_name: str
+    io_type: Literal["inputs", "outputs"]
+    io_argument_type: Literal["parameters", "artifacts"]
+    io_name: str
 
 
 class NodeInput(BaseModel):
     name: str
     source: Optional[NodeInputSource] = None
+    type: str = "inputs"
 
 
 class NodeParameterInput(NodeInput):
     value: Optional[str] = None
     value_from: Optional[Union[str, Dict]] = None
+    argument_type: str = "parameters"
 
 
 class NodeArtifactInput(NodeInput):
-    pass
+    argument_type: str = "artifacts"
 
 
 class NodeInputs(BaseModel):
@@ -148,14 +151,17 @@ class NodeInputs(BaseModel):
 # outputs
 class NodeOutput(BaseModel):
     name: str
+    type: str = "outputs"
 
 
 class NodeParameterOutput(NodeOutput):
     value_from: Optional[Union[str, Dict]] = None
+    argument_type: str = "parameters"
 
 
 class NodeArtifactOutput(NodeOutput):
     path: str
+    argument_type: str = "artifacts"
 
 
 class NodeOutputs(BaseModel):
@@ -172,12 +178,32 @@ class PipelineNode(BaseModel):
     outputs: NodeOutputs
     depends: List[str] = []
 
+    @property
+    def ios(
+        self,
+    ) -> List[
+        Union[
+            NodeParameterInput,
+            NodeParameterOutput,
+            NodeArtifactInput,
+            NodeArtifactOutput,
+        ]
+    ]:
+        return (
+            self.inputs.parameters
+            + self.outputs.parameters
+            + self.inputs.artifacts
+            + self.outputs.artifacts
+        )
+
 
 # --- Pipeline
 # inputs
 class PipelineParameterInput(BaseModel):
     name: str
     value: Optional[str] = None
+    type: str = "inputs"
+    argument_type: str = "parameters"
 
 
 class PipelineInputs(BaseModel):
@@ -185,26 +211,14 @@ class PipelineInputs(BaseModel):
 
 
 # outputs
-# class NodeInputSource(BaseModel):
-#     node: str
-#     output_name: str
-#     output_type: Literal["parameters", "artifacts"]
-
-
-# class NodeInput(BaseModel):
-#     name: str
-#     source: Optional[NodeInputSource] = None
-
-
-# class NodeParameterInput(NodeInput):
-#     value: Optional[str] = None
-#     value_from: Optional[Union[str, Dict]] = None
 class PipelineParameterOutput(NodeParameterInput):
-    pass
+    type: str = "outputs"
+    argument_type: str = "parameters"
 
 
 class PipelineArtifactOutput(NodeArtifactInput):
-    pass
+    type: str = "outputs"
+    argument_type: str = "artifacts"
 
 
 class PipelineOutputs(BaseModel):
@@ -218,6 +232,16 @@ class Pipeline(BaseModel):
     inputs: Optional[PipelineInputs] = None
     outputs: Optional[PipelineOutputs] = None
     dag: List[PipelineNode]
+
+    @property
+    def ios(
+        self,
+    ) -> List[Union[PipelineInputs, PipelineOutputs, PipelineArtifactOutput]]:
+        return (
+            self.inputs.parameters
+            + self.outputs.parameters
+            + self.outputs.artifacts
+        )
 
     def get_template(self, name: str) -> ScriptTemplate:
 
@@ -256,17 +280,17 @@ class Pipeline(BaseModel):
         #   'tasks.Set-a-coin.outputs.parameters.coin'
         expression_content = reference.replace("{{", "").replace("}}", "")
 
-        # 'workflow.parameters.coin' -> ['workflow','parameters','coin']
+        # 'inputs.parameters.coin' -> ['inputs','parameters','coin']
         # 'tasks.Set-a-coin.outputs.parameters.coin' ->
         #   ['tasks','Set-a-coin','outputs','parameters','coin']
         tokens = expression_content.split(".")
 
         if tokens[0] == "inputs":
-            # ('pipeline','parameters','coin')
-            return ("pipeline", tokens[1], tokens[2])
+            # ('pipeline','inputs','parameters','coin')
+            return ("pipeline", tokens[0], tokens[1], tokens[2])
         elif tokens[0] == "tasks":
-            # ('Set-a-coin','parameters','coin')
-            return (tokens[1], tokens[3], tokens[4])
+            # ('Set-a-coin','outputs','parameters','coin')
+            return (tokens[1], tokens[2], tokens[3], tokens[4])
         else:
             raise ValueError(f"First token {tokens[0]} not supported.")
 
@@ -333,17 +357,19 @@ class Pipeline(BaseModel):
             )
         (
             upstream_node,
-            output_type,
-            output_name,
+            io_type,
+            io_argument_type,
+            io_name,
         ) = cls.resolve_parameter_reference(
             output_parameter_value_from_parameter
         )
         return PipelineParameterOutput(
             name=output_parameter.name,
             source=NodeInputSource(
-                node=upstream_node,
-                output_name=output_name,
-                output_type=output_type,
+                node_name=upstream_node,
+                io_type=io_type,
+                io_argument_type=io_argument_type,
+                io_name=io_name,
             ),
         )
 
@@ -378,15 +404,17 @@ class Pipeline(BaseModel):
 
         (
             upstream_node,
-            output_type,
-            output_name,
+            io_type,
+            io_argument_type,
+            io_name,
         ) = cls.resolve_parameter_reference(output_artifact_from_)
         return PipelineArtifactOutput(
             name=output_artifact.name,
             source=NodeInputSource(
-                node=upstream_node,
-                output_name=output_name,
-                output_type=output_type,
+                node_name=upstream_node,
+                io_type=io_type,
+                io_argument_type=io_argument_type,
+                io_name=io_name,
             ),
         )
 
@@ -458,15 +486,17 @@ class Pipeline(BaseModel):
         else:
             (
                 upstream_node,
-                output_type,
-                output_name,
+                io_type,
+                io_argument_type,
+                io_name,
             ) = cls.resolve_parameter_reference(input_parameter_value)
             return NodeParameterInput(
                 name=input_parameter.name,
                 source=NodeInputSource(
-                    node=upstream_node,
-                    output_name=output_name,
-                    output_type=output_type,
+                    node_name=upstream_node,
+                    io_type=io_type,
+                    io_argument_type=io_argument_type,
+                    io_name=io_name,
                 ),
             )
 
@@ -499,15 +529,17 @@ class Pipeline(BaseModel):
 
         (
             upstream_node,
-            output_type,
-            output_name,
+            io_type,
+            io_argument_type,
+            io_name,
         ) = cls.resolve_parameter_reference(input_artifact_from_)
         return NodeArtifactInput(
             name=input_artifact.name,
             source=NodeInputSource(
-                node=upstream_node,
-                output_name=output_name,
-                output_type=output_type,
+                node_name=upstream_node,
+                io_type=io_type,
+                io_argument_type=io_argument_type,
+                io_name=io_name,
             ),
         )
 
@@ -651,13 +683,100 @@ class Pipeline(BaseModel):
         )
 
     @classmethod
-    def transform_dag_visualization_node_position(
-        cls, x_y: Tuple[float, float]
-    ) -> Tuple[float, float]:
+    def build_visualization_pipeline_io_node(
+        cls,
+        io: Union[
+            PipelineArtifactOutput,
+            PipelineParameterInput,
+            PipelineParameterOutput,
+        ],
+    ) -> DagPipelineIONode:
+        """Builds and returns a visualization node that represents a DAG's I/O
+        attribute in the visualization's diagram.
 
-        transformed_x_y = 350 * x_y[0], 150 * x_y[1]
+        Args:
+            io (Union[PipelineArtifactOutput,PipelineParameterInput,PipelineParameterOutput]): # noqa: E501
+                The I/O instance
 
-        return transformed_x_y
+        Returns:
+            DagPipelineIONode: The instance representing the DAG's I/O attibute
+                in the visualization's diagram.
+        """
+        pipeline_io_node_name = (
+            f"pipeline_{io.type}_{io.argument_type}_{io.name}"
+        )
+        return DagPipelineIONode(
+            id=pipeline_io_node_name,
+            data={
+                "label": f"{PIPELINE_NODE_EMOJI_MAP[io.type]['pipeline']} {PIPELINE_NODE_EMOJI_MAP[io.argument_type]} {io.name}",  # noqa: E501
+                "value": getattr(io, "value", None),
+            },
+        )
+
+    @classmethod
+    def build_visualization_task_io_node(
+        cls,
+        task_name: str,
+        io: Union[
+            NodeParameterInput,
+            NodeArtifactInput,
+            NodeParameterOutput,
+            NodeArtifactOutput,
+        ],
+    ) -> DagTaskIONode:
+        """Builds and returns a visualization node that represents a DAG's
+        task's I/O attribute in the visualization's diagram.
+
+        Args:
+            task_name (str): The name of the task
+            io (Union[NodeParameterInput, NodeArtifactInput, NodeParameterOutput, NodeArtifactOutput]): # noqa: E501
+                The I/O instance.
+
+        Returns:
+            DagTaskIONode: The instance representing the task's I/O attibute in
+                the visualization's diagram.
+        """
+        task_io_node_name = (
+            f"{task_name}_{io.type}_{io.argument_type}_{io.name}"
+        )
+
+        return DagTaskIONode(
+            id=task_io_node_name,
+            data={
+                "label": f"{PIPELINE_NODE_EMOJI_MAP[io.type]['task']} {PIPELINE_NODE_EMOJI_MAP[io.argument_type]} {io.name}",  # noqa: E501
+                "value": getattr(io, "value", None),
+            },
+        )
+
+    @classmethod
+    def build_visualization_connection(
+        cls,
+        source_node_name: str,
+        target_node_name: str,
+        animated: bool = True,
+    ) -> DagConnection:
+        """Builds and returns a visualization edge that represents a dependency
+        between the specified source and target nodes (which can represent a
+        DAG's task or an I/O, respectively) the visualization's diagram.
+
+        Args:
+            source_node_name (str): _description_
+            target_node_name (str): _description_
+            animated (bool, optional): _description_. Defaults to True.
+
+        Returns:
+            DagConnection: The instance representing the dependency between the
+                specified source and target nodes in the visualization's
+                diagram.
+        """
+
+        return DagConnection(
+            id=f"{source_node_name}->{target_node_name}",
+            source=source_node_name,
+            target=target_node_name,
+            animated=animated,
+            edge_type="smoothstep",
+        )
 
     def create_dag_visualization_schema(
         self,
@@ -674,138 +793,117 @@ class Pipeline(BaseModel):
                 visualizing the DAG on the dashboard.
         """
 
-        connections: List[Dict] = []
-        nodes: List[Dict] = []
+        vis_connections: List[Dict] = []
+        vis_nodes: List[Dict] = []
 
         for task_node in self.dag:
 
-            task_node_name = task_node.name
-
-            nodes.append(
-                DagTaskNode(
-                    id=task_node_name,
-                    data={
-                        "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node_name}"  # noqa: E501
-                    },
-                )
+            vis_task_node = DagTaskNode(
+                id=task_node.name,
+                data={
+                    "label": f"{PIPELINE_NODE_EMOJI_MAP['task']} {task_node.name}"  # noqa: E501
+                },
             )
+            vis_nodes.append(vis_task_node)
 
             # we only create task_node <-> task_node connections if we dont
             # display the tasks' IO specs
             if not include_task_io:
                 if task_node.depends is not None:
                     for upstream_node_name in task_node.depends:
-                        connections.append(
-                            DagConnection(
-                                id=f"{upstream_node_name}->{task_node_name}",
-                                source=upstream_node_name,
-                                target=task_node_name,
-                                animated=True,
-                                edge_type="smoothstep",
+                        # add the task->task connection
+                        task_to_task_connection = (
+                            self.build_visualization_connection(
+                                source_node_name=upstream_node_name,
+                                target_node_name=task_node.name,
                             )
                         )
-            # if we include the tasks' IO specs, we need to draw
-            # - io nodes and
-            # connections between
-            # - inputs and outputs, and
-            # - inputs/outputs and associated task_nodes
+                        vis_connections.append(task_to_task_connection)
+
+            # if we include the tasks' I/O specs, we need to draw
+            # - task I/O nodes
+            # and
+            # - task_input->task,
+            # - source_(input/output)->task_input,
+            # - task->task_output
+            # connections
             else:
-                for interface_type in ["inputs", "outputs"]:
-
-                    for argument_type in ["parameters", "artifacts"]:
-                        arguments = getattr(
-                            getattr(task_node, interface_type), argument_type
-                        )
-                        if not arguments:
-                            continue
-
-                        for argument in arguments:
-                            # add the task io node
-                            task_io_node_name = f"{task_node_name}_{interface_type}_{argument_type}_{argument.name}"  # noqa: E501
-                            nodes.append(
-                                DagTaskIONode(
-                                    id=task_io_node_name,
-                                    data={
-                                        "label": f"{PIPELINE_NODE_EMOJI_MAP[interface_type]['task']} {PIPELINE_NODE_EMOJI_MAP[argument_type]} {argument.name}",  # noqa: E501
-                                        "value": getattr(
-                                            argument, "value", None
-                                        ),
-                                    },
-                                )
-                            )
-
-                            # connect that task io node with the task node
-                            if interface_type == "inputs":
-                                upstream_node_name = task_io_node_name
-                                node_name = task_node_name
-                            else:
-                                upstream_node_name = task_node_name
-                                node_name = task_io_node_name
-
-                            connections.append(
-                                DagConnection(
-                                    id=f"{upstream_node_name}->{node_name}",
-                                    source=upstream_node_name,
-                                    target=node_name,
-                                    animated=False,
-                                    edge_type="smoothstep",
-                                )
-                            )
-
-                            # connect the input type task io node with the
-                            # upstream output type task io node - where
-                            # appropriate
-                            if (
-                                interface_type == "inputs"
-                                and getattr(argument, "source", None)
-                                is not None
-                            ):
-                                task_io_source = argument.source
-                                upstream_node_name = f"{task_io_source.node}_outputs_{task_io_source.output_type}_{task_io_source.output_name}"  # noqa: E501
-                                connections.append(
-                                    DagConnection(
-                                        id=f"{upstream_node_name}->{task_io_node_name}",  # noqa: E501
-                                        source=upstream_node_name,
-                                        target=task_io_node_name,
-                                        animated=True,
-                                        edge_type="smoothstep",
-                                    )
-                                )
-
-        if include_task_io:
-            for input in self.inputs.parameters:
-                node_name = f"pipeline_outputs_parameters_{input.name}"
-                nodes.append(
-                    DagPipelineIONode(
-                        id=node_name,
-                        data={
-                            "label": f"{PIPELINE_NODE_EMOJI_MAP['inputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {input.name}",  # noqa: E501
-                            "value": input.value,
-                        },
-                        node_type="input",
+                for io in task_node.ios:
+                    # add the task I/O node
+                    vis_task_io_node = self.build_visualization_task_io_node(
+                        task_name=task_node.name, io=io
                     )
-                )
-            # for output_parameter in self.outputs.parameters:
-            #     node_name = f"pipeline_outputs_parameters_{output_parameter.name}" # noqa: E501
-            #     nodes.append(
-            #         DagPipelineIONode(
-            #             id=node_name,
-            #             data={
-            #                 "label": f"{PIPELINE_NODE_EMOJI_MAP['outputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {output_parameter.name}",  # noqa: E501
-            #             },
-            #             #node_type="output",
-            #         )
-            #     )
-            # for output_artifact in self.outputs.artifacts:
-            #     node_name = f"pipeline_outputs_artifacts_{output_artifact.name}" # noqa: E501
-            #     nodes.append(
-            #         DagPipelineIONode(
-            #             id=node_name,
-            #             data={
-            #                 "label": f"{PIPELINE_NODE_EMOJI_MAP['outputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['artifacts']} {output_artifact.name}",  # noqa: E501
-            #             },
-            #             node_type="input",
-            #         )
-            #     )
+                    vis_nodes.append(vis_task_io_node)
 
-        return DagVisualizationItems(connections=connections, nodes=nodes)
+                    if io.type == "inputs":
+                        # add the task_input->task connection
+                        task_input_to_task_connection = (
+                            self.build_visualization_connection(
+                                source_node_name=vis_task_io_node.id,
+                                target_node_name=task_node.name,
+                                animated=False,
+                            )
+                        )
+                        vis_connections.append(task_input_to_task_connection)
+
+                        try:
+                            # add the source_(input/output)->task_input
+                            # connection
+                            assert io.source is not None
+                            vis_source_io_node_name = f"{io.source.node_name}_{io.source.io_type}_{io.source.io_argument_type}_{io.source.io_name}"  # noqa: E501
+                            source_io_to_task_input_connection = (
+                                self.build_visualization_connection(
+                                    source_node_name=vis_source_io_node_name,
+                                    target_node_name=vis_task_io_node.id,
+                                    animated=False,
+                                )
+                            )
+                            vis_connections.append(
+                                source_io_to_task_input_connection
+                            )
+                        except (AttributeError, AssertionError):
+                            pass
+
+                    elif io.type == "outputs":
+                        # add the task->task_output
+                        task_to_task_output_connection = (
+                            self.build_visualization_connection(
+                                source_node_name=task_node.name,
+                                target_node_name=vis_task_io_node.id,
+                                animated=False,
+                            )
+                        )
+                        vis_connections.append(task_to_task_output_connection)
+
+        # if we include the tasks' I/O specs, we need to draw
+        # - pipeline I/O nodes
+        # and
+        # - source_task_output->pipeline_output
+        # connections
+        if include_task_io:
+            for io in self.ios:
+                vis_pipeline_io_node = (
+                    self.build_visualization_pipeline_io_node(io)
+                )
+                vis_nodes.append(vis_pipeline_io_node)
+
+                try:
+                    # add the source_task_output->pipeline_output connection
+                    assert io.source is not None
+                    vis_source_io_node_name = f"{io.source.node_name}_{io.source.io_type}_{io.source.io_argument_type}_{io.source.io_name}"  # noqa: E501
+                    source_io_to_pipeline_output_connection = (
+                        self.build_visualization_connection(
+                            source_node_name=vis_source_io_node_name,
+                            target_node_name=vis_pipeline_io_node.id,
+                            animated=False,
+                        )
+                    )
+                    vis_connections.append(
+                        source_io_to_pipeline_output_connection
+                    )
+                except (AttributeError, AssertionError):
+                    pass
+
+        return DagVisualizationItems(
+            connections=vis_connections, nodes=vis_nodes
+        )
