@@ -27,7 +27,7 @@ PIPELINE_NODE_EMOJI_MAP = {
         "task": "⤵️",  # :arrow_heading_down:
         "pipeline": "⏬",  # :arrow_double_down:
     },
-    "outputs": {"task": "↪️"},  # :arrow_right_hook:
+    "outputs": {"task": "↪️", "pipeline": "↪️"},  # :arrow_right_hook:
     "parameters": "📃",  # :page_with_curl
     "artifacts": "📂",  # :open_file_folder:
 }
@@ -178,7 +178,6 @@ class PipelineNode(BaseModel):
 class PipelineParameterInput(BaseModel):
     name: str
     value: Optional[str] = None
-    default: Optional[Any] = None
 
 
 class PipelineInputs(BaseModel):
@@ -200,7 +199,7 @@ class PipelineInputs(BaseModel):
 # class NodeParameterInput(NodeInput):
 #     value: Optional[str] = None
 #     value_from: Optional[Union[str, Dict]] = None
-class PipelineParameterOutput(NodeParameterOutput):
+class PipelineParameterOutput(NodeParameterInput):
     pass
 
 
@@ -262,7 +261,7 @@ class Pipeline(BaseModel):
         #   ['tasks','Set-a-coin','outputs','parameters','coin']
         tokens = expression_content.split(".")
 
-        if tokens[0] == "workflow":
+        if tokens[0] == "inputs":
             # ('pipeline','parameters','coin')
             return ("pipeline", tokens[1], tokens[2])
         elif tokens[0] == "tasks":
@@ -319,21 +318,18 @@ class Pipeline(BaseModel):
                 output.
         """
 
-        output_parameter_value_from = getattr(
-            output_parameter, "valueFrom", None
-        )
-        output_parameter_value_from_parameter = getattr(
-            output_parameter_value_from, "parameter", None
-        )
-
-        if cls.contains_parameter_reference(
-            output_parameter_value_from_parameter
-        ):
+        try:
+            output_parameter_value_from_parameter = (
+                output_parameter.value_from.parameter
+            )
+            assert cls.contains_parameter_reference(
+                output_parameter_value_from_parameter
+            )
+        except (AttributeError, AssertionError):
             raise ValueError(
                 "Pipeline parameter output must provide a"
-                " source via its `valueFrom.parameter` attribute,"
-                " but seems to be missing:"
-                f"{output_parameter_value_from_parameter}"
+                " source via its `value_from.parameter` attribute,"
+                f" but seems to be missing: {output_parameter}"
             )
         (
             upstream_node,
@@ -352,7 +348,7 @@ class Pipeline(BaseModel):
         )
 
     @classmethod
-    def build_pipeline_node_output_artifact(
+    def build_pipeline_output_artifact(
         cls, output_artifact: ArtifactModel
     ) -> PipelineArtifactOutput:
         """Builds and returns a PipelineArtifactOutput instance from the
@@ -370,7 +366,10 @@ class Pipeline(BaseModel):
 
         output_artifact_from_ = getattr(output_artifact, "from_", None)
 
-        if cls.contains_parameter_reference(output_artifact_from_):
+        try:
+            output_artifact_from_ = output_artifact.from_
+            assert cls.contains_parameter_reference(output_artifact_from_)
+        except (AttributeError, AssertionError):
             raise ValueError(
                 "Pipeline artifact input must provide a"
                 " source via its `from_` attribute, but seems to"
@@ -403,7 +402,9 @@ class Pipeline(BaseModel):
         # add pipeline inputs directly from inner dag template
         pipeline_inputs = PipelineInputs(
             parameters=[
-                PipelineParameterInput(dag_input_parameter)
+                PipelineParameterInput.model_validate(
+                    dag_input_parameter.dict()
+                )
                 for dag_input_parameter in inner_dag_template.inputs.parameters
             ]
         )
@@ -425,8 +426,8 @@ class Pipeline(BaseModel):
 
         if output_artifacts is not None:
             for output_artifact in output_artifacts:
-                pipeline_output_artifact = (
-                    cls.build_pipeline_node_output_artifact(output_artifact)
+                pipeline_output_artifact = cls.build_pipeline_output_artifact(
+                    output_artifact
                 )
                 pipeline_outputs["artifacts"].append(pipeline_output_artifact)
 
@@ -452,8 +453,8 @@ class Pipeline(BaseModel):
 
         input_parameter_value = getattr(input_parameter, "value", None)
 
-        if cls.contains_parameter_reference(input_parameter_value):
-            return NodeParameterInput(**input_parameter)
+        if not cls.contains_parameter_reference(input_parameter_value):
+            return NodeParameterInput.model_validate(input_parameter.dict())
         else:
             (
                 upstream_node,
@@ -486,9 +487,10 @@ class Pipeline(BaseModel):
             NodeArtifactInput: The assembled pipeline node artifact input.
         """
 
-        input_artifact_from_ = getattr(input_artifact, "from_", None)
-
-        if cls.contains_parameter_reference(input_artifact_from_):
+        try:
+            input_artifact_from_ = input_artifact.from_
+            assert cls.contains_parameter_reference(input_artifact_from_)
+        except (AttributeError, AssertionError):
             raise ValueError(
                 "Pipeline node artifact input must provide a"
                 " source via its `from_` attribute, but seems to"
@@ -528,7 +530,7 @@ class Pipeline(BaseModel):
         # add node outputs directly from template
         pipeline_node["outputs"] = NodeOutputs(
             **copy_non_null_dict(
-                component_templates_dict[pipeline_node["template"]].outputs
+                component_templates_dict[task.template].outputs.dict()
             )
         )
 
@@ -616,7 +618,7 @@ class Pipeline(BaseModel):
 
         # metadata
         metadata = PipelineMetadata(
-            pipeline=workflow_template_resource.metadata.model_dump(),
+            pipeline=workflow_template_resource.metadata.dict(),
             flow=getattr(workflow_template_spec, "workflow_metadata", None),
             component=getattr(workflow_template_spec, "pod_metadata", None),
         )
@@ -626,9 +628,13 @@ class Pipeline(BaseModel):
         for template in workflow_template_spec.templates:
             # we are only interested in Script and Resource type templates
             if template.script is not None:
-                templates.append(ScriptTemplate.model_validate(template))
+                templates.append(
+                    ScriptTemplate.model_validate(template.dict())
+                )
             elif template.resource is not None:
-                templates.append(ResourceTemplate.model_validate(template))
+                templates.append(
+                    ResourceTemplate.model_validate(template.dict())
+                )
 
         # io
         inputs, outputs = cls.build_io(workflow_template_spec)
@@ -767,7 +773,7 @@ class Pipeline(BaseModel):
                                 )
 
         if include_task_io:
-            for input in self.inputs:
+            for input in self.inputs.parameters:
                 node_name = f"pipeline_outputs_parameters_{input.name}"
                 nodes.append(
                     DagPipelineIONode(
@@ -779,5 +785,27 @@ class Pipeline(BaseModel):
                         node_type="input",
                     )
                 )
+            # for output_parameter in self.outputs.parameters:
+            #     node_name = f"pipeline_outputs_parameters_{output_parameter.name}" # noqa: E501
+            #     nodes.append(
+            #         DagPipelineIONode(
+            #             id=node_name,
+            #             data={
+            #                 "label": f"{PIPELINE_NODE_EMOJI_MAP['outputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['parameters']} {output_parameter.name}",  # noqa: E501
+            #             },
+            #             #node_type="output",
+            #         )
+            #     )
+            # for output_artifact in self.outputs.artifacts:
+            #     node_name = f"pipeline_outputs_artifacts_{output_artifact.name}" # noqa: E501
+            #     nodes.append(
+            #         DagPipelineIONode(
+            #             id=node_name,
+            #             data={
+            #                 "label": f"{PIPELINE_NODE_EMOJI_MAP['outputs']['pipeline']} {PIPELINE_NODE_EMOJI_MAP['artifacts']} {output_artifact.name}",  # noqa: E501
+            #             },
+            #             node_type="input",
+            #         )
+            #     )
 
         return DagVisualizationItems(connections=connections, nodes=nodes)

@@ -7,7 +7,7 @@ from bettmensch_ai.server.pipeline import (
     NodeInput,
     NodeOutput,
     Pipeline,
-    PipelineInputParameter,
+    PipelineParameterInput,
     ResourceTemplate,
     ScriptTemplate,
 )
@@ -38,7 +38,7 @@ class FlowState(BaseModel):
 
 
 # --- FlowInput
-class FlowInputParameter(PipelineInputParameter):
+class FlowInputParameter(PipelineParameterInput):
     pass
 
 
