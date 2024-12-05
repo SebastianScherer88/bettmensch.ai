@@ -4,15 +4,19 @@ from datetime import datetime
 from typing import Dict, List, Literal, Optional, Union
 
 from bettmensch_ai.server.pipeline import (
-    NodeInput,
-    NodeOutput,
+    NodeArtifactInput,
+    NodeArtifactOutput,
+    NodeParameterInput,
+    NodeParameterOutput,
     Pipeline,
     PipelineParameterInput,
     ResourceTemplate,
     ScriptTemplate,
 )
 from bettmensch_ai.server.utils import copy_non_null_dict
+from hera.workflows.models import NodeStatus as NodeStatusModel
 from hera.workflows.models import Workflow as WorkflowModel
+from hera.workflows.models import WorkflowStatus as WorkflowStatusModel
 from pydantic import BaseModel
 
 
@@ -37,19 +41,13 @@ class FlowState(BaseModel):
     task_results_completion_status: Optional[Dict[str, bool]] = None
 
 
-# --- FlowInput
-class FlowInputParameter(PipelineParameterInput):
+# --- FlowNode
+# inputs
+class FlowNodeParameterInput(NodeParameterInput):
     pass
 
 
-# --- FlowNode
-# inputs
-class FlowNodeParameterInput(NodeInput):
-    value: Optional[str] = None
-    value_from: Optional[Union[str, Dict]] = None
-
-
-class FlowNodeArtifactInput(NodeInput):
+class FlowNodeArtifactInput(NodeArtifactInput):
     s3_prefix: Optional[str] = None
 
 
@@ -59,13 +57,11 @@ class FlowNodeInputs(BaseModel):
 
 
 # outputs
-class FlowNodeParameterOutput(NodeOutput):
+class FlowNodeParameterOutput(NodeParameterOutput):
     value: Optional[str] = None
-    value_from: Optional[Union[str, Dict]] = None
 
 
-class FlowNodeArtifactOutput(NodeOutput):
-    path: str
+class FlowNodeArtifactOutput(NodeArtifactOutput):
     s3_prefix: Optional[str] = None
 
 
@@ -106,6 +102,29 @@ class FlowArtifactConfiguration(BaseModel):
 
 
 # --- Flow
+# inputs
+class FlowParameterInput(PipelineParameterInput):
+    pass
+
+
+class FlowInputs(BaseModel):
+    parameters: List[FlowParameterInput] = []
+
+
+# outputs
+class FlowParameterOutput(FlowNodeParameterInput):
+    type: str = "outputs"
+
+
+class FlowArtifactOutput(FlowNodeArtifactInput):
+    type: str = "outputs"
+
+
+class FlowOutputs(BaseModel):
+    parameters: List[FlowParameterOutput] = []
+    artifacts: List[FlowArtifactOutput] = []
+
+
 class Flow(Pipeline):
     """A flow node is an instantiated pipeline node on Kubernetes."""
 
@@ -113,75 +132,106 @@ class Flow(Pipeline):
     state: FlowState
     artifact_configuration: FlowArtifactConfiguration
     templates: List[Union[ScriptTemplate, ResourceTemplate]]
-    inputs: List[FlowInputParameter] = []
+    inputs: Optional[FlowInputs] = None
+    outputs: Optional[FlowOutputs] = None
     dag: List[FlowNode]
 
     @classmethod
-    def build_dag(cls, workflow_status: Dict) -> List[FlowNode]:
+    def get_node_status_by_display_name(
+        cls, workflow_status: WorkflowStatusModel
+    ) -> Dict[str, NodeStatusModel]:
+        """Generates a display_name -> NodeStatus dictionary from the passed
+        workflow_status' `nodes` attribute (holds a node_id -> NodeStatusModel
+        dictionary).
+
+        Args:
+            workflow_status (WorkflowStatusModel): The workflow status
+                instance.
+
+        Returns:
+            Dict[str,NodeStatusModel]: The display_name -> NodeStatusModel
+                dictionary
+        """
+
+        return dict(
+            [
+                (node_status.display_name, node_status)
+                for node_status in workflow_status.nodes.values()
+            ]
+        )
+
+    @classmethod
+    def build_dag(cls, workflow_status: WorkflowStatusModel) -> List[FlowNode]:
         """Utility to build the Flow class' dag attribute. Identical to the
         Pipeline class' dag attribute, but with additional values resolved at
         runtime.
 
         Args:
-            workflow_status (_type_): The status field of a dict-ified
-                IoArgoprojWorkflowV1alpha1Workflow class instance
+            workflow_status (WorkflowStatusModel): The status field of a hera
+                Workflow model instance.
 
         Returns:
             List[FlowNode]: The constructed dag attribute of a Flow instance.
         """
 
         # build pipeline dag
-        workflow_template_spec = workflow_status[
-            "stored_workflow_template_spec"
-        ]
-        pipeline_dag = super().build_dag(workflow_template_spec)
+        pipeline_dag = super().build_dag(
+            workflow_status.stored_workflow_template_spec
+        )
 
         # add FlowNode specific values and available resolved input/output
         # values for each FlowNode
         flow_dag = []
-        workflow_nodes = list(workflow_status["nodes"].values())
-
-        print(
-            f"Workflow node display names:{[wn['display_name'] for wn in workflow_nodes]}"  # noqa: E501
+        workflow_nodes_dict = cls.get_node_status_by_display_name(
+            workflow_status
         )
+        # workflow_nodes = list(workflow_status.nodes.values())
+
+        # print(
+        #     f"Workflow node display names:{[wn['display_name'] for wn in workflow_nodes]}"  # noqa: E501
+        # )
 
         for pipeline_node in pipeline_dag:
-            pipeline_node_dict = pipeline_node.model_dump()
-            print(f"Pipeline node name: {pipeline_node_dict['name']}")
+            # pipeline_node_dict = pipeline_node.model_dump()
+            # print(f"Pipeline node name: {pipeline_node_dict['name']}")
 
             flow_node_dict = {
-                "name": pipeline_node_dict["name"],
-                "template": pipeline_node_dict["template"],
-                "inputs": pipeline_node_dict["inputs"],
-                "depends": pipeline_node_dict["depends"],
+                "name": pipeline_node.name,
+                "template": pipeline_node.template,
+                "inputs": pipeline_node.inputs.model_dump(),
+                "depends": pipeline_node.depends,
             }
 
-            potential_workflow_node_dict = [
-                workflow_node
-                for workflow_node in workflow_nodes
-                if workflow_node["display_name"] == pipeline_node_dict["name"]
-            ]
-
-            if potential_workflow_node_dict:
-                workflow_node_dict = copy_non_null_dict(
-                    potential_workflow_node_dict[0]
-                )
-
+            try:
+                workflow_node_dict = workflow_nodes_dict[
+                    pipeline_node.name
+                ].dict()
+                workflow_node_dict = copy_non_null_dict(workflow_node_dict)
+            except KeyError:
+                print("Exception")
+                flow_node_dict["pod_name"] = pipeline_node.name
+                flow_node_dict["phase"] = "Not Scheduled"
+                flow_node_dict["outputs"] = FlowNodeOutputs(
+                    parameters=pipeline_node.outputs.parameters,
+                    artifacts=pipeline_node.outputs.artifacts,
+                ).model_dump()
+                flow_node_dict["logs"] = None
+            else:
+                print("No Exception")
                 flow_node_dict["id"] = workflow_node_dict["id"]
                 flow_node_dict["type"] = workflow_node_dict["type"]
                 flow_node_dict["pod_name"] = workflow_node_dict["name"]
                 flow_node_dict["phase"] = workflow_node_dict["phase"]
-                flow_node_dict["outputs"] = dict(
-                    **pipeline_node_dict["outputs"],
-                    **{"exit_code": workflow_node_dict.get("exit_code")},
-                )
+                flow_node_dict["outputs"] = FlowNodeOutputs(
+                    parameters=pipeline_node.outputs.parameters,
+                    artifacts=pipeline_node.outputs.artifacts,
+                    exit_code=workflow_node_dict["exit_code"],
+                ).model_dump()
                 flow_node_dict["logs"] = None
-                flow_node_dict["dependants"] = workflow_node_dict.get(
-                    "children"
-                )
-                flow_node_dict["host_node_name"] = workflow_node_dict.get(
+                flow_node_dict["dependants"] = workflow_node_dict["children"]
+                flow_node_dict["host_node_name"] = workflow_node_dict[
                     "host_node_name"
-                )
+                ]
 
                 # inject resolved input values where possible
                 for argument_io in ("inputs", "outputs"):
@@ -219,20 +269,11 @@ class Flow(Pipeline):
                                         pass
                         except KeyError:
                             pass
-
-            else:
-                flow_node_dict["pod_name"] = pipeline_node_dict["name"]
-                flow_node_dict["phase"] = "Not Scheduled"
-                flow_node_dict["outputs"] = dict(
-                    **pipeline_node_dict["outputs"],
-                )
-                flow_node_dict["logs"] = None
-            try:
+            finally:
+                print(f"Flow node dict:{flow_node_dict}")
                 flow_node = FlowNode(**flow_node_dict)
-            except Exception as e:
-                raise (e)
-
-            flow_dag.append(flow_node)
+                print(f"Flow node:{flow_node}")
+                flow_dag.append(flow_node)
 
         return flow_dag
 
@@ -252,46 +293,42 @@ class Flow(Pipeline):
         Returns:
             Flow: A Flow class instance.
         """
-
-        workflow_dict = workflow_model.dict()
-        workflow_spec = workflow_dict["spec"].copy()
-        workflow_status = workflow_dict["status"].copy()
-        workflow_template_spec = workflow_status[
-            "stored_workflow_template_spec"
-        ].copy()
+        workflow_status = workflow_model.status
 
         # metadata
-        metadata = FlowMetadata(**workflow_dict["metadata"])
+        metadata = FlowMetadata(**workflow_model.metadata.dict())
 
         # state
-        state = FlowState(**workflow_status)
+        state = FlowState(**workflow_status.dict())
 
         # artifact_configuration
         artifact_configuration = FlowArtifactConfiguration(
-            repository_ref=workflow_status["artifact_gc_status"],
-            gc_status=workflow_status["artifact_repository_ref"],
+            repository_ref=workflow_status.artifact_gc_status.dict(),
+            gc_status=workflow_status.artifact_repository_ref.dict(),
         )
 
         # templates
-        entrypoint_template = workflow_template_spec["entrypoint"]
         templates = []
-        for template in workflow_template_spec["templates"]:
-            # we are not interested in the entrypoint template
-            if template["name"] == entrypoint_template:
-                continue
-            elif template["script"] is not None:
-                templates.append(ScriptTemplate.model_validate(template))
-            elif template["resource"] is not None:
-                templates.append(ResourceTemplate.model_validate(template))
+        for (
+            template
+        ) in workflow_status.stored_workflow_template_spec.templates:
+            # we are only interested in Script and Resource type templates
+            if template.script is not None:
+                templates.append(
+                    ScriptTemplate.model_validate(template.dict())
+                )
+            elif template.resource is not None:
+                templates.append(
+                    ResourceTemplate.model_validate(template.dict())
+                )
 
-        # inputs
-        inputs = [
-            FlowInputParameter(**parameter)
-            for parameter in workflow_spec["arguments"]["parameters"]
-        ]
+        # io
+        inputs, outputs = cls.build_io(
+            workflow_status.stored_workflow_template_spec
+        )
 
         # dag
-        dag = cls.build_dag(workflow_status)
+        dag = cls.build_dag(workflow_status.status)
 
         return cls(
             metadata=metadata,
@@ -299,5 +336,6 @@ class Flow(Pipeline):
             artifact_configuration=artifact_configuration,
             templates=templates,
             inputs=inputs,
+            outputs=outputs,
             dag=dag,
         )
