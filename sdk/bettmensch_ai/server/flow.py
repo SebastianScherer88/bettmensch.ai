@@ -94,6 +94,24 @@ class FlowNode(BaseModel):
     dependants: Optional[Union[str, List[str]]] = None
     host_node_name: Optional[str] = None
 
+    @property
+    def ios(
+        self,
+    ) -> List[
+        Union[
+            FlowNodeParameterInput,
+            FlowNodeParameterOutput,
+            FlowNodeArtifactInput,
+            FlowNodeArtifactOutput,
+        ]
+    ]:
+        return (
+            self.inputs.parameters
+            + self.outputs.parameters
+            + self.inputs.artifacts
+            + self.outputs.artifacts
+        )
+
 
 # --- FlowArtifactConfiguration
 class FlowArtifactConfiguration(BaseModel):
@@ -212,8 +230,7 @@ class Flow(Pipeline):
                 flow_node_dict["pod_name"] = pipeline_node.name
                 flow_node_dict["phase"] = "Not Scheduled"
                 flow_node_dict["outputs"] = FlowNodeOutputs(
-                    parameters=pipeline_node.outputs.parameters,
-                    artifacts=pipeline_node.outputs.artifacts,
+                    **pipeline_node.outputs.model_dump(),
                 ).model_dump()
                 flow_node_dict["logs"] = None
             else:
@@ -223,15 +240,14 @@ class Flow(Pipeline):
                 flow_node_dict["pod_name"] = workflow_node_dict["name"]
                 flow_node_dict["phase"] = workflow_node_dict["phase"]
                 flow_node_dict["outputs"] = FlowNodeOutputs(
-                    parameters=pipeline_node.outputs.parameters,
-                    artifacts=pipeline_node.outputs.artifacts,
-                    exit_code=workflow_node_dict["exit_code"],
+                    exit_code=workflow_node_dict.get("exit_code", None),
+                    **pipeline_node.outputs.model_dump(),
                 ).model_dump()
                 flow_node_dict["logs"] = None
                 flow_node_dict["dependants"] = workflow_node_dict["children"]
-                flow_node_dict["host_node_name"] = workflow_node_dict[
-                    "host_node_name"
-                ]
+                flow_node_dict["host_node_name"] = workflow_node_dict.get(
+                    "host_node_name", None
+                )
 
                 # inject resolved input values where possible
                 for argument_io in ("inputs", "outputs"):
@@ -328,14 +344,14 @@ class Flow(Pipeline):
         )
 
         # dag
-        dag = cls.build_dag(workflow_status.status)
+        dag = cls.build_dag(workflow_status)
 
         return cls(
             metadata=metadata,
             state=state,
             artifact_configuration=artifact_configuration,
             templates=templates,
-            inputs=inputs,
-            outputs=outputs,
+            inputs=inputs.model_dump(),
+            outputs=outputs.model_dump(),
             dag=dag,
         )
