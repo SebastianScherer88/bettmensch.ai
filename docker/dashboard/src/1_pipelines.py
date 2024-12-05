@@ -161,7 +161,6 @@ def get_formatted_pipeline_data(
                 "templates"
             ]
         except Exception as e:
-            raise e
             st.write(
                 f"Oops! Could not collect data for Pipeline {resource_name}: "
                 f"{e} Please make sure the workflow template was created with "
