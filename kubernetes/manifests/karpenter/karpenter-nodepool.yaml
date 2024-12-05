@@ -29,7 +29,7 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # ~5 minutes required for larger images, otherwise karpenter will deprovision before pods are running
-    expireAfter: 24h
+    expireAfter: 2h
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
@@ -61,7 +61,7 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # dont go lower to prevent decomissioning bc of image pull phase
-    expireAfter: 3h # limit GPU nodes to 3 ours - enough to train annotated transformer on one GPU (~2.8h)
+    expireAfter: 1h # limit GPU nodes to 3 ours - enough to train annotated transformer on one GPU (~2.8h)
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
@@ -96,4 +96,4 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 30m # larger training images take longer to pull
-    expireAfter: 240h # limit GPU nodes to 12h ours
+    expireAfter: 24h # limit GPU nodes to 12h ours
