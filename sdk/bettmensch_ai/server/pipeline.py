@@ -213,12 +213,10 @@ class PipelineInputs(BaseModel):
 # outputs
 class PipelineParameterOutput(NodeParameterInput):
     type: str = "outputs"
-    argument_type: str = "parameters"
 
 
 class PipelineArtifactOutput(NodeArtifactInput):
     type: str = "outputs"
-    argument_type: str = "artifacts"
 
 
 class PipelineOutputs(BaseModel):
