@@ -203,15 +203,8 @@ class Flow(Pipeline):
         workflow_nodes_dict = cls.get_node_status_by_display_name(
             workflow_status
         )
-        # workflow_nodes = list(workflow_status.nodes.values())
-
-        # print(
-        #     f"Workflow node display names:{[wn['display_name'] for wn in workflow_nodes]}"  # noqa: E501
-        # )
 
         for pipeline_node in pipeline_dag:
-            # pipeline_node_dict = pipeline_node.model_dump()
-            # print(f"Pipeline node name: {pipeline_node_dict['name']}")
 
             flow_node_dict = {
                 "name": pipeline_node.name,
@@ -226,7 +219,6 @@ class Flow(Pipeline):
                 ].dict()
                 workflow_node_dict = copy_non_null_dict(workflow_node_dict)
             except KeyError:
-                print("Exception")
                 flow_node_dict["pod_name"] = pipeline_node.name
                 flow_node_dict["phase"] = "Not Scheduled"
                 flow_node_dict["outputs"] = FlowNodeOutputs(
@@ -234,7 +226,6 @@ class Flow(Pipeline):
                 ).model_dump()
                 flow_node_dict["logs"] = None
             else:
-                print("No Exception")
                 flow_node_dict["id"] = workflow_node_dict["id"]
                 flow_node_dict["type"] = workflow_node_dict["type"]
                 flow_node_dict["pod_name"] = workflow_node_dict["name"]
@@ -286,9 +277,7 @@ class Flow(Pipeline):
                         except KeyError:
                             pass
             finally:
-                print(f"Flow node dict:{flow_node_dict}")
                 flow_node = FlowNode(**flow_node_dict)
-                print(f"Flow node:{flow_node}")
                 flow_dag.append(flow_node)
 
         return flow_dag
