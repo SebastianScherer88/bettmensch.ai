@@ -234,8 +234,9 @@ class Flow(Pipeline):
                     exit_code=workflow_node_dict.get("exit_code", None),
                     **pipeline_node.outputs.model_dump(),
                 ).model_dump()
-                flow_node_dict["logs"] = None
-                flow_node_dict["dependants"] = workflow_node_dict["children"]
+                flow_node_dict["dependants"] = workflow_node_dict.get(
+                    "children", None
+                )
                 flow_node_dict["host_node_name"] = workflow_node_dict.get(
                     "host_node_name", None
                 )

@@ -156,8 +156,8 @@ def get_formatted_flow_data(
             ]
         except Exception as e:
             st.write(
-                f"Oops! Could not collect data for Flow {resource_name}: {e}"
-                "Please make sure the Argo Workflow was created with the "
+                f"Oops! Could not collect data for Flow {resource_name}: {e}."
+                " Please make sure the Argo Workflow was created with the "
                 "bettmensch.ai SDK and was submitted successfully."
             )
 

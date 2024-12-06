@@ -163,8 +163,8 @@ def get_formatted_pipeline_data(
         except Exception as e:
             st.write(
                 f"Oops! Could not collect data for Pipeline {resource_name}: "
-                f"{e} Please make sure the workflow template was created with "
-                "the bettmensch.ai SDK and was submitted successfully."
+                f"{e}. Please make sure the workflow template was created with"
+                " the bettmensch.ai SDK and was submitted successfully."
             )
 
     return formatted_pipeline_data
