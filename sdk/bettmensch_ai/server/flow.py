@@ -195,9 +195,6 @@ class Flow(Pipeline):
         """
 
         inner_dag_node = workflow_nodes_dict["bettmensch-ai-inner-dag"]
-        print(f"Inner dag node: {inner_dag_node}")
-        # import pdb
-        # pdb.set_trace()
 
         # add flow inputs directly from inner dag node status
         if inner_dag_node.inputs is not None:

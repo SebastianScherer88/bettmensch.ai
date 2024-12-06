@@ -821,19 +821,19 @@ class Pipeline(BaseModel):
             )
             vis_nodes.append(vis_task_node)
 
-            # we only create task_node <-> task_node connections if we dont
-            # display the tasks' IO specs
-            if not include_task_io:
-                if task_node.depends is not None:
-                    for upstream_node_name in task_node.depends:
-                        # add the task->task connection
-                        task_to_task_connection = (
-                            self.build_visualization_connection(
-                                source_node_name=upstream_node_name,
-                                target_node_name=task_node.name,
-                            )
+            # # we only create task_node <-> task_node connections if we dont
+            # # display the tasks' IO specs
+            # if not include_task_io:
+            if task_node.depends is not None:
+                for upstream_node_name in task_node.depends:
+                    # add the task->task connection
+                    task_to_task_connection = (
+                        self.build_visualization_connection(
+                            source_node_name=upstream_node_name,
+                            target_node_name=task_node.name,
                         )
-                        vis_connections.append(task_to_task_connection)
+                    )
+                    vis_connections.append(task_to_task_connection)
 
             # if we include the tasks' I/O specs, we need to draw
             # - task I/O nodes
