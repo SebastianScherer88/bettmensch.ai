@@ -393,7 +393,8 @@ def display_flow_dag_selection(
                                 task_outputs_artifacts_df["s3"].apply(
                                     pd.Series
                                 ),
-                            ]
+                            ],
+                            axis=1,
                         ).rename(
                             columns={
                                 "name": "Name",
