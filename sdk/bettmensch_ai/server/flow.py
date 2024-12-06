@@ -16,6 +16,7 @@ from bettmensch_ai.server.pipeline import (
 from bettmensch_ai.server.utils import copy_non_null_dict
 from hera.workflows.models import NodeStatus as NodeStatusModel
 from hera.workflows.models import Workflow as WorkflowModel
+from hera.workflows.models import WorkflowSpec as WorkflowSpecModel
 from hera.workflows.models import WorkflowStatus as WorkflowStatusModel
 from pydantic import BaseModel
 
@@ -48,7 +49,7 @@ class FlowNodeParameterInput(NodeParameterInput):
 
 
 class FlowNodeArtifactInput(NodeArtifactInput):
-    s3_prefix: Optional[str] = None
+    s3: Optional[ArtifactS3] = None
 
 
 class FlowNodeInputs(BaseModel):
@@ -61,8 +62,13 @@ class FlowNodeParameterOutput(NodeParameterOutput):
     value: Optional[str] = None
 
 
+class ArtifactS3(BaseModel):
+    bucket: Optional[str] = None
+    key: Optional[str] = None
+
+
 class FlowNodeArtifactOutput(NodeArtifactOutput):
-    s3_prefix: Optional[str] = None
+    s3: Optional[ArtifactS3] = None
 
 
 class FlowNodeOutputs(BaseModel):
@@ -180,7 +186,9 @@ class Flow(Pipeline):
 
     @classmethod
     def build_io(
-        cls, workflow_nodes_dict: Dict[str, NodeStatusModel]
+        cls,
+        workflow_template_spec: WorkflowSpecModel,
+        workflow_nodes_dict: Dict[str, NodeStatusModel],
     ) -> Union[FlowInputs, FlowOutputs]:
         """Build the io attributes of a Flow instance.
 
@@ -212,23 +220,40 @@ class Flow(Pipeline):
 
         # add flow inputs directly from inner dag node status
         flow_outputs = {"parameters": [], "artifacts": []}
+        _, pipeline_outputs = super().build_io(workflow_template_spec)
 
         if inner_dag_node.outputs is not None:
             # output parameters
             output_parameters = inner_dag_node.outputs.parameters
             if output_parameters is not None:
                 for output_parameter in output_parameters:
-                    flow_output_parameter = FlowParameterOutput.model_validate(
-                        output_parameter.dict()
+                    # grab source attribute from pipeline output parameter
+                    pipeline_output_parameter_source = [
+                        pop
+                        for pop in pipeline_outputs.parameters
+                        if pop.name == output_parameter.name
+                    ][0].source
+
+                    flow_output_parameter = FlowParameterOutput(
+                        source=pipeline_output_parameter_source,
+                        **output_parameter.dict(),
                     )
                     flow_outputs["parameters"].append(flow_output_parameter)
 
-            # output parameters
+            # output artifacts
             output_artifacts = inner_dag_node.outputs.artifacts
             if output_artifacts is not None:
                 for output_artifact in output_artifacts:
-                    flow_output_artifact = FlowArtifactOutput.model_validate(
-                        output_artifact.dict()
+                    # grab source attribute from pipeline output parameter
+                    pipeline_output_artifact_source = [
+                        poa
+                        for poa in pipeline_outputs.artifacts
+                        if poa.name == output_artifact.name
+                    ][0].source
+
+                    flow_output_artifact = FlowArtifactOutput(
+                        source=pipeline_output_artifact_source,
+                        **output_artifact.dict(),
                     )
                     flow_outputs["artifacts"].append(flow_output_artifact)
 
@@ -300,7 +325,7 @@ class Flow(Pipeline):
                     "host_node_name", None
                 )
 
-                # inject resolved input values where possible
+                # inject resolved input/output values where possible
                 for argument_io in ("inputs", "outputs"):
                     for argument_type in ("parameters", "artifacts"):
                         try:
@@ -328,8 +353,15 @@ class Flow(Pipeline):
                                                 ] = argument["value"]
                                             elif argument_type == "artifacts":
                                                 flow_node_arguments[i][
-                                                    "s3_prefix"
-                                                ] = argument["s3"]["key"]
+                                                    "s3"
+                                                ] = {
+                                                    "key": argument["s3"][
+                                                        "key"
+                                                    ],
+                                                    "bucket": argument["s3"][
+                                                        "bucket"
+                                                    ],
+                                                }
                                     elif argument["name"] == "main-logs":
                                         flow_node_dict["logs"] = argument
                                     else:
@@ -391,7 +423,9 @@ class Flow(Pipeline):
         workflow_nodes_dict = cls.get_node_status_by_display_name(
             workflow_status
         )
-        inputs, outputs = cls.build_io(workflow_nodes_dict)
+        inputs, outputs = cls.build_io(
+            workflow_status.stored_workflow_template_spec, workflow_nodes_dict
+        )
 
         # dag
         dag = cls.build_dag(workflow_status, workflow_nodes_dict)

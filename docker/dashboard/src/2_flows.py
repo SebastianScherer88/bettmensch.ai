@@ -323,10 +323,14 @@ def display_flow_dag_selection(
                                         "source",
                                         "type",
                                         "argument_type",
+                                        "s3",
                                     ],
                                     axis=1,
                                 ),
                                 task_inputs_artifacts_df["source"].apply(
+                                    pd.Series
+                                ),
+                                task_inputs_artifacts_df["s3"].apply(
                                     pd.Series
                                 ),
                             ],
@@ -334,7 +338,8 @@ def display_flow_dag_selection(
                         ).rename(
                             columns={
                                 "name": "Name",
-                                "s3_prefix": "S3 Prefix",
+                                "bucket": "S3 Bucket",
+                                "key": "S3 Prefix",
                                 "node_name": "Upstream Task",
                                 "io_type": "Upstream I/O type",
                                 "io_argument_type": "Upstream I/O Argument Type",  # noqa: E501
@@ -379,16 +384,23 @@ def display_flow_dag_selection(
                         task_outputs_artifacts_df = pd.DataFrame(
                             task["outputs"]["artifacts"]
                         )
-                        task_outputs_artifacts_formatted_df = (
-                            task_outputs_artifacts_df.drop(
-                                ["path", "type", "argument_type"], axis=1
-                            ).rename(
-                                columns={
-                                    "name": "Name",
-                                    "s3_prefix": "S3 Prefix",
-                                },
-                                inplace=False,
-                            )
+                        task_outputs_artifacts_formatted_df = pd.concat(
+                            [
+                                task_outputs_artifacts_df.drop(
+                                    ["path", "type", "argument_type", "s3"],
+                                    axis=1,
+                                ),
+                                task_outputs_artifacts_df["s3"].apply(
+                                    pd.Series
+                                ),
+                            ]
+                        ).rename(
+                            columns={
+                                "name": "Name",
+                                "bucket": "S3 Bucket",
+                                "key": "S3 Prefix",
+                            },
+                            inplace=False,
                         )
                     else:
                         task_outputs_artifacts_formatted_df = pd.DataFrame()
@@ -577,22 +589,20 @@ def display_selected_flow(
                     flow_outputs_artifacts_formatted_df = pd.concat(
                         [
                             flow_outputs_artifacts_df.drop(
-                                [
-                                    "source",
-                                    "type",
-                                    "argument_type",
-                                ],
+                                ["source", "type", "argument_type", "s3"],
                                 axis=1,
                             ),
                             flow_outputs_artifacts_df["source"].apply(
                                 pd.Series
                             ),
+                            flow_outputs_artifacts_df["s3"].apply(pd.Series),
                         ],
                         axis=1,
                     ).rename(
                         columns={
                             "name": "Name",
-                            "value": "Default",
+                            "bucket": "S3 Bucket",
+                            "key": "S3 Prefix",
                             "node_name": "Upstream Task",
                             "io_type": "Upstream I/O type",
                             "io_argument_type": "Upstream I/O Argument Type",

@@ -821,8 +821,8 @@ class Pipeline(BaseModel):
             )
             vis_nodes.append(vis_task_node)
 
-            # # we only create task_node <-> task_node connections if we dont
-            # # display the tasks' IO specs
+            # we only create task_node <-> task_node connections if we dont
+            # display the tasks' IO specs
             # if not include_task_io:
             if task_node.depends is not None:
                 for upstream_node_name in task_node.depends:
@@ -831,6 +831,7 @@ class Pipeline(BaseModel):
                         self.build_visualization_connection(
                             source_node_name=upstream_node_name,
                             target_node_name=task_node.name,
+                            animated=not include_task_io,
                         )
                     )
                     vis_connections.append(task_to_task_connection)
@@ -842,7 +843,7 @@ class Pipeline(BaseModel):
             # - source_(input/output)->task_input,
             # - task->task_output
             # connections
-            else:
+            if include_task_io:
                 for io in task_node.ios:
                     # add the task I/O node
                     vis_task_io_node = self.build_visualization_task_io_node(
@@ -870,7 +871,6 @@ class Pipeline(BaseModel):
                                 self.build_visualization_connection(
                                     source_node_name=vis_source_io_node_name,
                                     target_node_name=vis_task_io_node.id,
-                                    animated=False,
                                 )
                             )
                             vis_connections.append(
@@ -910,7 +910,6 @@ class Pipeline(BaseModel):
                         self.build_visualization_connection(
                             source_node_name=vis_source_io_node_name,
                             target_node_name=vis_pipeline_io_node.id,
-                            animated=False,
                         )
                     )
                     vis_connections.append(
