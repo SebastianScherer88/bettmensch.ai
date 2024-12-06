@@ -179,7 +179,72 @@ class Flow(Pipeline):
         )
 
     @classmethod
-    def build_dag(cls, workflow_status: WorkflowStatusModel) -> List[FlowNode]:
+    def build_io(
+        cls, workflow_nodes_dict: Dict[str, NodeStatusModel]
+    ) -> Union[FlowInputs, FlowOutputs]:
+        """Build the io attributes of a Flow instance.
+
+        Args:
+            inner_dag_node (NodeStatusModel): The NodeStatus of the Flow's
+                Workflow's inner dag.
+
+
+        Returns:
+            Union[FlowInputs,FlowOutputs]: The data for the Flow instance's
+                `inputs` and `outputs` attributes
+        """
+
+        inner_dag_node = workflow_nodes_dict["bettmensch-ai-inner-dag"]
+        print(f"Inner dag node: {inner_dag_node}")
+        # import pdb
+        # pdb.set_trace()
+
+        # add flow inputs directly from inner dag node status
+        if inner_dag_node.inputs is not None:
+            if inner_dag_node.inputs.parameters is not None:
+                flow_inputs = FlowInputs(
+                    parameters=[
+                        FlowParameterInput.model_validate(
+                            dag_input_parameter.dict()
+                        )
+                        for dag_input_parameter in inner_dag_node.inputs.parameters  # noqa: E501
+                    ]
+                )
+            else:
+                flow_inputs = FlowInputs(parameters=[], artifacts=[])
+
+        # add flow inputs directly from inner dag node status
+        flow_outputs = {"parameters": [], "artifacts": []}
+
+        if inner_dag_node.outputs is not None:
+            # output parameters
+            output_parameters = inner_dag_node.outputs.parameters
+            if output_parameters is not None:
+                for output_parameter in output_parameters:
+                    flow_output_parameter = FlowParameterOutput.model_validate(
+                        output_parameter.dict()
+                    )
+                    flow_outputs["parameters"].append(flow_output_parameter)
+
+            # output parameters
+            output_artifacts = inner_dag_node.outputs.artifacts
+            if output_artifacts is not None:
+                for output_artifact in output_artifacts:
+                    flow_output_artifact = FlowArtifactOutput.model_validate(
+                        output_artifact.dict()
+                    )
+                    flow_outputs["artifacts"].append(flow_output_artifact)
+
+        flow_outputs = FlowOutputs.model_validate(flow_outputs)
+
+        return flow_inputs, flow_outputs
+
+    @classmethod
+    def build_dag(
+        cls,
+        workflow_status: WorkflowStatusModel,
+        workflow_nodes_dict: NodeStatusModel,
+    ) -> List[FlowNode]:
         """Utility to build the Flow class' dag attribute. Identical to the
         Pipeline class' dag attribute, but with additional values resolved at
         runtime.
@@ -200,9 +265,6 @@ class Flow(Pipeline):
         # add FlowNode specific values and available resolved input/output
         # values for each FlowNode
         flow_dag = []
-        workflow_nodes_dict = cls.get_node_status_by_display_name(
-            workflow_status
-        )
 
         for pipeline_node in pipeline_dag:
 
@@ -329,19 +391,20 @@ class Flow(Pipeline):
                 )
 
         # io
-        inputs, outputs = cls.build_io(
-            workflow_status.stored_workflow_template_spec
+        workflow_nodes_dict = cls.get_node_status_by_display_name(
+            workflow_status
         )
+        inputs, outputs = cls.build_io(workflow_nodes_dict)
 
         # dag
-        dag = cls.build_dag(workflow_status)
+        dag = cls.build_dag(workflow_status, workflow_nodes_dict)
 
         return cls(
             metadata=metadata,
             state=state,
             artifact_configuration=artifact_configuration,
             templates=templates,
-            inputs=inputs.model_dump(),
-            outputs=outputs.model_dump(),
+            inputs=inputs,
+            outputs=outputs,
             dag=dag,
         )
