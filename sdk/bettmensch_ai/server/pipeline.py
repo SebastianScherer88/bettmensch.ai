@@ -426,36 +426,43 @@ class Pipeline(BaseModel):
         )
 
         # add pipeline inputs directly from inner dag template
-        pipeline_inputs = PipelineInputs(
-            parameters=[
-                PipelineParameterInput.model_validate(
-                    dag_input_parameter.dict()
+        if inner_dag_template.inputs is not None:
+            if inner_dag_template.inputs.parameters is not None:
+                pipeline_inputs = PipelineInputs(
+                    parameters=[
+                        PipelineParameterInput.model_validate(
+                            dag_input_parameter.dict()
+                        )
+                        for dag_input_parameter in inner_dag_template.inputs.parameters  # noqa: E501
+                    ]
                 )
-                for dag_input_parameter in inner_dag_template.inputs.parameters
-            ]
-        )
+        else:
+            pipeline_inputs = PipelineInputs(parameters=[], artifacts=[])
 
         pipeline_outputs = {"parameters": [], "artifacts": []}
 
-        output_parameters = inner_dag_template.outputs.parameters
+        if inner_dag_template.outputs is not None:
+            # output parameters
+            output_parameters = inner_dag_template.outputs.parameters
+            if output_parameters is not None:
+                for output_parameter in output_parameters:
+                    pipeline_output_parameter = (
+                        cls.build_pipeline_output_parameter(output_parameter)
+                    )
+                    pipeline_outputs["parameters"].append(
+                        pipeline_output_parameter
+                    )
 
-        if output_parameters is not None:
-            for output_parameter in output_parameters:
-                pipeline_output_parameter = (
-                    cls.build_pipeline_output_parameter(output_parameter)
-                )
-                pipeline_outputs["parameters"].append(
-                    pipeline_output_parameter
-                )
-
-        output_artifacts = inner_dag_template.outputs.artifacts
-
-        if output_artifacts is not None:
-            for output_artifact in output_artifacts:
-                pipeline_output_artifact = cls.build_pipeline_output_artifact(
-                    output_artifact
-                )
-                pipeline_outputs["artifacts"].append(pipeline_output_artifact)
+            # output artifacts
+            output_artifacts = inner_dag_template.outputs.artifacts
+            if output_artifacts is not None:
+                for output_artifact in output_artifacts:
+                    pipeline_output_artifact = (
+                        cls.build_pipeline_output_artifact(output_artifact)
+                    )
+                    pipeline_outputs["artifacts"].append(
+                        pipeline_output_artifact
+                    )
 
         pipeline_outputs = PipelineOutputs.model_validate(pipeline_outputs)
 
@@ -558,36 +565,46 @@ class Pipeline(BaseModel):
         }
 
         # add node outputs directly from template
-        pipeline_node["outputs"] = NodeOutputs(
-            **copy_non_null_dict(
-                component_templates_dict[task.template].outputs.dict()
+        node_outputs = component_templates_dict[task.template].outputs
+        if node_outputs is not None:
+            pipeline_node["outputs"] = NodeOutputs(
+                **copy_non_null_dict(
+                    component_templates_dict[task.template].outputs.dict()
+                )
             )
-        )
+        else:
+            pipeline_node["outputs"] = NodeOutputs(parameters=[], artifacts=[])
 
         # add node inputs from task arguments; resolve any source references
         # into custom NodeInputSource
         pipeline_node["inputs"] = {"parameters": [], "artifacts": []}
 
-        input_parameters = task.arguments.parameters
+        if task.arguments is not None:
 
-        if input_parameters is not None:
-            for input_parameter in input_parameters:
-                pipeline_node_input_parameter = (
-                    cls.build_pipeline_node_input_parameter(input_parameter)
-                )
-                pipeline_node["inputs"]["parameters"].append(
-                    pipeline_node_input_parameter
-                )
+            # parameters
+            input_parameters = task.arguments.parameters
 
-        input_artifacts = task.arguments.artifacts
-        if input_artifacts is not None:
-            for input_artifact in input_artifacts:
-                pipeline_node_input_artifact = (
-                    cls.build_pipeline_node_input_artifact(input_artifact)
-                )
-                pipeline_node["inputs"]["artifacts"].append(
-                    pipeline_node_input_artifact
-                )
+            if input_parameters is not None:
+                for input_parameter in input_parameters:
+                    pipeline_node_input_parameter = (
+                        cls.build_pipeline_node_input_parameter(
+                            input_parameter
+                        )
+                    )
+                    pipeline_node["inputs"]["parameters"].append(
+                        pipeline_node_input_parameter
+                    )
+
+            # artifacts
+            input_artifacts = task.arguments.artifacts
+            if input_artifacts is not None:
+                for input_artifact in input_artifacts:
+                    pipeline_node_input_artifact = (
+                        cls.build_pipeline_node_input_artifact(input_artifact)
+                    )
+                    pipeline_node["inputs"]["artifacts"].append(
+                        pipeline_node_input_artifact
+                    )
 
         return PipelineNode.model_validate(pipeline_node)
 
