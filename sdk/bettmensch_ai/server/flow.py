@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from bettmensch_ai.server.pipeline import (
     NodeArtifactInput,
     NodeArtifactOutput,
+    NodeInputs,
+    NodeOutputs,
     NodeParameterInput,
     NodeParameterOutput,
     Pipeline,
+    PipelineInputs,
     PipelineNode,
+    PipelineOutputs,
     PipelineParameterInput,
     ResourceTemplate,
     ScriptTemplate,
@@ -186,6 +190,166 @@ class Flow(Pipeline):
         )
 
     @classmethod
+    def _get_model_classes(
+        pipeline_io: Union[
+            type[PipelineInputs],
+            type[PipelineOutputs],
+            type[NodeInputs],
+            type[NodeOutputs],
+        ]
+    ) -> Tuple[
+        Union[
+            type[FlowParameterInput],
+            type[FlowParameterOutput],
+            type[FlowNodeParameterInput],
+            type[FlowNodeParameterOutput],
+        ],
+        Union[
+            type[FlowArtifactOutput],
+            type[FlowNodeArtifactInput],
+            type[FlowNodeArtifactOutput],
+        ],
+        Union[
+            type[FlowInputs],
+            type[FlowOutputs],
+            type[FlowNodeInputs],
+            type[FlowNodeOutputs],
+        ],
+    ]:
+        """_summary_
+
+        Args:
+            pipeline_io (Union[
+                type[PipelineInputs],
+                type[PipelineOutputs],
+                type[NodeInputs],
+                type[NodeOutputs]
+            ]): _description_
+
+        Returns:
+            Tuple[
+                Union[
+                    type[FlowParameterInput],
+                    type[FlowParameterOutput],
+                    type[FlowNodeParameterInput],
+                    type[FlowNodeParameterOutput]
+                ],
+                Union[
+                    type[FlowArtifactOutput],
+                    type[FlowNodeArtifactInput],
+                    type[FlowNodeArtifactOutput]
+                ],
+                Union[
+                    type[FlowInputs],
+                    type[FlowOutputs],
+                    type[FlowNodeInputs],
+                    type[FlowNodeOutputs]
+                ]
+            ]: _description_
+        """
+
+        if pipeline_io == PipelineInputs:
+            return FlowParameterInput, None, FlowInputs
+        elif pipeline_io == PipelineOutputs:
+            return FlowParameterOutput, FlowArtifactOutput, FlowOutputs
+        elif pipeline_io == NodeInputs:
+            return (
+                FlowNodeParameterInput,
+                FlowNodeArtifactInput,
+                FlowNodeInputs,
+            )
+        elif pipeline_io == NodeOutputs:
+            return (
+                FlowNodeParameterOutput,
+                FlowNodeArtifactOutput,
+                FlowNodeOutputs,
+            )
+        else:
+            raise TypeError(
+                f"Type {pipeline_io} not supported. Must be one of"
+                "- PipelineInputs"
+                "- PipelineOutputs"
+                "- NodeInputs"
+                "- NodeOutputs"
+            )
+
+    @classmethod
+    def _build_generic_io(
+        cls,
+        io_type: Literal["inputs", "outputs"],
+        pipeline_io: Union[
+            PipelineInputs,
+            PipelineOutputs,
+            NodeInputs,
+            NodeOutputs,
+        ],
+        flow_node: NodeStatusModel,
+    ) -> Union[FlowInputs, FlowOutputs, FlowNodeInputs, FlowNodeOutputs]:
+        """Parametrizable utility function to build either inputs or outputs
+        for the Flow or one of its FlowNodes.
+
+        Args:
+            io_type (Literal["inputs", "outputs"]): _description_
+            pipeline_io (Union[
+                PipelineInputs,
+                PipelineOutputs,
+                NodeInputs,
+                NodeOutputs,
+            ]): _description_
+            flow_node (NodeStatusModel): _description_
+
+        Returns:
+            Union[FlowInputs, FlowOutputs, FlowNodeInputs, FlowNodeOutputs]:
+                _description_
+        """
+
+        io = {"parameters": [], "artifacts": []}
+
+        (
+            parameter_io_class,
+            artifact_io_class,
+            io_class,
+        ) = cls._get_model_classes(pipeline_io.__class__)
+
+        # parameters
+        for ppo in pipeline_io.parameters:
+            flow_parameter_output_data = ppo.model_dump()
+            try:
+                fpo_value = [
+                    fpo
+                    for fpo in getattr(flow_node, io_type).parameters
+                    if fpo.name == ppo.name
+                ][0].value
+            except (AttributeError, IndexError):
+                fpo_value = None
+            finally:
+                flow_parameter_output_data["value"] = fpo_value
+                flow_parameter_output = parameter_io_class.model_validate(
+                    flow_parameter_output_data
+                )
+                io["parameters"].append(flow_parameter_output)
+
+        # artifacts
+        for pao in pipeline_io.artifacts:
+            flow_artifact_output_data = pao.model_dump()
+            try:
+                fao_s3 = [
+                    fao
+                    for fao in getattr(flow_node, io_type).artifacts
+                    if fao.name == pao.name
+                ][0].s3.dict()
+            except (AttributeError, IndexError):
+                fao_s3 = None
+            finally:
+                flow_artifact_output_data["s3"] = fao_s3
+                flow_parameter_output = artifact_io_class.model_validate(
+                    flow_artifact_output_data
+                )
+                io["artifacts"].append(flow_parameter_output)
+
+        return io_class.model_validate(io)
+
+    @classmethod
     def build_io(
         cls,
         workflow_template_spec: WorkflowSpecModel,
@@ -275,16 +439,14 @@ class Flow(Pipeline):
         return flow_inputs, flow_outputs
 
     @classmethod
-    def build_flow_node_io_parameter(
-        cls, pipeline_node_io: Union[NodeParameterInput, NodeParameterOutput]
-    ):
-        pass
+    def build_flow_node_io(
+        cls,
+        pipeline_node_io: Union[NodeArtifactInput, NodeArtifactOutput],
+        flow_node: NodeStatusModel,
+    ) -> Tuple[FlowNodeInputs, FlowNodeOutputs]:
 
-    @classmethod
-    def build_flow_node_io_artifact(
-        cls, pipeline_node_io: Union[NodeArtifactInput, NodeArtifactOutput]
-    ):
-        pass
+        if flow_node is not None:
+            flow_node = copy_non_null_dict(flow_node.dict())
 
     @classmethod
     def build_flow_node(
@@ -302,80 +464,99 @@ class Flow(Pipeline):
             FlowNode: _description_
         """
 
-        flow_node_dict = {
+        flow_node_data = {
             "name": pipeline_node.name,
             "template": pipeline_node.template,
-            "inputs": pipeline_node.inputs.model_dump(),
             "depends": pipeline_node.depends,
         }
 
         try:
-            workflow_node_dict = workflow_nodes_dict[pipeline_node.name].dict()
-            workflow_node_dict = copy_non_null_dict(workflow_node_dict)
+            flow_node = workflow_nodes_dict[pipeline_node.name]
         except KeyError:
-            flow_node_dict["pod_name"] = pipeline_node.name
-            flow_node_dict["phase"] = "Not Scheduled"
-            flow_node_dict["outputs"] = FlowNodeOutputs(
-                **pipeline_node.outputs.model_dump(),
-            ).model_dump()
-            flow_node_dict["logs"] = None
-        else:
-            flow_node_dict["id"] = workflow_node_dict["id"]
-            flow_node_dict["type"] = workflow_node_dict["type"]
-            flow_node_dict["pod_name"] = workflow_node_dict["name"]
-            flow_node_dict["phase"] = workflow_node_dict["phase"]
-            flow_node_dict["outputs"] = FlowNodeOutputs(
-                exit_code=workflow_node_dict.get("exit_code", None),
-                **pipeline_node.outputs.model_dump(),
-            ).model_dump()
-            flow_node_dict["dependants"] = workflow_node_dict.get(
-                "children", None
-            )
-            flow_node_dict["host_node_name"] = workflow_node_dict.get(
-                "host_node_name", None
-            )
+            flow_node = None
 
-            # inject resolved input/output values where possible
-            for argument_io in ("inputs", "outputs"):
-                for argument_type in ("parameters", "artifacts"):
-                    try:
-                        workflow_node_arguments = workflow_node_dict[
-                            argument_io
-                        ][argument_type]
-                        flow_node_arguments = flow_node_dict[argument_io][
-                            argument_type
-                        ]
+        flow_node_inputs, flow_node_outputs = cls.build_flow_node_io(
+            pipeline_node, flow_node
+        )
 
-                        if workflow_node_arguments is None:
-                            continue
-                        else:
-                            for i, argument in enumerate(
-                                workflow_node_arguments
-                            ):
-                                if i < len(flow_node_arguments):
-                                    if (
-                                        flow_node_arguments[i]["name"]
-                                        == argument["name"]
-                                    ):
-                                        if argument_type == "parameters":
-                                            flow_node_arguments[i][
-                                                "value"
-                                            ] = argument["value"]
-                                        elif argument_type == "artifacts":
-                                            flow_node_arguments[i]["s3"] = {
-                                                "key": argument["s3"]["key"],
-                                                "bucket": argument["s3"][
-                                                    "bucket"
-                                                ],
-                                            }
-                                elif argument["name"] == "main-logs":
-                                    flow_node_dict["logs"] = argument
-                                else:
-                                    pass
-                    except KeyError:
-                        pass
-        finally:
-            flow_node = FlowNode(**flow_node_dict)
+        flow_node_data
+
+        # --------------
+        # flow_node_dict = {
+        #     "name": pipeline_node.name,
+        #     "template": pipeline_node.template,
+        #     "inputs": pipeline_node.inputs.model_dump(),
+        #     "depends": pipeline_node.depends,
+        # }
+
+        # try:
+        #     workflow_node_dict = workflow_nodes_dict[pipeline_node.name].
+        # dict()
+        #     workflow_node_dict = copy_non_null_dict(workflow_node_dict)
+        # except KeyError:
+        #     flow_node_dict["pod_name"] = pipeline_node.name
+        #     flow_node_dict["phase"] = "Not Scheduled"
+        #     flow_node_dict["outputs"] = FlowNodeOutputs(
+        #         **pipeline_node.outputs.model_dump(),
+        #     ).model_dump()
+        #     flow_node_dict["logs"] = None
+        # else:
+        #     flow_node_dict["id"] = workflow_node_dict["id"]
+        #     flow_node_dict["type"] = workflow_node_dict["type"]
+        #     flow_node_dict["pod_name"] = workflow_node_dict["name"]
+        #     flow_node_dict["phase"] = workflow_node_dict["phase"]
+        #     flow_node_dict["outputs"] = FlowNodeOutputs(
+        #         exit_code=workflow_node_dict.get("exit_code", None),
+        #         **pipeline_node.outputs.model_dump(),
+        #     ).model_dump()
+        #     flow_node_dict["dependants"] = workflow_node_dict.get(
+        #         "children", None
+        #     )
+        #     flow_node_dict["host_node_name"] = workflow_node_dict.get(
+        #         "host_node_name", None
+        #     )
+
+        #     # inject resolved input/output values where possible
+        #     for argument_io in ("inputs", "outputs"):
+        #         for argument_type in ("parameters", "artifacts"):
+        #             try:
+        #                 workflow_node_arguments = workflow_node_dict[
+        #                     argument_io
+        #                 ][argument_type]
+        #                 flow_node_arguments = flow_node_dict[argument_io][
+        #                     argument_type
+        #                 ]
+
+        #                 if workflow_node_arguments is None:
+        #                     continue
+        #                 else:
+        #                     for i, argument in enumerate(
+        #                         workflow_node_arguments
+        #                     ):
+        #                         if i < len(flow_node_arguments):
+        #                             if (
+        #                                 flow_node_arguments[i]["name"]
+        #                                 == argument["name"]
+        #                             ):
+        #                                 if argument_type == "parameters":
+        #                                     flow_node_arguments[i][
+        #                                         "value"
+        #                                     ] = argument["value"]
+        #                                 elif argument_type == "artifacts":
+        #                                     flow_node_arguments[i]["s3"] = {
+        #                                         "key": argument["s3"]["key"],
+        #                                         "bucket": argument["s3"][
+        #                                             "bucket"
+        #                                         ],
+        #                                     }
+        #                         elif argument["name"] == "main-logs":
+        #                             flow_node_dict["logs"] = argument
+        #                         else:
+        #                             pass
+        #             except KeyError:
+        #                 pass
+        # finally:
+        #     flow_node = FlowNode(**flow_node_dict)
 
         return flow_node
 
