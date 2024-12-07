@@ -10,7 +10,7 @@ repos:
     hooks:
     -   id: flake8
         args:
-        -   --per-file-ignores=sdk/test/unit/conftest.py:E501
+        -   --per-file-ignores=sdk/test/unit/server/conftest.py:E501
 # - repo: https://github.com/pre-commit/pre-commit-hooks
 #   rev: v2.3.0
 #   hooks:

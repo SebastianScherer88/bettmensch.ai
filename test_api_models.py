@@ -24,6 +24,30 @@ for DIR in DIRS:
         os.makedirs(DIR)
 
 
+def recursive_non_null_dict(data):
+
+    if isinstance(data, dict):
+        non_null_data = {}
+
+        for k, v in data.items():
+            if v is None:
+                print(f"Key {k} | None-Value {v}")
+                pass
+            elif isinstance(v, (dict, list, tuple)):
+                non_null_data[k] = recursive_non_null_dict(v)
+            else:
+                print(f"Key {k} | Value {v}")
+                non_null_data[k] = v
+
+        return non_null_data
+    elif isinstance(data, list):
+        return [recursive_non_null_dict(data_i) for data_i in data]
+    elif isinstance(data, tuple):
+        return (recursive_non_null_dict(data_i) for data_i in data)
+    else:
+        return data
+
+
 def recursive_datetime_to_string(data):
     if isinstance(data, dict):
         return dict(
@@ -34,7 +58,7 @@ def recursive_datetime_to_string(data):
     elif isinstance(data, tuple):
         return (recursive_datetime_to_string(data_i) for data_i in data)
     elif isinstance(data, datetime.datetime):
-        return "test-datetime-value"
+        return "07/12/2024"
     else:
         return data
 
@@ -61,8 +85,8 @@ argo_workflow_list_response = argo_workflow_api.list_workflows(
 for i, argo_workflow_template in enumerate(
     argo_workflow_template_list_response.items
 ):
-    argo_workflow_template_dict = recursive_datetime_to_string(
-        argo_workflow_template.to_dict()
+    argo_workflow_template_dict = recursive_non_null_dict(
+        recursive_datetime_to_string(argo_workflow_template.to_dict())
     )
     with open(
         f"{ARGO_WORKFLOW_TEMPLATE_MODELS_DIR}/argo_workflow_template_{i}.json",
@@ -72,7 +96,9 @@ for i, argo_workflow_template in enumerate(
 
 # export argo workflow
 for i, argo_workflow in enumerate(argo_workflow_list_response.items):
-    argo_workflow_dict = recursive_datetime_to_string(argo_workflow.to_dict())
+    argo_workflow_dict = recursive_non_null_dict(
+        recursive_datetime_to_string(argo_workflow.to_dict())
+    )
     with open(
         f"{ARGO_WORKFLOW_MODELS_DIR}/argo_workflow_{i}.json", "w"
     ) as argo_workflow_file:
@@ -92,8 +118,8 @@ hera_workflow_list_response = hera_api.list_workflows()
 for i, hera_workflow_template in enumerate(
     hera_workflow_template_list_response.items
 ):
-    hera_workflow_template_dict = recursive_datetime_to_string(
-        hera_workflow_template.dict()
+    hera_workflow_template_dict = recursive_non_null_dict(
+        recursive_datetime_to_string(hera_workflow_template.dict())
     )
     with open(
         f"{HERA_WORKFLOW_TEMPLATE_MODELS_DIR}/hera_workflow_template_{i}.json",
@@ -103,7 +129,9 @@ for i, hera_workflow_template in enumerate(
 
 # export hera workflow
 for i, hera_workflow in enumerate(hera_workflow_list_response.items):
-    hera_workflow_dict = recursive_datetime_to_string(hera_workflow.dict())
+    hera_workflow_dict = recursive_non_null_dict(
+        recursive_datetime_to_string(hera_workflow.dict())
+    )
     with open(
         f"{HERA_WORKFLOW_MODELS_DIR}/hera_workflow_{i}.json", "w"
     ) as hera_workflow_file:

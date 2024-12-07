@@ -127,6 +127,7 @@ def get_formatted_flow_data(
         "metadata": {},
         "state": {},
         "inputs": {},
+        "outputs": {},
         "dag": {},
         "templates": {},
     }
@@ -146,17 +147,19 @@ def get_formatted_flow_data(
             ]
             formatted_flow_data["state"][resource_name] = flow_dict["state"]
             formatted_flow_data["inputs"][resource_name] = flow_dict["inputs"]
+            formatted_flow_data["outputs"][resource_name] = flow_dict[
+                "outputs"
+            ]
             formatted_flow_data["dag"][resource_name] = flow_dict["dag"]
             formatted_flow_data["templates"][resource_name] = flow_dict[
                 "templates"
             ]
         except Exception as e:
             st.write(
-                f"Oops! Could not collect data for Flow {resource_name}: {e}"
-                "Please make sure the Argo Workflow was created with the "
+                f"Oops! Could not collect data for Flow {resource_name}: {e}."
+                " Please make sure the Argo Workflow was created with the "
                 "bettmensch.ai SDK and was submitted successfully."
             )
-            raise e
 
     return formatted_flow_data
 
@@ -282,7 +285,13 @@ def display_flow_dag_selection(
                         task_inputs_parameters_formatted_df = pd.concat(
                             [
                                 task_inputs_parameters_df.drop(
-                                    ["source", "value_from"], axis=1
+                                    [
+                                        "source",
+                                        "type",
+                                        "argument_type",
+                                        "value_from",
+                                    ],
+                                    axis=1,
                                 ),
                                 task_inputs_parameters_df["source"].apply(
                                     pd.Series
@@ -293,9 +302,10 @@ def display_flow_dag_selection(
                             columns={
                                 "name": "Name",
                                 "value": "Value",
-                                "node": "Upstream Task",
-                                "output_name": "Upstream Output",
-                                "output_type": "Upstream Type",
+                                "node_name": "Upstream Task",
+                                "io_type": "Upstream I/O type",
+                                "io_argument_type": "Upstream I/O Argument Type",  # noqa: E501
+                                "io_name": "Upstream I/O",
                             },
                             inplace=False,
                         )
@@ -309,9 +319,18 @@ def display_flow_dag_selection(
                         task_inputs_artifacts_formatted_df = pd.concat(
                             [
                                 task_inputs_artifacts_df.drop(
-                                    ["source"], axis=1
+                                    [
+                                        "source",
+                                        "type",
+                                        "argument_type",
+                                        "s3",
+                                    ],
+                                    axis=1,
                                 ),
                                 task_inputs_artifacts_df["source"].apply(
+                                    pd.Series
+                                ),
+                                task_inputs_artifacts_df["s3"].apply(
                                     pd.Series
                                 ),
                             ],
@@ -319,10 +338,12 @@ def display_flow_dag_selection(
                         ).rename(
                             columns={
                                 "name": "Name",
-                                "s3_prefix": "S3 Prefix",
-                                "node": "Upstream Task",
-                                "output_name": "Upstream Output",
-                                "output_type": "Upstream Type",
+                                "bucket": "S3 Bucket",
+                                "key": "S3 Prefix",
+                                "node_name": "Upstream Task",
+                                "io_type": "Upstream I/O type",
+                                "io_argument_type": "Upstream I/O Argument Type",  # noqa: E501
+                                "io_name": "Upstream I/O",
                             },
                             inplace=False,
                         )
@@ -347,7 +368,7 @@ def display_flow_dag_selection(
                         )
                         task_outputs_parameters_formatted_df = (
                             task_outputs_parameters_df.drop(
-                                "value_from", axis=1
+                                ["value_from", "type", "argument_type"], axis=1
                             ).rename(
                                 columns={
                                     "name": "Name",
@@ -363,16 +384,24 @@ def display_flow_dag_selection(
                         task_outputs_artifacts_df = pd.DataFrame(
                             task["outputs"]["artifacts"]
                         )
-                        task_outputs_artifacts_formatted_df = (
-                            task_outputs_artifacts_df.drop(
-                                "path", axis=1
-                            ).rename(
-                                columns={
-                                    "name": "Name",
-                                    "s3_prefix": "S3 Prefix",
-                                },
-                                inplace=False,
-                            )
+                        task_outputs_artifacts_formatted_df = pd.concat(
+                            [
+                                task_outputs_artifacts_df.drop(
+                                    ["path", "type", "argument_type", "s3"],
+                                    axis=1,
+                                ),
+                                task_outputs_artifacts_df["s3"].apply(
+                                    pd.Series
+                                ),
+                            ],
+                            axis=1,
+                        ).rename(
+                            columns={
+                                "name": "Name",
+                                "bucket": "S3 Bucket",
+                                "key": "S3 Prefix",
+                            },
+                            inplace=False,
                         )
                     else:
                         task_outputs_artifacts_formatted_df = pd.DataFrame()
@@ -476,9 +505,16 @@ def display_selected_flow(
     with spec_col:
         st.markdown(f"### :arrow_forward: Flow: `{selected_flow}`")
 
-        tab_inputs, tab_metadata, tab_dag, tab_templates = st.tabs(
+        (
+            tab_inputs,
+            tab_outputs,
+            tab_metadata,
+            tab_dag,
+            tab_templates,
+        ) = st.tabs(
             [
                 "Flow Inputs",
+                "Flow Outputs",
                 "Flow Meta Data",
                 "Flow DAG",
                 "Flow Templates",
@@ -487,15 +523,105 @@ def display_selected_flow(
 
         with tab_inputs:
             with st.container(height=tab_container_height, border=False):
-                flow_inputs = formatted_flow_data["inputs"][selected_flow]
-                flow_inputs_formatted_df = pd.DataFrame(flow_inputs).rename(
-                    columns={
-                        "name": "Name",
-                        "value": "Value",
-                    }
+                flow_inputs = formatted_flow_data["inputs"][selected_flow][
+                    "parameters"
+                ]
+                flow_inputs_formatted_df = (
+                    pd.DataFrame(flow_inputs)
+                    .drop(["type", "argument_type"], axis=1)
+                    .rename(
+                        columns={
+                            "name": "Name",
+                            "value": "Value",
+                        }
+                    )
                 )
                 st.write(":page_with_curl: Parameters")
                 st.dataframe(flow_inputs_formatted_df, hide_index=True)
+
+        with tab_outputs:
+            with st.container(height=tab_container_height, border=False):
+                # build pipeline outputs parameters table
+                flow_outputs_parameters = formatted_flow_data["outputs"][
+                    selected_flow
+                ]["parameters"]
+                if flow_outputs_parameters:
+                    flow_outputs_parameters_df = pd.DataFrame(
+                        flow_outputs_parameters
+                    )
+                    flow_outputs_parameters_formatted_df = pd.concat(
+                        [
+                            flow_outputs_parameters_df.drop(
+                                [
+                                    "source",
+                                    "type",
+                                    "argument_type",
+                                    "value_from",
+                                    "value",
+                                ],
+                                axis=1,
+                            ),
+                            flow_outputs_parameters_df["source"].apply(
+                                pd.Series
+                            ),
+                        ],
+                        axis=1,
+                    ).rename(
+                        columns={
+                            "name": "Name",
+                            "node_name": "Upstream Task",
+                            "io_type": "Upstream I/O type",
+                            "io_argument_type": "Upstream I/O Argument Type",
+                            "io_name": "Upstream I/O",
+                        },
+                        inplace=False,
+                    )
+                else:
+                    flow_outputs_parameters_formatted_df = pd.DataFrame()
+
+                # build pipeline outputs artifact table
+                flow_outputs_artifacts = formatted_flow_data["outputs"][
+                    selected_flow
+                ]["artifacts"]
+                if flow_outputs_artifacts:
+                    flow_outputs_artifacts_df = pd.DataFrame(
+                        flow_outputs_artifacts
+                    )
+                    flow_outputs_artifacts_formatted_df = pd.concat(
+                        [
+                            flow_outputs_artifacts_df.drop(
+                                ["source", "type", "argument_type", "s3"],
+                                axis=1,
+                            ),
+                            flow_outputs_artifacts_df["source"].apply(
+                                pd.Series
+                            ),
+                            flow_outputs_artifacts_df["s3"].apply(pd.Series),
+                        ],
+                        axis=1,
+                    ).rename(
+                        columns={
+                            "name": "Name",
+                            "bucket": "S3 Bucket",
+                            "key": "S3 Prefix",
+                            "node_name": "Upstream Task",
+                            "io_type": "Upstream I/O type",
+                            "io_argument_type": "Upstream I/O Argument Type",
+                            "io_name": "Upstream I/O",
+                        },
+                        inplace=False,
+                    )
+                else:
+                    flow_outputs_artifacts_formatted_df = pd.DataFrame()
+
+                st.write(":page_with_curl: Parameters")
+                st.dataframe(
+                    flow_outputs_parameters_formatted_df, hide_index=True
+                )
+                st.write(":open_file_folder: Artifacts")
+                st.dataframe(
+                    flow_outputs_artifacts_formatted_df, hide_index=True
+                )
 
         with tab_metadata:
             with st.container(height=tab_container_height, border=False):

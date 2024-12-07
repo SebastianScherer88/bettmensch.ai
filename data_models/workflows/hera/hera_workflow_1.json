@@ -1,19 +1,15 @@
 {
-    "api_version": null,
-    "kind": null,
     "metadata": {
         "annotations": {
             "karpenter.sh/do-not-disrupt": "true",
             "workflows.argoproj.io/pod-name-format": "v2"
         },
-        "cluster_name": null,
-        "creation_timestamp": "test-datetime-value",
-        "deletion_grace_period_seconds": null,
-        "deletion_timestamp": null,
-        "finalizers": null,
-        "generate_name": "pipeline-test-artifact-pipeline-d5rzf-flow-",
-        "generation": 6,
+        "creation_timestamp": "07/12/2024",
+        "generate_name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-",
+        "generation": 12,
         "labels": {
+            "bettmensch.ai/pipeline-id": "9de5c132-b8d2-44c8-b52e-47bfa710b7df",
+            "bettmensch.ai/pipeline-name": "pipeline-test-torch-cpu-pipeline-hgcxv",
             "workflows.argoproj.io/completed": "true",
             "workflows.argoproj.io/creator": "system-serviceaccount-argo-argo-server",
             "workflows.argoproj.io/phase": "Succeeded"
@@ -25,8 +21,7 @@
                 "fields_v1": {},
                 "manager": "argo",
                 "operation": "Update",
-                "subresource": null,
-                "time": "test-datetime-value"
+                "time": "07/12/2024"
             },
             {
                 "api_version": "argoproj.io/v1alpha1",
@@ -34,1317 +29,1205 @@
                 "fields_v1": {},
                 "manager": "workflow-controller",
                 "operation": "Update",
-                "subresource": null,
-                "time": "test-datetime-value"
+                "time": "07/12/2024"
             }
         ],
-        "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
+        "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9",
         "namespace": "argo",
-        "owner_references": null,
-        "resource_version": "18180",
-        "self_link": null,
-        "uid": "dc477fa6-dd12-43b7-8511-e3dc03bf023c"
+        "resource_version": "9564",
+        "uid": "15d5987d-9e1c-4606-82a0-611e6c7b19ee"
     },
     "spec": {
-        "active_deadline_seconds": null,
-        "affinity": null,
-        "archive_logs": null,
         "arguments": {
-            "artifacts": null,
             "parameters": [
                 {
-                    "default": null,
-                    "description": null,
-                    "enum": null,
-                    "global_name": null,
-                    "name": "a",
-                    "value": "Second integration test value a",
-                    "value_from": null
+                    "name": "n_iter",
+                    "value": "15"
+                },
+                {
+                    "name": "n_seconds_sleep",
+                    "value": "2"
                 }
             ]
         },
-        "artifact_gc": null,
-        "artifact_repository_ref": null,
-        "automount_service_account_token": null,
-        "dns_config": null,
-        "dns_policy": null,
-        "entrypoint": null,
-        "executor": null,
-        "hooks": null,
-        "host_aliases": null,
-        "host_network": null,
-        "image_pull_secrets": null,
-        "metrics": null,
-        "node_selector": null,
-        "on_exit": null,
-        "parallelism": null,
-        "pod_disruption_budget": null,
-        "pod_gc": null,
-        "pod_metadata": null,
-        "pod_priority": null,
-        "pod_priority_class_name": null,
-        "pod_spec_patch": null,
-        "priority": null,
-        "retry_strategy": null,
-        "scheduler_name": null,
-        "security_context": null,
-        "service_account_name": null,
-        "shutdown": null,
-        "suspend": null,
-        "synchronization": null,
-        "template_defaults": null,
-        "templates": null,
-        "tolerations": null,
-        "ttl_strategy": null,
-        "volume_claim_gc": null,
-        "volume_claim_templates": null,
-        "volumes": null,
-        "workflow_metadata": null,
         "workflow_template_ref": {
-            "cluster_scope": null,
-            "name": "pipeline-test-artifact-pipeline-d5rzf"
+            "name": "pipeline-test-torch-cpu-pipeline-hgcxv"
         }
     },
     "status": {
         "artifact_gc_status": {
-            "not_specified": true,
-            "pods_recouped": null,
-            "strategies_processed": null
+            "not_specified": true
         },
         "artifact_repository_ref": {
             "artifact_repository": {
-                "archive_logs": null,
-                "artifactory": null,
-                "azure": null,
-                "gcs": null,
-                "hdfs": null,
-                "oss": null,
                 "s3": {
-                    "access_key_secret": null,
                     "bucket": "bettmensch-ai-artifact-repository",
-                    "ca_secret": null,
-                    "create_bucket_if_not_present": null,
-                    "encryption_options": null,
                     "endpoint": "s3.us-east-2.amazonaws.com",
                     "insecure": true,
-                    "key_format": null,
-                    "key_prefix": null,
-                    "region": null,
-                    "role_arn": null,
-                    "secret_key_secret": null,
-                    "use_sdk_creds": null
+                    "key_format": "argo-workflows/{{workflow.name}}/{{pod.name}}"
                 }
             },
             "config_map": "artifact-repositories",
-            "default": null,
             "key": "bettmensch-ai-artifact-repository",
             "namespace": "argo"
         },
-        "compressed_nodes": null,
         "conditions": [
             {
-                "message": null,
                 "status": "False",
                 "type": "PodRunning"
             },
             {
-                "message": null,
                 "status": "True",
                 "type": "Completed"
             }
         ],
-        "estimated_duration": null,
-        "finished_at": "test-datetime-value",
-        "message": null,
+        "finished_at": "07/12/2024",
         "nodes": {
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9": {
-                "boundary_id": null,
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9": {
                 "children": [
-                    "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-3688018393"
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078"
                 ],
-                "daemoned": null,
-                "display_name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "estimated_duration": null,
-                "finished_at": "test-datetime-value",
-                "host_node_name": null,
-                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "inputs": null,
-                "memoization_status": null,
-                "message": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "node_flag": null,
+                "display_name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9",
+                "finished_at": "07/12/2024",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9",
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9",
                 "outbound_nodes": [
-                    "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-2313483554"
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825"
                 ],
-                "outputs": null,
                 "phase": "Succeeded",
-                "pod_ip": null,
-                "progress": "2/2",
+                "progress": "5/5",
                 "resources_duration": {
-                    "cpu": 2,
-                    "memory": 48
+                    "cpu": 26,
+                    "memory": 1054
                 },
-                "started_at": "test-datetime-value",
-                "synchronization_status": null,
-                "template_name": "bettmensch-ai-dag",
-                "template_ref": null,
+                "started_at": "07/12/2024",
+                "template_name": "bettmensch-ai-outer-dag",
                 "template_scope": "local/",
                 "type": "DAG"
             },
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1037491743": {
-                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "children": [
-                    "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-2313483554"
-                ],
-                "daemoned": null,
-                "display_name": "show-artifact-0",
-                "estimated_duration": null,
-                "finished_at": "test-datetime-value",
-                "host_node_name": null,
-                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1037491743",
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "display_name": "torch-ddp-0-worker-1(0)",
+                "finished_at": "07/12/2024",
+                "host_node_name": "ip-10-0-48-85.us-east-2.compute.internal",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172",
                 "inputs": {
-                    "artifacts": [
-                        {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": {
-                                "access_key_secret": null,
-                                "bucket": null,
-                                "ca_secret": null,
-                                "create_bucket_if_not_present": null,
-                                "encryption_options": null,
-                                "endpoint": null,
-                                "insecure": null,
-                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9/pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-convert-to-artifact-1820573056/a_art.tgz",
-                                "region": null,
-                                "role_arn": null,
-                                "secret_key_secret": null,
-                                "use_sdk_creds": null
-                            },
-                            "sub_path": null
-                        }
-                    ],
-                    "parameters": null
-                },
-                "memoization_status": null,
-                "message": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9.show-artifact-0",
-                "node_flag": null,
-                "outbound_nodes": null,
-                "outputs": {
-                    "artifacts": null,
-                    "exit_code": "0",
-                    "parameters": null,
-                    "result": null
-                },
-                "phase": "Succeeded",
-                "pod_ip": null,
-                "progress": "1/1",
-                "resources_duration": {
-                    "cpu": 1,
-                    "memory": 24
-                },
-                "started_at": "test-datetime-value",
-                "synchronization_status": null,
-                "template_name": "show-artifact",
-                "template_ref": null,
-                "template_scope": "local/",
-                "type": "Retry"
-            },
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1820573056": {
-                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "children": [
-                    "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1037491743"
-                ],
-                "daemoned": null,
-                "display_name": "convert-to-artifact-0(0)",
-                "estimated_duration": null,
-                "finished_at": "test-datetime-value",
-                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal",
-                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1820573056",
-                "inputs": {
-                    "artifacts": null,
                     "parameters": [
                         {
-                            "default": null,
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a",
-                            "value": "Second integration test value a",
-                            "value_from": null
+                            "default": "100",
+                            "name": "n_iter",
+                            "value": "15"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep",
+                            "value": "2"
                         },
                         {
                             "default": "null",
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a_art",
-                            "value": "null",
-                            "value_from": null
+                            "name": "duration",
+                            "value": "null"
                         }
                     ]
                 },
-                "memoization_status": null,
-                "message": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9.convert-to-artifact-0(0)",
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-0-worker-1(0)",
                 "node_flag": {
-                    "hooked": null,
                     "retried": true
                 },
-                "outbound_nodes": null,
                 "outputs": {
-                    "artifacts": [
-                        {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a_art",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a_art",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": {
-                                "access_key_secret": null,
-                                "bucket": null,
-                                "ca_secret": null,
-                                "create_bucket_if_not_present": null,
-                                "encryption_options": null,
-                                "endpoint": null,
-                                "insecure": null,
-                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9/pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-convert-to-artifact-1820573056/a_art.tgz",
-                                "region": null,
-                                "role_arn": null,
-                                "secret_key_secret": null,
-                                "use_sdk_creds": null
-                            },
-                            "sub_path": null
-                        }
-                    ],
                     "exit_code": "0",
-                    "parameters": null,
-                    "result": null
-                },
-                "phase": "Succeeded",
-                "pod_ip": null,
-                "progress": "1/1",
-                "resources_duration": {
-                    "cpu": 1,
-                    "memory": 24
-                },
-                "started_at": "test-datetime-value",
-                "synchronization_status": null,
-                "template_name": "convert-to-artifact",
-                "template_ref": null,
-                "template_scope": "local/",
-                "type": "Pod"
-            },
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-2313483554": {
-                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "children": null,
-                "daemoned": null,
-                "display_name": "show-artifact-0(0)",
-                "estimated_duration": null,
-                "finished_at": "test-datetime-value",
-                "host_node_name": "ip-10-0-48-52.us-east-2.compute.internal",
-                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-2313483554",
-                "inputs": {
-                    "artifacts": [
-                        {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": {
-                                "access_key_secret": null,
-                                "bucket": null,
-                                "ca_secret": null,
-                                "create_bucket_if_not_present": null,
-                                "encryption_options": null,
-                                "endpoint": null,
-                                "insecure": null,
-                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9/pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-convert-to-artifact-1820573056/a_art.tgz",
-                                "region": null,
-                                "role_arn": null,
-                                "secret_key_secret": null,
-                                "use_sdk_creds": null
-                            },
-                            "sub_path": null
-                        }
-                    ],
-                    "parameters": null
-                },
-                "memoization_status": null,
-                "message": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9.show-artifact-0(0)",
-                "node_flag": {
-                    "hooked": null,
-                    "retried": true
-                },
-                "outbound_nodes": null,
-                "outputs": {
-                    "artifacts": null,
-                    "exit_code": "0",
-                    "parameters": null,
-                    "result": null
-                },
-                "phase": "Succeeded",
-                "pod_ip": null,
-                "progress": "1/1",
-                "resources_duration": {
-                    "cpu": 1,
-                    "memory": 24
-                },
-                "started_at": "test-datetime-value",
-                "synchronization_status": null,
-                "template_name": "show-artifact",
-                "template_ref": null,
-                "template_scope": "local/",
-                "type": "Pod"
-            },
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-3688018393": {
-                "boundary_id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9",
-                "children": [
-                    "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1820573056"
-                ],
-                "daemoned": null,
-                "display_name": "convert-to-artifact-0",
-                "estimated_duration": null,
-                "finished_at": "test-datetime-value",
-                "host_node_name": null,
-                "id": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-3688018393",
-                "inputs": {
-                    "artifacts": null,
                     "parameters": [
                         {
-                            "default": null,
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a",
-                            "value": "Second integration test value a",
-                            "value_from": null
+                            "name": "duration",
+                            "value": "30",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 12,
+                    "memory": 496
+                },
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-1",
+                "template_scope": "local/",
+                "type": "Pod"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "display_name": "torch-ddp-delete-torch-ddp-service",
+                "finished_at": "07/12/2024",
+                "host_node_name": "ip-10-0-49-235.us-east-2.compute.internal",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825",
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-delete-torch-ddp-service",
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 0,
+                    "memory": 0
+                },
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-delete-torch-ddp-service",
+                "template_scope": "local/",
+                "type": "Pod"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2373051150": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2699628426",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3370869069"
+                ],
+                "display_name": "torch-ddp-create-torch-ddp-service",
+                "finished_at": "07/12/2024",
+                "host_node_name": "ip-10-0-49-235.us-east-2.compute.internal",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2373051150",
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-create-torch-ddp-service",
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 0,
+                    "memory": 1
+                },
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-create-torch-ddp-service",
+                "template_scope": "local/",
+                "type": "Pod"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2699628426": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2872643249"
+                ],
+                "display_name": "torch-ddp-0",
+                "finished_at": "07/12/2024",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2699628426",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "default": "100",
+                            "name": "n_iter",
+                            "value": "15"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep",
+                            "value": "2"
                         },
                         {
                             "default": "null",
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a_art",
-                            "value": "null",
-                            "value_from": null
+                            "name": "duration",
+                            "value": "null"
                         }
                     ]
                 },
-                "memoization_status": null,
-                "message": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9.convert-to-artifact-0",
-                "node_flag": null,
-                "outbound_nodes": null,
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-0",
                 "outputs": {
-                    "artifacts": [
-                        {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a_art",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a_art",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": {
-                                "access_key_secret": null,
-                                "bucket": null,
-                                "ca_secret": null,
-                                "create_bucket_if_not_present": null,
-                                "encryption_options": null,
-                                "endpoint": null,
-                                "insecure": null,
-                                "key": "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9/pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-convert-to-artifact-1820573056/a_art.tgz",
-                                "region": null,
-                                "role_arn": null,
-                                "secret_key_secret": null,
-                                "use_sdk_creds": null
-                            },
-                            "sub_path": null
-                        }
-                    ],
                     "exit_code": "0",
-                    "parameters": null,
-                    "result": null
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value": "30",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
                 },
                 "phase": "Succeeded",
-                "pod_ip": null,
-                "progress": "2/2",
+                "progress": "3/3",
                 "resources_duration": {
-                    "cpu": 2,
-                    "memory": 48
+                    "cpu": 14,
+                    "memory": 557
                 },
-                "started_at": "test-datetime-value",
-                "synchronization_status": null,
-                "template_name": "convert-to-artifact",
-                "template_ref": null,
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-0",
                 "template_scope": "local/",
                 "type": "Retry"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2872643249": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3901607477",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825"
+                ],
+                "display_name": "torch-ddp-0(0)",
+                "finished_at": "07/12/2024",
+                "host_node_name": "ip-10-0-49-235.us-east-2.compute.internal",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2872643249",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "default": "100",
+                            "name": "n_iter",
+                            "value": "15"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep",
+                            "value": "2"
+                        },
+                        {
+                            "default": "null",
+                            "name": "duration",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-0(0)",
+                "node_flag": {
+                    "retried": true
+                },
+                "outputs": {
+                    "exit_code": "0",
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value": "30",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 13,
+                    "memory": 527
+                },
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-0",
+                "template_scope": "local/",
+                "type": "Pod"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2373051150"
+                ],
+                "display_name": "bettmensch-ai-inner-dag",
+                "finished_at": "07/12/2024",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "n_iter",
+                            "value": "15"
+                        },
+                        {
+                            "name": "n_seconds_sleep",
+                            "value": "2"
+                        }
+                    ]
+                },
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag",
+                "outbound_nodes": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172",
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825"
+                ],
+                "phase": "Succeeded",
+                "progress": "5/5",
+                "resources_duration": {
+                    "cpu": 26,
+                    "memory": 1054
+                },
+                "started_at": "07/12/2024",
+                "template_name": "bettmensch-ai-inner-dag",
+                "template_scope": "local/",
+                "type": "DAG"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3370869069": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172"
+                ],
+                "display_name": "torch-ddp-0-worker-1",
+                "finished_at": "07/12/2024",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3370869069",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "default": "100",
+                            "name": "n_iter",
+                            "value": "15"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep",
+                            "value": "2"
+                        },
+                        {
+                            "default": "null",
+                            "name": "duration",
+                            "value": "null"
+                        }
+                    ]
+                },
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.torch-ddp-0-worker-1",
+                "outputs": {
+                    "exit_code": "0",
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value": "30",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 12,
+                    "memory": 496
+                },
+                "started_at": "07/12/2024",
+                "template_name": "torch-ddp-1",
+                "template_scope": "local/",
+                "type": "Retry"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3901607477": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "children": [
+                    "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508"
+                ],
+                "display_name": "show-duration-param-0",
+                "finished_at": "07/12/2024",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3901607477",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "value": "30"
+                        }
+                    ]
+                },
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.show-duration-param-0",
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 30
+                },
+                "started_at": "07/12/2024",
+                "template_name": "show-duration-param",
+                "template_scope": "local/",
+                "type": "Retry"
+            },
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508": {
+                "boundary_id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-3111033078",
+                "display_name": "show-duration-param-0(0)",
+                "finished_at": "07/12/2024",
+                "host_node_name": "ip-10-0-48-85.us-east-2.compute.internal",
+                "id": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508",
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a",
+                            "value": "30"
+                        }
+                    ]
+                },
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9.bettmensch-ai-inner-dag.show-duration-param-0(0)",
+                "node_flag": {
+                    "retried": true
+                },
+                "outputs": {
+                    "exit_code": "0"
+                },
+                "phase": "Succeeded",
+                "progress": "1/1",
+                "resources_duration": {
+                    "cpu": 1,
+                    "memory": 30
+                },
+                "started_at": "07/12/2024",
+                "template_name": "show-duration-param",
+                "template_scope": "local/",
+                "type": "Pod"
             }
         },
-        "offload_node_status_version": null,
-        "outputs": null,
-        "persistent_volume_claims": null,
         "phase": "Succeeded",
-        "progress": "2/2",
+        "progress": "5/5",
         "resources_duration": {
-            "cpu": 2,
-            "memory": 48
+            "cpu": 26,
+            "memory": 1054
         },
-        "started_at": "test-datetime-value",
+        "started_at": "07/12/2024",
         "stored_templates": {
-            "namespaced/pipeline-test-artifact-pipeline-d5rzf/bettmensch-ai-dag": {
-                "active_deadline_seconds": null,
-                "affinity": null,
-                "archive_location": null,
-                "automount_service_account_token": null,
-                "container": null,
-                "container_set": null,
-                "daemon": null,
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/bettmensch-ai-inner-dag": {
                 "dag": {
-                    "fail_fast": null,
-                    "target": null,
                     "tasks": [
                         {
+                            "arguments": {},
+                            "name": "torch-ddp-create-torch-ddp-service",
+                            "template": "torch-ddp-create-torch-ddp-service"
+                        },
+                        {
                             "arguments": {
-                                "artifacts": null,
                                 "parameters": [
                                     {
-                                        "default": null,
-                                        "description": null,
-                                        "enum": null,
-                                        "global_name": null,
-                                        "name": "a",
-                                        "value": "{{workflow.parameters.a}}",
-                                        "value_from": null
+                                        "name": "n_iter",
+                                        "value": "{{inputs.parameters.n_iter}}"
+                                    },
+                                    {
+                                        "name": "n_seconds_sleep",
+                                        "value": "{{inputs.parameters.n_seconds_sleep}}"
                                     }
                                 ]
                             },
-                            "continue_on": null,
-                            "dependencies": null,
-                            "depends": null,
-                            "hooks": null,
-                            "inline": null,
-                            "name": "convert-to-artifact-0",
-                            "on_exit": null,
-                            "template": "convert-to-artifact",
-                            "template_ref": null,
-                            "when": null,
-                            "with_items": null,
-                            "with_param": null,
-                            "with_sequence": null
+                            "depends": "torch-ddp-create-torch-ddp-service",
+                            "name": "torch-ddp-0",
+                            "template": "torch-ddp-0"
                         },
                         {
                             "arguments": {
-                                "artifacts": [
+                                "parameters": [
                                     {
-                                        "archive": null,
-                                        "archive_logs": null,
-                                        "artifact_gc": null,
-                                        "artifactory": null,
-                                        "azure": null,
-                                        "deleted": null,
-                                        "from_": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}",
-                                        "from_expression": null,
-                                        "gcs": null,
-                                        "git": null,
-                                        "global_name": null,
-                                        "hdfs": null,
-                                        "http": null,
-                                        "mode": null,
-                                        "name": "a",
-                                        "optional": null,
-                                        "oss": null,
-                                        "path": null,
-                                        "raw": null,
-                                        "recurse_mode": null,
-                                        "s3": null,
-                                        "sub_path": null
+                                        "name": "n_iter",
+                                        "value": "{{inputs.parameters.n_iter}}"
+                                    },
+                                    {
+                                        "name": "n_seconds_sleep",
+                                        "value": "{{inputs.parameters.n_seconds_sleep}}"
                                     }
-                                ],
-                                "parameters": null
+                                ]
                             },
-                            "continue_on": null,
-                            "dependencies": null,
-                            "depends": "convert-to-artifact-0",
-                            "hooks": null,
-                            "inline": null,
-                            "name": "show-artifact-0",
-                            "on_exit": null,
-                            "template": "show-artifact",
-                            "template_ref": null,
-                            "when": null,
-                            "with_items": null,
-                            "with_param": null,
-                            "with_sequence": null
+                            "depends": "torch-ddp-create-torch-ddp-service",
+                            "name": "torch-ddp-0-worker-1",
+                            "template": "torch-ddp-1"
+                        },
+                        {
+                            "arguments": {},
+                            "depends": "torch-ddp-0",
+                            "name": "torch-ddp-delete-torch-ddp-service",
+                            "template": "torch-ddp-delete-torch-ddp-service"
+                        },
+                        {
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "a",
+                                        "value": "{{tasks.torch-ddp-0.outputs.parameters.duration}}"
+                                    }
+                                ]
+                            },
+                            "depends": "torch-ddp-0",
+                            "name": "show-duration-param-0",
+                            "template": "show-duration-param"
                         }
                     ]
                 },
-                "data": null,
-                "executor": null,
-                "fail_fast": null,
-                "host_aliases": null,
-                "http": null,
-                "init_containers": null,
                 "inputs": {
-                    "artifacts": null,
-                    "parameters": null
-                },
-                "memoize": null,
-                "metadata": {
-                    "annotations": null,
-                    "labels": null
-                },
-                "metrics": null,
-                "name": "bettmensch-ai-dag",
-                "node_selector": null,
-                "outputs": {
-                    "artifacts": null,
-                    "exit_code": null,
-                    "parameters": null,
-                    "result": null
-                },
-                "parallelism": null,
-                "plugin": null,
-                "pod_spec_patch": null,
-                "priority": null,
-                "priority_class_name": null,
-                "resource": null,
-                "retry_strategy": null,
-                "scheduler_name": null,
-                "script": null,
-                "security_context": null,
-                "service_account_name": null,
-                "sidecars": null,
-                "steps": null,
-                "suspend": null,
-                "synchronization": null,
-                "timeout": null,
-                "tolerations": null,
-                "volumes": null
-            },
-            "namespaced/pipeline-test-artifact-pipeline-d5rzf/convert-to-artifact": {
-                "active_deadline_seconds": null,
-                "affinity": null,
-                "archive_location": null,
-                "automount_service_account_token": null,
-                "container": null,
-                "container_set": null,
-                "daemon": null,
-                "dag": null,
-                "data": null,
-                "executor": null,
-                "fail_fast": null,
-                "host_aliases": null,
-                "http": null,
-                "init_containers": null,
-                "inputs": {
-                    "artifacts": null,
                     "parameters": [
                         {
-                            "default": null,
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a",
-                            "value": null,
-                            "value_from": null
+                            "name": "n_iter"
+                        },
+                        {
+                            "name": "n_seconds_sleep"
+                        }
+                    ]
+                },
+                "metadata": {},
+                "name": "bettmensch-ai-inner-dag",
+                "outputs": {}
+            },
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/bettmensch-ai-outer-dag": {
+                "dag": {
+                    "tasks": [
+                        {
+                            "arguments": {
+                                "parameters": [
+                                    {
+                                        "name": "n_iter",
+                                        "value": "{{workflow.parameters.n_iter}}"
+                                    },
+                                    {
+                                        "name": "n_seconds_sleep",
+                                        "value": "{{workflow.parameters.n_seconds_sleep}}"
+                                    }
+                                ]
+                            },
+                            "name": "bettmensch-ai-inner-dag",
+                            "template": "bettmensch-ai-inner-dag"
+                        }
+                    ]
+                },
+                "inputs": {},
+                "metadata": {},
+                "name": "bettmensch-ai-outer-dag",
+                "outputs": {}
+            },
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/show-duration-param": {
+                "inputs": {
+                    "parameters": [
+                        {
+                            "name": "a"
+                        }
+                    ]
+                },
+                "metadata": {},
+                "name": "show-duration-param",
+                "outputs": {},
+                "retry_strategy": {
+                    "limit": "1",
+                    "retry_policy": "OnError"
+                },
+                "script": {
+                    "command": [
+                        "python"
+                    ],
+                    "image": "bettmensch88/bettmensch.ai-standard:3.11-latest",
+                    "image_pull_policy": "Always",
+                    "name": "",
+                    "resources": {
+                        "limits": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        },
+                        "requests": {
+                            "cpu": "100m",
+                            "memory": "100Mi"
+                        }
+                    },
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\ndef show_parameter(a: InputParameter) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputParameter.\"\"\"\n    print(f'Content of input parameter a is: {a}')\n\nshow_parameter(a)\n"
+                }
+            },
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/torch-ddp-0": {
+                "inputs": {
+                    "parameters": [
+                        {
+                            "default": "100",
+                            "name": "n_iter"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep"
                         },
                         {
                             "default": "null",
-                            "description": null,
-                            "enum": null,
-                            "global_name": null,
-                            "name": "a_art",
-                            "value": null,
-                            "value_from": null
+                            "name": "duration"
                         }
                     ]
                 },
-                "memoize": null,
                 "metadata": {
-                    "annotations": null,
-                    "labels": null
+                    "labels": {
+                        "torch-job": "torch-ddp-0",
+                        "torch-node": "0"
+                    }
                 },
-                "metrics": null,
-                "name": "convert-to-artifact",
-                "node_selector": null,
+                "name": "torch-ddp-0",
                 "outputs": {
-                    "artifacts": [
+                    "parameters": [
                         {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a_art",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a_art",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": null,
-                            "sub_path": null
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
                         }
-                    ],
-                    "exit_code": null,
-                    "parameters": null,
-                    "result": null
+                    ]
                 },
-                "parallelism": null,
-                "plugin": null,
-                "pod_spec_patch": null,
-                "priority": null,
-                "priority_class_name": null,
-                "resource": null,
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}",
                 "retry_strategy": {
-                    "affinity": null,
-                    "backoff": null,
-                    "expression": null,
                     "limit": "1",
                     "retry_policy": "OnError"
                 },
-                "scheduler_name": null,
                 "script": {
-                    "args": null,
                     "command": [
                         "python"
                     ],
-                    "env": null,
-                    "env_from": null,
-                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_min_nodes",
+                            "value": "2"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_max_nodes",
+                            "value": "2"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_node_rank",
+                            "value": "0"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_url",
+                            "value": "torch-ddp-0-{{workflow.uid}}.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "image": "bettmensch88/bettmensch.ai-pytorch:3.11-latest",
                     "image_pull_policy": "Always",
-                    "lifecycle": null,
-                    "liveness_probe": null,
                     "name": "",
-                    "ports": null,
-                    "readiness_probe": null,
+                    "ports": [
+                        {
+                            "container_port": 29200,
+                            "name": "ddp",
+                            "protocol": "TCP"
+                        }
+                    ],
                     "resources": {
                         "limits": {
                             "cpu": "100m",
-                            "memory": "100Mi"
+                            "memory": "300Mi"
                         },
                         "requests": {
                             "cpu": "100m",
-                            "memory": "100Mi"
+                            "memory": "300Mi"
                         }
                     },
-                    "security_context": null,
-                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)",
-                    "startup_probe": null,
-                    "stdin": null,
-                    "stdin_once": null,
-                    "termination_message_path": null,
-                    "termination_message_policy": null,
-                    "tty": null,
-                    "volume_devices": null,
-                    "volume_mounts": null,
-                    "working_dir": null
-                },
-                "security_context": null,
-                "service_account_name": null,
-                "sidecars": null,
-                "steps": null,
-                "suspend": null,
-                "synchronization": null,
-                "timeout": null,
-                "tolerations": null,
-                "volumes": null
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: n_iter = json.loads(r'''{{inputs.parameters.n_iter}}''')\nexcept: n_iter = r'''{{inputs.parameters.n_iter}}'''\ntry: n_seconds_sleep = json.loads(r'''{{inputs.parameters.n_seconds_sleep}}''')\nexcept: n_seconds_sleep = r'''{{inputs.parameters.n_seconds_sleep}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\nfrom bettmensch_ai.pipelines.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef tensor_reduce(n_iter: InputParameter=100, n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime as dt\n    import GPUtil\n    import torch\n    import torch.distributed as dist\n    from bettmensch_ai.pipelines.component.torch_ddp import LaunchContext\n    has_gpu = torch.cuda.is_available()\n    ddp_context = LaunchContext()\n    print(f'GPU present: {has_gpu}')\n    if has_gpu:\n        dist.init_process_group(backend='nccl')\n    else:\n        dist.init_process_group(backend='gloo')\n    for i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        GPUtil.showUtilization()\n        a = torch.tensor([ddp_context.rank])\n        print(f'{i}/{n_iter}: @{dt.now()}')\n        print(f'{i}/{n_iter}: Backend {dist.get_backend()}')\n        print(f'{i}/{n_iter}: Global world size: {ddp_context.world_size}')\n        print(f'{i}/{n_iter}: Global worker process rank: {ddp_context.rank}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.rank + 1}/{ddp_context.world_size} globally!')\n        print(f'{i}/{n_iter}: Local rank of worker: {ddp_context.local_rank}')\n        print(f'{i}/{n_iter}: Local world size: {ddp_context.local_world_size}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.local_rank + 1}/{ddp_context.local_world_size} locally!')\n        print(f'{i}/{n_iter}: Node/pod rank: {ddp_context.group_rank}')\n        if has_gpu:\n            device = torch.device(f'cuda:{ddp_context.local_rank}')\n            device_count = torch.cuda.device_count()\n            print(f'{i}/{n_iter}: GPU count: {device_count}')\n            device_name = torch.cuda.get_device_name(ddp_context.local_rank)\n            print(f'{i}/{n_iter}: GPU name: {device_name}')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f'{i}/{n_iter}: GPU property: {device_property}')\n        else:\n            device = torch.device('cpu')\n        a_placed = a.to(device)\n        print(f'{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}')\n        dist.all_reduce(a_placed)\n        print(f'{i}/{n_iter}: Post-`all_reduce` tensor: {a_placed}')\n        print('===================================================')\n    if duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom torch.distributed.elastic.multiprocessing.errors import record\n\ntensor_reduce=record(tensor_reduce)\n\nfrom bettmensch_ai.pipelines.component import as_torch_ddp\n\ntorch_ddp_decorator=as_torch_ddp()\n\ntorch_ddp_function=torch_ddp_decorator(tensor_reduce)\n\n\ntorch_ddp_function(n_iter,n_seconds_sleep,duration)"
+                }
             },
-            "namespaced/pipeline-test-artifact-pipeline-d5rzf/show-artifact": {
-                "active_deadline_seconds": null,
-                "affinity": null,
-                "archive_location": null,
-                "automount_service_account_token": null,
-                "container": null,
-                "container_set": null,
-                "daemon": null,
-                "dag": null,
-                "data": null,
-                "executor": null,
-                "fail_fast": null,
-                "host_aliases": null,
-                "http": null,
-                "init_containers": null,
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/torch-ddp-1": {
                 "inputs": {
-                    "artifacts": [
+                    "parameters": [
                         {
-                            "archive": null,
-                            "archive_logs": null,
-                            "artifact_gc": null,
-                            "artifactory": null,
-                            "azure": null,
-                            "deleted": null,
-                            "from_": null,
-                            "from_expression": null,
-                            "gcs": null,
-                            "git": null,
-                            "global_name": null,
-                            "hdfs": null,
-                            "http": null,
-                            "mode": null,
-                            "name": "a",
-                            "optional": null,
-                            "oss": null,
-                            "path": "a",
-                            "raw": null,
-                            "recurse_mode": null,
-                            "s3": null,
-                            "sub_path": null
+                            "default": "100",
+                            "name": "n_iter"
+                        },
+                        {
+                            "default": "10",
+                            "name": "n_seconds_sleep"
+                        },
+                        {
+                            "default": "null",
+                            "name": "duration"
                         }
-                    ],
-                    "parameters": null
+                    ]
                 },
-                "memoize": null,
                 "metadata": {
-                    "annotations": null,
-                    "labels": null
+                    "labels": {
+                        "torch-job": "torch-ddp-0",
+                        "torch-node": "1"
+                    }
                 },
-                "metrics": null,
-                "name": "show-artifact",
-                "node_selector": null,
+                "name": "torch-ddp-1",
                 "outputs": {
-                    "artifacts": null,
-                    "exit_code": null,
-                    "parameters": null,
-                    "result": null
+                    "parameters": [
+                        {
+                            "name": "duration",
+                            "value_from": {
+                                "path": "duration"
+                            }
+                        }
+                    ]
                 },
-                "parallelism": null,
-                "plugin": null,
-                "pod_spec_patch": null,
-                "priority": null,
-                "priority_class_name": null,
-                "resource": null,
+                "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}",
                 "retry_strategy": {
-                    "affinity": null,
-                    "backoff": null,
-                    "expression": null,
                     "limit": "1",
                     "retry_policy": "OnError"
                 },
-                "scheduler_name": null,
                 "script": {
-                    "args": null,
                     "command": [
                         "python"
                     ],
-                    "env": null,
-                    "env_from": null,
-                    "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                    "env": [
+                        {
+                            "name": "NCCL_DEBUG",
+                            "value": "INFO"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_min_nodes",
+                            "value": "2"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_max_nodes",
+                            "value": "2"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_node_rank",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_nproc_per_node",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_max_restarts",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_start_method",
+                            "value": "fork"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_backend",
+                            "value": "static"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_url",
+                            "value": "torch-ddp-0-{{workflow.uid}}.argo.svc.cluster.local"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_port",
+                            "value": "29200"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_run_id",
+                            "value": "1"
+                        },
+                        {
+                            "name": "bettmensch_ai_torch_ddp_tee",
+                            "value": "0"
+                        }
+                    ],
+                    "image": "bettmensch88/bettmensch.ai-pytorch:3.11-latest",
                     "image_pull_policy": "Always",
-                    "lifecycle": null,
-                    "liveness_probe": null,
                     "name": "",
-                    "ports": null,
-                    "readiness_probe": null,
                     "resources": {
                         "limits": {
                             "cpu": "100m",
-                            "memory": "100Mi"
+                            "memory": "300Mi"
                         },
                         "requests": {
                             "cpu": "100m",
-                            "memory": "100Mi"
+                            "memory": "300Mi"
                         }
                     },
-                    "security_context": null,
-                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)",
-                    "startup_probe": null,
-                    "stdin": null,
-                    "stdin_once": null,
-                    "termination_message_path": null,
-                    "termination_message_policy": null,
-                    "tty": null,
-                    "volume_devices": null,
-                    "volume_mounts": null,
-                    "working_dir": null
-                },
-                "security_context": null,
-                "service_account_name": null,
-                "sidecars": null,
-                "steps": null,
-                "suspend": null,
-                "synchronization": null,
-                "timeout": null,
-                "tolerations": null,
-                "volumes": null
+                    "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: n_iter = json.loads(r'''{{inputs.parameters.n_iter}}''')\nexcept: n_iter = r'''{{inputs.parameters.n_iter}}'''\ntry: n_seconds_sleep = json.loads(r'''{{inputs.parameters.n_seconds_sleep}}''')\nexcept: n_seconds_sleep = r'''{{inputs.parameters.n_seconds_sleep}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\nfrom bettmensch_ai.pipelines.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef tensor_reduce(n_iter: InputParameter=100, n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime as dt\n    import GPUtil\n    import torch\n    import torch.distributed as dist\n    from bettmensch_ai.pipelines.component.torch_ddp import LaunchContext\n    has_gpu = torch.cuda.is_available()\n    ddp_context = LaunchContext()\n    print(f'GPU present: {has_gpu}')\n    if has_gpu:\n        dist.init_process_group(backend='nccl')\n    else:\n        dist.init_process_group(backend='gloo')\n    for i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        GPUtil.showUtilization()\n        a = torch.tensor([ddp_context.rank])\n        print(f'{i}/{n_iter}: @{dt.now()}')\n        print(f'{i}/{n_iter}: Backend {dist.get_backend()}')\n        print(f'{i}/{n_iter}: Global world size: {ddp_context.world_size}')\n        print(f'{i}/{n_iter}: Global worker process rank: {ddp_context.rank}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.rank + 1}/{ddp_context.world_size} globally!')\n        print(f'{i}/{n_iter}: Local rank of worker: {ddp_context.local_rank}')\n        print(f'{i}/{n_iter}: Local world size: {ddp_context.local_world_size}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.local_rank + 1}/{ddp_context.local_world_size} locally!')\n        print(f'{i}/{n_iter}: Node/pod rank: {ddp_context.group_rank}')\n        if has_gpu:\n            device = torch.device(f'cuda:{ddp_context.local_rank}')\n            device_count = torch.cuda.device_count()\n            print(f'{i}/{n_iter}: GPU count: {device_count}')\n            device_name = torch.cuda.get_device_name(ddp_context.local_rank)\n            print(f'{i}/{n_iter}: GPU name: {device_name}')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f'{i}/{n_iter}: GPU property: {device_property}')\n        else:\n            device = torch.device('cpu')\n        a_placed = a.to(device)\n        print(f'{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}')\n        dist.all_reduce(a_placed)\n        print(f'{i}/{n_iter}: Post-`all_reduce` tensor: {a_placed}')\n        print('===================================================')\n    if duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom torch.distributed.elastic.multiprocessing.errors import record\n\ntensor_reduce=record(tensor_reduce)\n\nfrom bettmensch_ai.pipelines.component import as_torch_ddp\n\ntorch_ddp_decorator=as_torch_ddp()\n\ntorch_ddp_function=torch_ddp_decorator(tensor_reduce)\n\n\ntorch_ddp_function(n_iter,n_seconds_sleep,duration)"
+                }
+            },
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/torch-ddp-create-torch-ddp-service": {
+                "inputs": {},
+                "metadata": {},
+                "name": "torch-ddp-create-torch-ddp-service",
+                "outputs": {},
+                "resource": {
+                    "action": "create",
+                    "manifest": "apiVersion: v1\nkind: Service\nmetadata:\n  name: torch-ddp-0-{{workflow.uid}}\n  namespace: argo\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n    torch-job: torch-ddp-0\nspec:\n  clusterIP: None  # ClusterIP set to None for headless service.\n  ports:\n  - name: ddp  # Port for torchrun master<->worker node coms.\n    port: 29200\n    targetPort: 29200\n  selector:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n    torch-job: torch-ddp-0\n    torch-node: '0'  # Selector for pods associated with this service.\n"
+                }
+            },
+            "namespaced/pipeline-test-torch-cpu-pipeline-hgcxv/torch-ddp-delete-torch-ddp-service": {
+                "inputs": {},
+                "metadata": {},
+                "name": "torch-ddp-delete-torch-ddp-service",
+                "outputs": {},
+                "resource": {
+                    "action": "delete",
+                    "flags": [
+                        "service",
+                        "--selector",
+                        "torch-job=torch-ddp-0,workflows.argoproj.io/workflow={{workflow.name}}",
+                        "-n",
+                        "argo"
+                    ]
+                }
             }
         },
         "stored_workflow_template_spec": {
-            "active_deadline_seconds": null,
-            "affinity": null,
-            "archive_logs": null,
             "arguments": {
-                "artifacts": null,
                 "parameters": [
                     {
-                        "default": null,
-                        "description": null,
-                        "enum": null,
-                        "global_name": null,
-                        "name": "a",
-                        "value": "Second integration test value a",
-                        "value_from": null
+                        "name": "n_iter",
+                        "value": "15"
+                    },
+                    {
+                        "name": "n_seconds_sleep",
+                        "value": "2"
                     }
                 ]
             },
-            "artifact_gc": null,
-            "artifact_repository_ref": null,
-            "automount_service_account_token": null,
-            "dns_config": null,
-            "dns_policy": null,
-            "entrypoint": "bettmensch-ai-dag",
-            "executor": null,
-            "hooks": null,
-            "host_aliases": null,
-            "host_network": null,
-            "image_pull_secrets": null,
-            "metrics": null,
-            "node_selector": null,
-            "on_exit": null,
-            "parallelism": null,
-            "pod_disruption_budget": null,
-            "pod_gc": null,
-            "pod_metadata": null,
-            "pod_priority": null,
-            "pod_priority_class_name": null,
-            "pod_spec_patch": null,
-            "priority": null,
-            "retry_strategy": null,
-            "scheduler_name": null,
-            "security_context": null,
+            "entrypoint": "bettmensch-ai-outer-dag",
             "service_account_name": "argo-workflow",
-            "shutdown": null,
-            "suspend": null,
-            "synchronization": null,
-            "template_defaults": null,
             "templates": [
                 {
-                    "active_deadline_seconds": null,
-                    "affinity": null,
-                    "archive_location": null,
-                    "automount_service_account_token": null,
-                    "container": null,
-                    "container_set": null,
-                    "daemon": null,
+                    "inputs": {},
+                    "metadata": {},
+                    "name": "torch-ddp-create-torch-ddp-service",
+                    "outputs": {},
+                    "resource": {
+                        "action": "create",
+                        "manifest": "apiVersion: v1\nkind: Service\nmetadata:\n  name: torch-ddp-0-{{workflow.uid}}\n  namespace: argo\n  labels:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n    torch-job: torch-ddp-0\nspec:\n  clusterIP: None  # ClusterIP set to None for headless service.\n  ports:\n  - name: ddp  # Port for torchrun master<->worker node coms.\n    port: 29200\n    targetPort: 29200\n  selector:\n    workflows.argoproj.io/workflow: {{workflow.name}}\n    torch-job: torch-ddp-0\n    torch-node: '0'  # Selector for pods associated with this service.\n"
+                    }
+                },
+                {
+                    "inputs": {},
+                    "metadata": {},
+                    "name": "torch-ddp-delete-torch-ddp-service",
+                    "outputs": {},
+                    "resource": {
+                        "action": "delete",
+                        "flags": [
+                            "service",
+                            "--selector",
+                            "torch-job=torch-ddp-0,workflows.argoproj.io/workflow={{workflow.name}}",
+                            "-n",
+                            "argo"
+                        ]
+                    }
+                },
+                {
                     "dag": {
-                        "fail_fast": null,
-                        "target": null,
                         "tasks": [
                             {
+                                "arguments": {},
+                                "name": "torch-ddp-create-torch-ddp-service",
+                                "template": "torch-ddp-create-torch-ddp-service"
+                            },
+                            {
                                 "arguments": {
-                                    "artifacts": null,
                                     "parameters": [
                                         {
-                                            "default": null,
-                                            "description": null,
-                                            "enum": null,
-                                            "global_name": null,
-                                            "name": "a",
-                                            "value": "{{workflow.parameters.a}}",
-                                            "value_from": null
+                                            "name": "n_iter",
+                                            "value": "{{inputs.parameters.n_iter}}"
+                                        },
+                                        {
+                                            "name": "n_seconds_sleep",
+                                            "value": "{{inputs.parameters.n_seconds_sleep}}"
                                         }
                                     ]
                                 },
-                                "continue_on": null,
-                                "dependencies": null,
-                                "depends": null,
-                                "hooks": null,
-                                "inline": null,
-                                "name": "convert-to-artifact-0",
-                                "on_exit": null,
-                                "template": "convert-to-artifact",
-                                "template_ref": null,
-                                "when": null,
-                                "with_items": null,
-                                "with_param": null,
-                                "with_sequence": null
+                                "depends": "torch-ddp-create-torch-ddp-service",
+                                "name": "torch-ddp-0",
+                                "template": "torch-ddp-0"
                             },
                             {
                                 "arguments": {
-                                    "artifacts": [
+                                    "parameters": [
                                         {
-                                            "archive": null,
-                                            "archive_logs": null,
-                                            "artifact_gc": null,
-                                            "artifactory": null,
-                                            "azure": null,
-                                            "deleted": null,
-                                            "from_": "{{tasks.convert-to-artifact-0.outputs.artifacts.a_art}}",
-                                            "from_expression": null,
-                                            "gcs": null,
-                                            "git": null,
-                                            "global_name": null,
-                                            "hdfs": null,
-                                            "http": null,
-                                            "mode": null,
-                                            "name": "a",
-                                            "optional": null,
-                                            "oss": null,
-                                            "path": null,
-                                            "raw": null,
-                                            "recurse_mode": null,
-                                            "s3": null,
-                                            "sub_path": null
+                                            "name": "n_iter",
+                                            "value": "{{inputs.parameters.n_iter}}"
+                                        },
+                                        {
+                                            "name": "n_seconds_sleep",
+                                            "value": "{{inputs.parameters.n_seconds_sleep}}"
                                         }
-                                    ],
-                                    "parameters": null
+                                    ]
                                 },
-                                "continue_on": null,
-                                "dependencies": null,
-                                "depends": "convert-to-artifact-0",
-                                "hooks": null,
-                                "inline": null,
-                                "name": "show-artifact-0",
-                                "on_exit": null,
-                                "template": "show-artifact",
-                                "template_ref": null,
-                                "when": null,
-                                "with_items": null,
-                                "with_param": null,
-                                "with_sequence": null
+                                "depends": "torch-ddp-create-torch-ddp-service",
+                                "name": "torch-ddp-0-worker-1",
+                                "template": "torch-ddp-1"
+                            },
+                            {
+                                "arguments": {},
+                                "depends": "torch-ddp-0",
+                                "name": "torch-ddp-delete-torch-ddp-service",
+                                "template": "torch-ddp-delete-torch-ddp-service"
+                            },
+                            {
+                                "arguments": {
+                                    "parameters": [
+                                        {
+                                            "name": "a",
+                                            "value": "{{tasks.torch-ddp-0.outputs.parameters.duration}}"
+                                        }
+                                    ]
+                                },
+                                "depends": "torch-ddp-0",
+                                "name": "show-duration-param-0",
+                                "template": "show-duration-param"
                             }
                         ]
                     },
-                    "data": null,
-                    "executor": null,
-                    "fail_fast": null,
-                    "host_aliases": null,
-                    "http": null,
-                    "init_containers": null,
                     "inputs": {
-                        "artifacts": null,
-                        "parameters": null
-                    },
-                    "memoize": null,
-                    "metadata": {
-                        "annotations": null,
-                        "labels": null
-                    },
-                    "metrics": null,
-                    "name": "bettmensch-ai-dag",
-                    "node_selector": null,
-                    "outputs": {
-                        "artifacts": null,
-                        "exit_code": null,
-                        "parameters": null,
-                        "result": null
-                    },
-                    "parallelism": null,
-                    "plugin": null,
-                    "pod_spec_patch": null,
-                    "priority": null,
-                    "priority_class_name": null,
-                    "resource": null,
-                    "retry_strategy": null,
-                    "scheduler_name": null,
-                    "script": null,
-                    "security_context": null,
-                    "service_account_name": null,
-                    "sidecars": null,
-                    "steps": null,
-                    "suspend": null,
-                    "synchronization": null,
-                    "timeout": null,
-                    "tolerations": null,
-                    "volumes": null
-                },
-                {
-                    "active_deadline_seconds": null,
-                    "affinity": null,
-                    "archive_location": null,
-                    "automount_service_account_token": null,
-                    "container": null,
-                    "container_set": null,
-                    "daemon": null,
-                    "dag": null,
-                    "data": null,
-                    "executor": null,
-                    "fail_fast": null,
-                    "host_aliases": null,
-                    "http": null,
-                    "init_containers": null,
-                    "inputs": {
-                        "artifacts": null,
                         "parameters": [
                             {
-                                "default": null,
-                                "description": null,
-                                "enum": null,
-                                "global_name": null,
-                                "name": "a",
-                                "value": null,
-                                "value_from": null
+                                "name": "n_iter"
+                            },
+                            {
+                                "name": "n_seconds_sleep"
+                            }
+                        ]
+                    },
+                    "metadata": {},
+                    "name": "bettmensch-ai-inner-dag",
+                    "outputs": {}
+                },
+                {
+                    "inputs": {
+                        "parameters": [
+                            {
+                                "default": "100",
+                                "name": "n_iter"
+                            },
+                            {
+                                "default": "10",
+                                "name": "n_seconds_sleep"
                             },
                             {
                                 "default": "null",
-                                "description": null,
-                                "enum": null,
-                                "global_name": null,
-                                "name": "a_art",
-                                "value": null,
-                                "value_from": null
+                                "name": "duration"
                             }
                         ]
                     },
-                    "memoize": null,
                     "metadata": {
-                        "annotations": null,
-                        "labels": null
+                        "labels": {
+                            "torch-job": "torch-ddp-0",
+                            "torch-node": "0"
+                        }
                     },
-                    "metrics": null,
-                    "name": "convert-to-artifact",
-                    "node_selector": null,
+                    "name": "torch-ddp-0",
                     "outputs": {
-                        "artifacts": [
+                        "parameters": [
                             {
-                                "archive": null,
-                                "archive_logs": null,
-                                "artifact_gc": null,
-                                "artifactory": null,
-                                "azure": null,
-                                "deleted": null,
-                                "from_": null,
-                                "from_expression": null,
-                                "gcs": null,
-                                "git": null,
-                                "global_name": null,
-                                "hdfs": null,
-                                "http": null,
-                                "mode": null,
-                                "name": "a_art",
-                                "optional": null,
-                                "oss": null,
-                                "path": "a_art",
-                                "raw": null,
-                                "recurse_mode": null,
-                                "s3": null,
-                                "sub_path": null
+                                "name": "duration",
+                                "value_from": {
+                                    "path": "duration"
+                                }
                             }
-                        ],
-                        "exit_code": null,
-                        "parameters": null,
-                        "result": null
+                        ]
                     },
-                    "parallelism": null,
-                    "plugin": null,
-                    "pod_spec_patch": null,
-                    "priority": null,
-                    "priority_class_name": null,
-                    "resource": null,
+                    "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}",
                     "retry_strategy": {
-                        "affinity": null,
-                        "backoff": null,
-                        "expression": null,
                         "limit": "1",
                         "retry_policy": "OnError"
                     },
-                    "scheduler_name": null,
                     "script": {
-                        "args": null,
                         "command": [
                             "python"
                         ],
-                        "env": null,
-                        "env_from": null,
-                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "env": [
+                            {
+                                "name": "NCCL_DEBUG",
+                                "value": "INFO"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_min_nodes",
+                                "value": "2"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_max_nodes",
+                                "value": "2"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_node_rank",
+                                "value": "0"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_nproc_per_node",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_max_restarts",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_start_method",
+                                "value": "fork"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_backend",
+                                "value": "static"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_url",
+                                "value": "torch-ddp-0-{{workflow.uid}}.argo.svc.cluster.local"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_port",
+                                "value": "29200"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_run_id",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_tee",
+                                "value": "0"
+                            }
+                        ],
+                        "image": "bettmensch88/bettmensch.ai-pytorch:3.11-latest",
                         "image_pull_policy": "Always",
-                        "lifecycle": null,
-                        "liveness_probe": null,
                         "name": "",
-                        "ports": null,
-                        "readiness_probe": null,
+                        "ports": [
+                            {
+                                "container_port": 29200,
+                                "name": "ddp",
+                                "protocol": "TCP"
+                            }
+                        ],
                         "resources": {
                             "limits": {
                                 "cpu": "100m",
-                                "memory": "100Mi"
+                                "memory": "300Mi"
                             },
                             "requests": {
                                 "cpu": "100m",
-                                "memory": "100Mi"
+                                "memory": "300Mi"
                             }
                         },
-                        "security_context": null,
-                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.io import InputParameter\n\nfrom bettmensch_ai.io import OutputArtifact\na_art = OutputArtifact(\"a_art\")\n\ndef convert_to_artifact(a: InputParameter, a_art: OutputArtifact=None) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that converts its InputParameter into\n    an OutputArtifact.\"\"\"\n    with open(a_art.path, 'w') as a_art_file:\n        a_art_file.write(str(a))\nconvert_to_artifact(a,a_art)",
-                        "startup_probe": null,
-                        "stdin": null,
-                        "stdin_once": null,
-                        "termination_message_path": null,
-                        "termination_message_policy": null,
-                        "tty": null,
-                        "volume_devices": null,
-                        "volume_mounts": null,
-                        "working_dir": null
-                    },
-                    "security_context": null,
-                    "service_account_name": null,
-                    "sidecars": null,
-                    "steps": null,
-                    "suspend": null,
-                    "synchronization": null,
-                    "timeout": null,
-                    "tolerations": null,
-                    "volumes": null
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: n_iter = json.loads(r'''{{inputs.parameters.n_iter}}''')\nexcept: n_iter = r'''{{inputs.parameters.n_iter}}'''\ntry: n_seconds_sleep = json.loads(r'''{{inputs.parameters.n_seconds_sleep}}''')\nexcept: n_seconds_sleep = r'''{{inputs.parameters.n_seconds_sleep}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\nfrom bettmensch_ai.pipelines.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef tensor_reduce(n_iter: InputParameter=100, n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime as dt\n    import GPUtil\n    import torch\n    import torch.distributed as dist\n    from bettmensch_ai.pipelines.component.torch_ddp import LaunchContext\n    has_gpu = torch.cuda.is_available()\n    ddp_context = LaunchContext()\n    print(f'GPU present: {has_gpu}')\n    if has_gpu:\n        dist.init_process_group(backend='nccl')\n    else:\n        dist.init_process_group(backend='gloo')\n    for i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        GPUtil.showUtilization()\n        a = torch.tensor([ddp_context.rank])\n        print(f'{i}/{n_iter}: @{dt.now()}')\n        print(f'{i}/{n_iter}: Backend {dist.get_backend()}')\n        print(f'{i}/{n_iter}: Global world size: {ddp_context.world_size}')\n        print(f'{i}/{n_iter}: Global worker process rank: {ddp_context.rank}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.rank + 1}/{ddp_context.world_size} globally!')\n        print(f'{i}/{n_iter}: Local rank of worker: {ddp_context.local_rank}')\n        print(f'{i}/{n_iter}: Local world size: {ddp_context.local_world_size}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.local_rank + 1}/{ddp_context.local_world_size} locally!')\n        print(f'{i}/{n_iter}: Node/pod rank: {ddp_context.group_rank}')\n        if has_gpu:\n            device = torch.device(f'cuda:{ddp_context.local_rank}')\n            device_count = torch.cuda.device_count()\n            print(f'{i}/{n_iter}: GPU count: {device_count}')\n            device_name = torch.cuda.get_device_name(ddp_context.local_rank)\n            print(f'{i}/{n_iter}: GPU name: {device_name}')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f'{i}/{n_iter}: GPU property: {device_property}')\n        else:\n            device = torch.device('cpu')\n        a_placed = a.to(device)\n        print(f'{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}')\n        dist.all_reduce(a_placed)\n        print(f'{i}/{n_iter}: Post-`all_reduce` tensor: {a_placed}')\n        print('===================================================')\n    if duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom torch.distributed.elastic.multiprocessing.errors import record\n\ntensor_reduce=record(tensor_reduce)\n\nfrom bettmensch_ai.pipelines.component import as_torch_ddp\n\ntorch_ddp_decorator=as_torch_ddp()\n\ntorch_ddp_function=torch_ddp_decorator(tensor_reduce)\n\n\ntorch_ddp_function(n_iter,n_seconds_sleep,duration)"
+                    }
                 },
                 {
-                    "active_deadline_seconds": null,
-                    "affinity": null,
-                    "archive_location": null,
-                    "automount_service_account_token": null,
-                    "container": null,
-                    "container_set": null,
-                    "daemon": null,
-                    "dag": null,
-                    "data": null,
-                    "executor": null,
-                    "fail_fast": null,
-                    "host_aliases": null,
-                    "http": null,
-                    "init_containers": null,
                     "inputs": {
-                        "artifacts": [
+                        "parameters": [
                             {
-                                "archive": null,
-                                "archive_logs": null,
-                                "artifact_gc": null,
-                                "artifactory": null,
-                                "azure": null,
-                                "deleted": null,
-                                "from_": null,
-                                "from_expression": null,
-                                "gcs": null,
-                                "git": null,
-                                "global_name": null,
-                                "hdfs": null,
-                                "http": null,
-                                "mode": null,
-                                "name": "a",
-                                "optional": null,
-                                "oss": null,
-                                "path": "a",
-                                "raw": null,
-                                "recurse_mode": null,
-                                "s3": null,
-                                "sub_path": null
+                                "default": "100",
+                                "name": "n_iter"
+                            },
+                            {
+                                "default": "10",
+                                "name": "n_seconds_sleep"
+                            },
+                            {
+                                "default": "null",
+                                "name": "duration"
                             }
-                        ],
-                        "parameters": null
+                        ]
                     },
-                    "memoize": null,
                     "metadata": {
-                        "annotations": null,
-                        "labels": null
+                        "labels": {
+                            "torch-job": "torch-ddp-0",
+                            "torch-node": "1"
+                        }
                     },
-                    "metrics": null,
-                    "name": "show-artifact",
-                    "node_selector": null,
+                    "name": "torch-ddp-1",
                     "outputs": {
-                        "artifacts": null,
-                        "exit_code": null,
-                        "parameters": null,
-                        "result": null
+                        "parameters": [
+                            {
+                                "name": "duration",
+                                "value_from": {
+                                    "path": "duration"
+                                }
+                            }
+                        ]
                     },
-                    "parallelism": null,
-                    "plugin": null,
-                    "pod_spec_patch": null,
-                    "priority": null,
-                    "priority_class_name": null,
-                    "resource": null,
+                    "pod_spec_patch": "topologySpreadConstraints:\n- maxSkew: 1\n  topologyKey: kubernetes.io/hostname\n  whenUnsatisfiable: DoNotSchedule\n  labelSelector:\n    matchExpressions:\n      - { key: torch-node, operator: In, values: ['0','1','2','3','4','5']}",
                     "retry_strategy": {
-                        "affinity": null,
-                        "backoff": null,
-                        "expression": null,
                         "limit": "1",
                         "retry_policy": "OnError"
                     },
-                    "scheduler_name": null,
                     "script": {
-                        "args": null,
                         "command": [
                             "python"
                         ],
-                        "env": null,
-                        "env_from": null,
-                        "image": "bettmensch88/bettmensch.ai:3.11-latest",
+                        "env": [
+                            {
+                                "name": "NCCL_DEBUG",
+                                "value": "INFO"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_min_nodes",
+                                "value": "2"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_max_nodes",
+                                "value": "2"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_node_rank",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_nproc_per_node",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_max_restarts",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_start_method",
+                                "value": "fork"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_backend",
+                                "value": "static"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_url",
+                                "value": "torch-ddp-0-{{workflow.uid}}.argo.svc.cluster.local"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_rdzv_endpoint_port",
+                                "value": "29200"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_run_id",
+                                "value": "1"
+                            },
+                            {
+                                "name": "bettmensch_ai_torch_ddp_tee",
+                                "value": "0"
+                            }
+                        ],
+                        "image": "bettmensch88/bettmensch.ai-pytorch:3.11-latest",
                         "image_pull_policy": "Always",
-                        "lifecycle": null,
-                        "liveness_probe": null,
                         "name": "",
-                        "ports": null,
-                        "readiness_probe": null,
+                        "resources": {
+                            "limits": {
+                                "cpu": "100m",
+                                "memory": "300Mi"
+                            },
+                            "requests": {
+                                "cpu": "100m",
+                                "memory": "300Mi"
+                            }
+                        },
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: n_iter = json.loads(r'''{{inputs.parameters.n_iter}}''')\nexcept: n_iter = r'''{{inputs.parameters.n_iter}}'''\ntry: n_seconds_sleep = json.loads(r'''{{inputs.parameters.n_seconds_sleep}}''')\nexcept: n_seconds_sleep = r'''{{inputs.parameters.n_seconds_sleep}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\nfrom bettmensch_ai.pipelines.io import OutputParameter\nduration = OutputParameter(\"duration\")\n\ndef tensor_reduce(n_iter: InputParameter=100, n_seconds_sleep: InputParameter=10, duration: OutputParameter=None) -> None:\n    \"\"\"When decorated with the torch_component decorator, implements a\n    bettmensch_ai.TorchComponent that runs a torch DDP across pods and nodes in\n    your K8s cluster.\"\"\"\n    import time\n    from datetime import datetime as dt\n    import GPUtil\n    import torch\n    import torch.distributed as dist\n    from bettmensch_ai.pipelines.component.torch_ddp import LaunchContext\n    has_gpu = torch.cuda.is_available()\n    ddp_context = LaunchContext()\n    print(f'GPU present: {has_gpu}')\n    if has_gpu:\n        dist.init_process_group(backend='nccl')\n    else:\n        dist.init_process_group(backend='gloo')\n    for i in range(1, n_iter + 1):\n        time.sleep(n_seconds_sleep)\n        GPUtil.showUtilization()\n        a = torch.tensor([ddp_context.rank])\n        print(f'{i}/{n_iter}: @{dt.now()}')\n        print(f'{i}/{n_iter}: Backend {dist.get_backend()}')\n        print(f'{i}/{n_iter}: Global world size: {ddp_context.world_size}')\n        print(f'{i}/{n_iter}: Global worker process rank: {ddp_context.rank}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.rank + 1}/{ddp_context.world_size} globally!')\n        print(f'{i}/{n_iter}: Local rank of worker: {ddp_context.local_rank}')\n        print(f'{i}/{n_iter}: Local world size: {ddp_context.local_world_size}')\n        print(f'{i}/{n_iter}: This makes me worker process {ddp_context.local_rank + 1}/{ddp_context.local_world_size} locally!')\n        print(f'{i}/{n_iter}: Node/pod rank: {ddp_context.group_rank}')\n        if has_gpu:\n            device = torch.device(f'cuda:{ddp_context.local_rank}')\n            device_count = torch.cuda.device_count()\n            print(f'{i}/{n_iter}: GPU count: {device_count}')\n            device_name = torch.cuda.get_device_name(ddp_context.local_rank)\n            print(f'{i}/{n_iter}: GPU name: {device_name}')\n            device_property = torch.cuda.get_device_capability(device)\n            print(f'{i}/{n_iter}: GPU property: {device_property}')\n        else:\n            device = torch.device('cpu')\n        a_placed = a.to(device)\n        print(f'{i}/{n_iter}: Pre-`all_reduce` tensor: {a_placed}')\n        dist.all_reduce(a_placed)\n        print(f'{i}/{n_iter}: Post-`all_reduce` tensor: {a_placed}')\n        print('===================================================')\n    if duration is not None:\n        duration_seconds = n_iter * n_seconds_sleep\n        duration.assign(duration_seconds)\n\nfrom torch.distributed.elastic.multiprocessing.errors import record\n\ntensor_reduce=record(tensor_reduce)\n\nfrom bettmensch_ai.pipelines.component import as_torch_ddp\n\ntorch_ddp_decorator=as_torch_ddp()\n\ntorch_ddp_function=torch_ddp_decorator(tensor_reduce)\n\n\ntorch_ddp_function(n_iter,n_seconds_sleep,duration)"
+                    }
+                },
+                {
+                    "inputs": {
+                        "parameters": [
+                            {
+                                "name": "a"
+                            }
+                        ]
+                    },
+                    "metadata": {},
+                    "name": "show-duration-param",
+                    "outputs": {},
+                    "retry_strategy": {
+                        "limit": "1",
+                        "retry_policy": "OnError"
+                    },
+                    "script": {
+                        "command": [
+                            "python"
+                        ],
+                        "image": "bettmensch88/bettmensch.ai-standard:3.11-latest",
+                        "image_pull_policy": "Always",
+                        "name": "",
                         "resources": {
                             "limits": {
                                 "cpu": "100m",
@@ -1355,44 +1238,46 @@
                                 "memory": "100Mi"
                             }
                         },
-                        "security_context": null,
-                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\n\nfrom bettmensch_ai.io import InputArtifact\na = InputArtifact(\"a\")\n\ndef show_artifact(a: InputArtifact) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputArtifact.\"\"\"\n    with open(a.path, 'r') as a_art_file:\n        a_content = a_art_file.read()\n    print(f'Content of input artifact a: {a_content}')\nshow_artifact(a)",
-                        "startup_probe": null,
-                        "stdin": null,
-                        "stdin_once": null,
-                        "termination_message_path": null,
-                        "termination_message_policy": null,
-                        "tty": null,
-                        "volume_devices": null,
-                        "volume_mounts": null,
-                        "working_dir": null
+                        "source": "import os\nimport sys\nsys.path.append(os.getcwd())\n\n# --- preprocessing\nimport json\ntry: a = json.loads(r'''{{inputs.parameters.a}}''')\nexcept: a = r'''{{inputs.parameters.a}}'''\n\nfrom bettmensch_ai.pipelines.io import InputParameter\n\ndef show_parameter(a: InputParameter) -> None:\n    \"\"\"When decorated with the bettmensch_ai.components.component decorator,\n    implements a bettmensch_ai.Component that prints the values of its\n    InputParameter.\"\"\"\n    print(f'Content of input parameter a is: {a}')\n\nshow_parameter(a)\n"
+                    }
+                },
+                {
+                    "dag": {
+                        "tasks": [
+                            {
+                                "arguments": {
+                                    "parameters": [
+                                        {
+                                            "name": "n_iter",
+                                            "value": "{{workflow.parameters.n_iter}}"
+                                        },
+                                        {
+                                            "name": "n_seconds_sleep",
+                                            "value": "{{workflow.parameters.n_seconds_sleep}}"
+                                        }
+                                    ]
+                                },
+                                "name": "bettmensch-ai-inner-dag",
+                                "template": "bettmensch-ai-inner-dag"
+                            }
+                        ]
                     },
-                    "security_context": null,
-                    "service_account_name": null,
-                    "sidecars": null,
-                    "steps": null,
-                    "suspend": null,
-                    "synchronization": null,
-                    "timeout": null,
-                    "tolerations": null,
-                    "volumes": null
+                    "inputs": {},
+                    "metadata": {},
+                    "name": "bettmensch-ai-outer-dag",
+                    "outputs": {}
                 }
             ],
-            "tolerations": null,
-            "ttl_strategy": null,
-            "volume_claim_gc": null,
-            "volume_claim_templates": null,
-            "volumes": null,
-            "workflow_metadata": null,
             "workflow_template_ref": {
-                "cluster_scope": null,
-                "name": "pipeline-test-artifact-pipeline-d5rzf"
+                "name": "pipeline-test-torch-cpu-pipeline-hgcxv"
             }
         },
-        "synchronization": null,
         "task_results_completion_status": {
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-1820573056": true,
-            "pipeline-test-artifact-pipeline-d5rzf-flow-pmrv9-2313483554": true
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1599494172": true,
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-1742334825": true,
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2373051150": true,
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-2872643249": true,
+            "pipeline-test-torch-cpu-pipeline-hgcxv-flow-cbbn9-59759508": true
         }
     }
 }
