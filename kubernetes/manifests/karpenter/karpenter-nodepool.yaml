@@ -8,12 +8,9 @@ spec:
       nodeClassRef:
         name: bettmensch-ai-default
       requirements:
-        - key: "karpenter.k8s.aws/instance-category"
+        - key: "node.kubernetes.io/instance-type"
           operator: In
-          values: ["c", "m", "r", "t"]
-        - key: "karpenter.k8s.aws/instance-cpu"
-          operator: In
-          values: ["4", "8", "16", "32"]
+          values: ["c4.large","c4.xlarge","c4.2xlarge","c4.4xlarge","c5.large","c5.xlarge","c5.2xlarge","c5.4xlarge"]
         - key: "kubernetes.io/arch"
           operator: In
           values: ["amd64"]
@@ -29,7 +26,7 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # ~5 minutes required for larger images, otherwise karpenter will deprovision before pods are running
-    expireAfter: 2h
+    expireAfter: 1h
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
@@ -41,9 +38,9 @@ spec:
       nodeClassRef:
         name: bettmensch-ai-default
       requirements:
-        - key: "karpenter.k8s.aws/instance-category"
+        - key: "node.kubernetes.io/instance-type"
           operator: In
-          values: ["p","g"]
+          values: ["g4dn.xlarge","g4dn.2xlarge","g4ad.xlarge","ga4d.2xlarge","ga4d.4xlarge","g6.xlarge","g3s.xlarge","ga4d.8xlarge","ga4d.16xlarge"]
         - key: "karpenter.k8s.aws/instance-generation"
           operator: Gt
           values: ["2"]
@@ -61,7 +58,7 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 15m # dont go lower to prevent decomissioning bc of image pull phase
-    expireAfter: 1h # limit GPU nodes to 3 ours - enough to train annotated transformer on one GPU (~2.8h)
+    expireAfter: 1h # limit GPU nodes to 1 hour - enough to train annotated transformer on 4 GPUs (~2.8h on 1 GPU)
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
@@ -73,9 +70,9 @@ spec:
       nodeClassRef:
         name: bettmensch-ai-default
       requirements:
-        - key: "karpenter.k8s.aws/instance-category"
+        - key: "node.kubernetes.io/instance-type"
           operator: In
-          values: ["p","g"]
+          values: ["g4dn.xlarge","g4dn.2xlarge","g4ad.xlarge","ga4d.2xlarge","ga4d.4xlarge","g6.xlarge","g3s.xlarge","ga4d.8xlarge","ga4d.16xlarge"]
         - key: "karpenter.k8s.aws/instance-generation"
           operator: Gt
           values: ["2"]
@@ -96,4 +93,4 @@ spec:
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 30m # larger training images take longer to pull
-    expireAfter: 24h # limit GPU nodes to 12h ours
+    expireAfter: 12h # limit GPU nodes to 12h hours
