@@ -59,7 +59,6 @@ def test_verbose_io_module():
         x=torch.tensor([[[1, 2], [3, 4]]], dtype=torch.float),
         mask=torch.tensor([[True, True], [True, False]]),
     )
-    print(_)
 
 
 def test_gpt1_core():

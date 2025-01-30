@@ -417,8 +417,6 @@ class DecoderLayer(VerboseIOModule):
         mha_out = self.skip_norm_mha(x=x, keys=x, values=x, mask=mha_mask)
         ff_out = self.skip_norm_ff(mha_out)
 
-        # print(f"Decoder layer output shape: {ff_out.size()}")
-
         return ff_out
 
 
@@ -453,8 +451,6 @@ class Decoder(VerboseIOModule):
     ) -> Float[torch.Tensor, "n_batch n_tokens dim_input"]:
         for layer in self.layers:
             x = layer(x, mask)
-
-        # print(f"Decoder output shape: {x.size()}")
 
         return x
 
