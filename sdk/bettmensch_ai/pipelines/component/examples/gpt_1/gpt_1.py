@@ -11,13 +11,12 @@ from train import contiguous_tokenize_to_fixed_length, pretrain, size_in_gb
 
 
 def get_source_data_split(
-    data_split: InputParameter = "train",  # "train" / "validation"
     data_out: OutputArtifact = None,
 ):
     from datasets import load_dataset
 
     data = load_dataset(
-        "bookcorpus/bookcorpus", split=data_split, trust_remote_code=True
+        "bookcorpus/bookcorpus", split="train", trust_remote_code=True
     )
     data.save_to_disk(data_out.path)
 
