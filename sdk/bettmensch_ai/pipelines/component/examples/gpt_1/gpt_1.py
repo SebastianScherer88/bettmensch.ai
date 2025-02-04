@@ -24,7 +24,8 @@ def get_source_data_split(
 
 def get_tokenized_data_split_and_tokenizer(
     source_data_split: InputArtifact,
-    n_observations: InputParameter = -1,
+    start_index: InputParameter = 0,
+    end_index: InputParameter = -1,
     sequence_length: InputParameter = 512,
     unk_token: InputParameter = "<unk>",
     bos_token: InputParameter = "<s>",  # only needed for fine-tuning tasks
@@ -60,7 +61,7 @@ def get_tokenized_data_split_and_tokenizer(
     )
 
     tokenized_data = contiguous_tokenize_to_fixed_length(
-        data[:n_observations]["text"],
+        data[start_index:end_index]["text"],
         tokenizer=tokenizer,
         batch_size=batch_size,
         length=sequence_length,
@@ -83,28 +84,35 @@ def get_tokenized_data_split_and_tokenizer(
     tokenizer.save_pretrained(tokenizer_out.path)
 
 
-def pretrain_checkpoints(
+def pretrain_and_checkpoint(
     tokenized_train: InputArtifact,
     tokenized_validation: InputArtifact,
     tokenizer: InputArtifact,
-    dim_embed: InputParameter,
-    n_decoder_layers: InputParameter,
-    n_heads: InputParameter,
-    dropout: InputParameter,
-    n_epochs: InputParameter,
-    batch_size: InputParameter,
-    shuffle: InputParameter,
-    display_step: InputParameter,
-    verbose: InputParameter,
+    sequence_length: InputParameter = 512,
+    dim_embed: InputParameter = 768,
+    n_decoder_layers: InputParameter = 12,
+    n_heads: InputParameter = 12,
+    dropout: InputParameter = 0.1,
+    learning_rate: InputParameter = 0.001,
+    momentum: InputParameter = 0.9,
+    n_epochs: InputParameter = 10,
+    batch_size: InputParameter = 2,
+    shuffle: InputParameter = True,
+    display_step: InputParameter = 20,
+    verbose: InputParameter = False,
 ):
+
     pretrain(
         train_data_path=tokenized_train.path,
         validation_data_path=tokenized_validation.path,
         tokenizer_path=tokenizer.path,
+        sequence_length=sequence_length,
         dim_embed=dim_embed,
         n_decoder_layers=n_decoder_layers,
         n_heads=n_heads,
         dropout=dropout,
+        learning_rate=learning_rate,
+        momentum=momentum,
         n_epochs=n_epochs,
         batch_size=batch_size,
         shuffle=shuffle,
@@ -113,8 +121,12 @@ def pretrain_checkpoints(
     )
 
 
+get_source_data_split_factory = as_component(get_source_data_split)
+
 get_tokenized_data_split_and_tokenizer_factory = as_component(
     get_tokenized_data_split_and_tokenizer
 )
 
-pretrain_gpt_1_factory = as_torch_ddp_component(pretrain_checkpoints)
+pretrain_and_checkpoint_factory = as_torch_ddp_component(
+    pretrain_and_checkpoint
+)

@@ -258,7 +258,7 @@ def pretrain(
         )
 
         summary_writer.add_scalars(
-            "Epoch train/validation loss",
+            "Epoch train vs. validation loss",
             {"Training": train_loss, "Validation": validation_loss},
             epoch + 1,
         )
