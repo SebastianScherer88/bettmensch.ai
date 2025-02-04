@@ -9,6 +9,7 @@ class SDKExtras(Enum):
     pipelines: str = "pipelines"
     pipelines_adapter: str = "pipelines-adapter"
     annotated_transformer: str = "annotated-transformer"
+    gpt_1: str = "gpt-1"
     serving: str = "serving"
     test: str = "test"
 
@@ -38,8 +39,8 @@ def get_extra_requirements() -> Dict[str, List[str]]:
 
     extra_requirements[SDKExtras.test.value] = (
         extra_requirements[SDKExtras.pipelines.value]
-        + [
-            "torch==2.3.1",
+        + [  # noqa: W503
+            "torch==2.3.1",  # pip install torch==2.3.1+cu121 --index-url https://download.pytorch.org/whl/cu121 for GPU support # noqa: E501
             "lightning==2.4.0",
             "numpy==1.24.1",
             "scipy==1.14.1",
@@ -52,6 +53,11 @@ def get_extra_requirements() -> Dict[str, List[str]]:
         "torchtext==0.18.0",
         "torchdata==0.9.0",
         "portalocker==2.10.1",
+        "spacy==3.8.2",
+    ]
+
+    extra_requirements[SDKExtras.gpt_1.value] = [
+        "datasets==3.2.0",
         "spacy==3.8.2",
     ]
 

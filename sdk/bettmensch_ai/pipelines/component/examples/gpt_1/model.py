@@ -80,6 +80,10 @@ class VerboseIOModule(torch.nn.Module):
                                 f"{indent}[{display_id}]'s positional input"
                                 f" {i+1}'s size: {arg.size()}"
                             )
+                            print(
+                                f"{indent}[{display_id}]'s positional input"
+                                f" {i+1}'s GPU device: {arg.get_device()}"
+                            )
                         except AttributeError:
                             print(
                                 f"{indent}[{display_id}]'s positional input"
@@ -91,6 +95,11 @@ class VerboseIOModule(torch.nn.Module):
                             print(
                                 f"{indent}[{display_id}]'s named input"
                                 f" {arg_name}'s size: {arg_value.size()}"
+                            )
+                            print(
+                                f"{indent}[{display_id}]'s name input"
+                                f" {arg_name}'s GPU device: "
+                                f"{arg_value.get_device()}"
                             )
                         except AttributeError:
                             continue
@@ -127,7 +136,8 @@ class Embedding(VerboseIOModule):
     ):
         super().__init__(id=id)
         self.embed = torch.nn.Embedding(
-            num_embeddings=n_vocab, embedding_dim=dim_embed
+            num_embeddings=n_vocab,
+            embedding_dim=dim_embed,
         )
         self.pos: Float[
             torch.Tensor, "1 n_tokens dim_embed"
@@ -160,6 +170,9 @@ def generate_padded_subsequent_mask(
     reduces noise during optimization, which speeds up training and improves
      model performance
     """
+
+    device = input_mask.get_device()
+
     n_tokens = input_mask.size()[-1]
     padded_token_mask: Float[
         torch.Tensor, "n_batch 1 n_tokens"
@@ -168,8 +181,9 @@ def generate_padded_subsequent_mask(
         torch.tril(torch.ones(size=(n_tokens, n_tokens)))
         .type(torch.bool)
         .unsqueeze(0)
+        .to(device)
     )
-    final_mask = padded_token_mask & subsequent_token_mask
+    final_mask = (padded_token_mask & subsequent_token_mask).to(device)
 
     return final_mask
 
@@ -536,6 +550,11 @@ class GPT1Pretrain(GPT1Core):
         v: Float[torch.Tensor, "n_batch n_tokens n_vocab"] = torch.matmul(
             d, self.embedding.embed.weight.transpose(-2, -1)
         )
-        t = torch.log_softmax(v, -1)
+        # torch's cross entropy loss requires the vocabulary dimension in the
+        # second rank as per https://pytorch.org/docs/stable/generated/...
+        # ...torch.nn.CrossEntropyLoss.html#crossentropyloss
+        o: Float[torch.Tensor, "n_batch n_vocab n_tokens"] = v.transpose(
+            -2, -1
+        )
 
-        return t
+        return o
