@@ -1,0 +1,4 @@
+# Force LF for the devcontainer's shell script regardless of a Windows
+# editor's line-ending settings - a CRLF shebang line breaks it when it
+# runs inside the (Linux) devcontainer.
+.devcontainer/*.sh text eol=lf

@@ -1,0 +1,6 @@
+services:
+  frontend:
+    image: ${DOCKER_IMAGE_BASE:-bettmensch88/bettmensch.ai}-frontend:local
+    build:
+      context: ../..
+      dockerfile: docker/frontend/Dockerfile

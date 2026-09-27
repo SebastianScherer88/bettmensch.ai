@@ -15,6 +15,10 @@ build/*
 sdk/build/*
 build_logs
 
+# frontend (React/Vite) build outputs
+docker/frontend/web/node_modules
+docker/frontend/web/dist
+
 # misc files
 *.pt
 check_manifests
@@ -29,3 +33,4 @@ infrastructure/terraform/.terraform.lock.hcl
 infrastructure/terraform/.terraform.tfstate.lock.info
 infrastructure/terraform/terraform.tfstate.backup
 
+.venv

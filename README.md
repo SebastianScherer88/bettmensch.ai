@@ -2,307 +2,197 @@
 
 ![bettmensch.ai logo](image/logo_transparent.png)
 
-Bettmensch.AI is a Kubernetes native open source platform for GitOps based ML workloads that allows for tight CI and CD integrations.
+Bettmensch.AI's `pipelines` is a Python framework for authoring and running
+data/ML pipelines: decorate plain functions with `@task`/`@pipeline` to
+assemble a DAG, then run it locally with `LocalRunner`, persisting task
+outputs and run metadata through pluggable, swappable backends (local files/
+SQLite by default, or S3 + PostgreSQL for a shared setup). A small, read-only
+React frontend lets you browse what's been run.
 
-![docker](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/docker.yaml/badge.svg)
-![unit tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/unit-test.yaml/badge.svg)
-![integration tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/integration-test.yaml/badge.svg)
-![platform tests](https://github.com/SebastianScherer88/bettmensch.ai/actions/workflows/platform-test.yaml/badge.svg)
-
-# :twisted_rightwards_arrows: CI
-
-The `.github/workflows` directory contains all Github Actions workflow files.
-
-Their respective state can be seen at the top of this README.
+See `docs/architecture.md` for the full design and `docs/design-decisions.md`
+for the reasoning behind it.
 
 # Setup
 
-## :bridge_at_night: AWS Infrastructure & Kubernetes
+## :window: Windows / VSCode (Dev Container)
 
-Before you start, make sure you have the following on your machine:
-- a working `terraform` installation
-- a working `aws` CLI installation configured to your AWS account
-- a dockerhub account `your-account`
+All `make`/`docker` commands below assume a Unix-like shell with `make`,
+`docker`, and `uv` on the `PATH` - none of which Windows has natively. If
+you're on Windows, open this repository in VSCode with the
+[Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+extension installed, then run **"Dev Containers: Reopen in Container"**
+(command palette). This builds a Linux devcontainer (`.devcontainer/`) with
+`make`/`uv` installed, and wires up `docker`/`docker compose` inside it to
+talk to your host's Docker Desktop daemon directly (no nested
+virtualization) - so every command below runs the same way it would on a
+native Linux machine or in CI.
 
-To provision 
-- the S3 bucket for the Argo Workflows artifact repository
-- Karpenter required infrastructure (IAM, message queues, etc.)
-- a working EKS cluster
-- the configured Karpenter, Argo Workflows & Volcano kubernetes installations 
-    on the cluster,
+## :snake: Install
 
-```bash
-make platform.up
-```
-
-To port forward to 
-- the `ArgoWorkflow` server running on EKS and
-- the `Mlflow` server running on EKS,
-
-run:
+`pipelines` (`bettmensch_ai.pipelines`, under `sdk/`) uses `uv` and the
+root `pyproject.toml` as its one and only packaging/dependency mechanism -
+there's no separate build/install step for the package itself
+(`pytest.ini`'s `pythonpath = sdk` makes it importable directly).
 
 ```bash
-make platform.connect
+make pipelines.install
 ```
 
-When you're done, you can tear down the stack by running
+installs its dependencies (`boto3`, plus the optional `postgres`/`frontend`
+extras for `PostgresMetadataStore`/the frontend's FastAPI backend) into a
+local `uv` venv.
+
+## :whale: Local dev stack (Postgres, MinIO, Frontend)
+
+`S3ArtifactStore`/`PostgresMetadataStore` need something real to talk to.
+From the repository root:
 
 ```bash
-make platform.down
+docker compose up -d
 ```
 
-## :computer: Dashboard
+brings up Postgres, MinIO, and the read-only frontend viewer, all wired
+together (there's a `docker-compose.yaml` at the repo root for exactly
+this - it `include`s `sdk/test/docker-compose/pipelines.docker-compose.yaml`,
+so the services are defined in one place). Equivalently: `make pipelines.up`.
 
-To build the `bettmensch.ai`'s custom dashboard's docker image, run:
-
-```bash
-make dashboard.build DOCKER_ACCOUNT=your-account
-```
-
-This will build the image and tag it locally with
-- `your-account/bettmensch-ai-dashboard:3.11-<commit-sha>`
-- `your-account/bettmensch-ai-dashboard:3.11-latest`
-
-To push the image to the docker repository and make it accessible to the 
-platform, run
-
-```bash
-make dashboard.push DOCKER_ACCOUNT=your-account
-```
-
-To run the dashboard locally, run:
-
-```bash
-make dashboard.run
-```
-
-See the `docker` directory for more details.
-
-## :books: Python SDK installation
-
-To install the python library `bettmensch_ai` with `torch-pipelines` support,
- run 
- 
-```bash
-make sdk.install EXTRAS=torch-pipelines
-```
-
-from the repository's top directory.
-
-You can now start authoring `Pipeline`s and start submitting `Flow`s and 
-start monitoring them on both the `ArgoWorkflow` as well as the `bettmensch.ai`
-dashboards.
+Then open http://localhost:8080, and point your own script's
+`S3ArtifactStore`/`PostgresMetadataStore` at `localhost:9000`/`localhost:5433`
+- see the frontend's own home page for a copy-pasteable example, or
+"Features" below. Tear it down with `docker compose down -v` (or
+`make pipelines.down`).
 
 ## :wrench: Running tests
 
-To run unit tests for the python library, run
-
 ```bash
-make sdk.test SUITE=unit
+make pipelines.test SUITE=unit          # no infrastructure needed
+make pipelines.test SUITE=integration   # needs the containers above
+make pipelines.test SUITE=functional    # needs the containers above
+make pipelines.test SUITE=all           # all three
 ```
 
-To run integration tests for the python library, run
+Narrow a run to one file or one test case with `MODULE`/`TEST_CASE`:
 
 ```bash
-make sdk.test SUITE=integration
+make pipelines.test SUITE=integration MODULE=test_s3_artifact_store_integration.py
+make pipelines.test SUITE=unit MODULE=test_metadata_store.py TEST_CASE=test_list_triggers_is_empty_when_none_registered
 ```
 
-To run K8s tests for the python library (requires a running and connected
-bettmensch.ai platform), run
+Or run the whole suite fully containerized - pytest itself runs inside a
+built image, in the same docker network as Postgres/MinIO, closer to how CI
+would see it (also brings the containers up and builds the image for you):
 
 ```bash
-make sdk.test SUITE=k8s
+make pipelines.test.docker SUITE=all
 ```
 
-# Features (under active development )
+See `sdk/pipelines.makefile` for the full set of targets/variables.
 
-## :computer: Dashboard
+# Features
 
-![bettmensch.ai](image/dashboard_0_home.JPG)
-
-:eyes: A dashboard for *monitoring* all workloads running on the platform.
-
-:open_hands: To actively *manage* `Pipeline`s, `Flow`s, please see the 
-respective documentation of `bettmensch.ai` SDK.
-
-## :twisted_rightwards_arrows: `Pipelines & Flows`
+## :twisted_rightwards_arrows: `pipelines`
 
 ### Overview
 
-`bettmensch.ai` comes with a python SDK for defining and executing distributed
- (ML) workloads by leveraging the 
- [`ArgoWorkflows`](https://argoproj.github.io/workflows/) framework and the
-  official [`hera`](https://github.com/argoproj-labs/hera) library. In this 
-  framework, pipelines are DAGs with graph nodes implementing your custom logic
-  for the given pipeline step, executed on K8s in a containerised step.
+`pipelines` lets you decorate plain python functions with `@task`/
+`@pipeline` to assemble a DAG - no orchestration platform required to
+define or run one locally. A task produces one output per declared name (a
+single opaque one by default, or one per field/key if it returns a
+`NamedTuple`/`TypedDict`). `LocalRunner` executes an assembled pipeline
+in-process, materializing every task output through a `BaseArtifactStore`
+and recording run bookkeeping through a `BaseMetadataStore` - both
+pluggable: `LocalArtifactStore`/`LocalMetadataStore` (filesystem/SQLite) by
+default, or `S3ArtifactStore`/`PostgresMetadataStore` for a shared setup
+(see "Local dev stack" above).
 
-### Examples
-
-The `io` module implements the classes implementing the transfer of inputs and
- outputs between a workfload's components.
-
-Using `InputParameter` and `OutputParameter` for `int`, `float` or `str` type 
-data:
+### Example
 
 ```python
-from bettmensch_ai.pipelines.io import InputParameter, OutputParameter
-from bettmensch_ai.pipelines import pipeline, as_component
+from bettmensch_ai.pipelines.task import task
+from bettmensch_ai.pipelines.pipeline import pipeline
+from bettmensch_ai.pipelines.runner import LocalRunner
 
-@as_component
-def add(
-    a: InputParameter = 1,
-    b: InputParameter = 2,
-    sum: OutputParameter = None,
-) -> None:
+@task
+def add(a: int, b: int) -> int:
+    return a + b
 
-    sum.assign(a + b)
+@pipeline
+def a_plus_b_plus_c(a: int, b: int, c: int = 2) -> int:
+    a_plus_b = add(a, b)
+    return add(a_plus_b, c)
 
-@as_pipeline("test-parameter-pipeline", "argo", True)
-def a_plus_b_plus_2(a: InputParameter = 1, b: InputParameter = 2) -> None:
-    a_plus_b = add(
-        "a-plus-b",
-        a=a,
-        b=b,
-    )
-
-    a_plus_b_plus_2 = add(
-        "a-plus-b-plus-2",
-        a=a_plus_b.outputs["sum"],
-        b=InputParameter("two", 2),
-    )
-
-a_plus_b_plus_2.export(test_output_dir)
-a_plus_b_plus_2.register()
-a_plus_b_plus_2.run(inputs={'a':3,'b':2})
+result = LocalRunner().run(a_plus_b_plus_c, a=3, b=2)
+print(result)  # 7
 ```
 
-Using `InputArtifact` and `OutputArtifact` for all other types of data, 
-leveraging AWS's `S3` storage service:
+To persist to the shared Postgres/MinIO stack instead of local defaults:
 
 ```python
-from bettmensch_ai.pipelines.io import InputArtifact, OutputArtifact
-from bettmensch_ai.pipelines import as_component, pipeline
+from bettmensch_ai.pipelines.artifact_store import S3ArtifactStore, S3ArtifactStoreConfig
+from bettmensch_ai.pipelines.metadata_store import PostgresMetadataStore, PostgresMetadataStoreConfig
 
-@as_component
-def convert_to_artifact(
-    a_param: InputParameter,
-    a_art: OutputArtifact = None,
-) -> None:
+artifact_store = S3ArtifactStore(S3ArtifactStoreConfig(
+    bucket="bettmensch-ai-artifacts",
+    endpoint_url="http://localhost:9000",
+    aws_access_key_id="bettmensch_ai",
+    aws_secret_access_key="bettmensch_ai_secret",
+))
+metadata_store = PostgresMetadataStore(PostgresMetadataStoreConfig(
+    dsn="postgresql://bettmensch_ai:bettmensch_ai@localhost:5433/bettmensch_ai_metadata",
+))
 
-    with open(a_art.path, "w") as a_art_file:
-        a_art_file.write(str(a_param))
-
-@as_component
-def show_artifact(a: InputArtifact) -> None:
-
-    with open(a.path, "r") as a_art_file:
-        a_content = a_art_file.read()
-
-    print(f"Content of input artifact a: {a_content}")
-
-@as_pipeline("test-artifact-pipeline", "argo", True)
-def parameter_to_artifact(
-    a: InputParameter = "Param A",
-) -> None:
-    convert = convert_to_artifact(
-        "convert-to-artifact",
-        a_param=a,
-    )
-
-    show = show_artifact(
-        "show-artifact",
-        a=convert.outputs["a_art"],
-    )
-
-parameter_to_artifact.export(test_output_dir)
-parameter_to_artifact.register()
-parameter_to_artifact.run(inputs={'a':"Test value A"})
+LocalRunner(artifact_store, metadata_store).run(a_plus_b_plus_c, a=3, b=2)
 ```
 
-**NOTE**: For more examples (including cross K8s node CPU and GPU `torch.distributed` 
-processes), see 
-- the `pipelines.component.examples` module,
-- the `pipelines.pipeline.examples` module, and
-- this repository's [integration `test`](./sdk/test/integration/)
- and [k8s `test`](./sdk/test/k8s/) sections.
+Then refresh the frontend (below) to see it show up.
 
-The submitted pipelines can be viewed on the dashboard's `Pipelines` section:
+See `sdk/test/unit/pipelines`, `sdk/test/integration/pipelines`, and
+`sdk/test/functional/pipelines` for many more worked examples, including
+multi-output tasks and every valid `ArtifactStore`/`MetadataStore`
+combination.
 
-![bettmensch.ai pipelines](image/dashboard_1_pipelines.JPG)
+## :bar_chart: Frontend
 
-The executed flows can be viewed on the dashboard's `Flows` section:
+A small, read-only React + TypeScript + Tailwind app (`docker/frontend/web/`)
+served by a thin FastAPI backend (`docker/frontend/backend/`) for inspecting
+whatever a `PostgresMetadataStore`/`S3ArtifactStore` pair already holds - it
+doesn't run, register, or delete anything itself. Three views:
 
-![bettmensch.ai flows](image/dashboard_2_flows.JPG)
+- **Pipelines**: every pipeline name the store knows of, filterable by
+  whether it's been assembled and/or registered, each with an interactive
+  DAG - backend-agnostic for an assembly, plus backend-specific metadata and
+  triggers for a registration - and a click-through panel per task (inputs/
+  outputs, materializers, `@resource`/`@uv` requirements).
+- **Runs**: every recorded pipeline run, filterable by status, rendered as
+  the same DAG (colored by each task's live status) via the run's own
+  snapshotted assembly; clicking a task adds its runtime timing and
+  materialized output(s) - JSON and Pydantic-model artifacts render as an
+  interactive, collapsible tree straight from the artifact store, other
+  formats (e.g. Parquet) show their materializer/type as metadata instead.
+- **Artifacts**: every task output across every run, searchable by pipeline
+  and run date, independent of drilling through a specific run.
 
-### Building images
-
-To build a 
-- `standard`,
-- `pytorch`, or
-- `pytorch-lightning`
-
-docker image to be used for the pipeline components, run
+See "Local dev stack" above to run it. To build/push a standalone,
+versioned image instead:
 
 ```bash
-make component.build DOCKER_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
+make frontend.build DOCKER_ACCOUNT=your-account
+make frontend.push DOCKER_ACCOUNT=your-account
 ```
 
-This will build the image and tag it locally with
-- `your-account/bettmensch-ai-standard:3.11-<commit-sha>`
-- `your-account/bettmensch-ai-standard:3.11-latest`
-
-To push the image to the docker repository and make it accessible to the 
-platform, run
-
-```bash
-make component.push DOCKER_ACCOUNT=your-account COMPONENT=standard # pytorch, pytorch-lightning
-```
-
-By default, the components will use the
-- `standard` image for the `Component` class
-- `pytorch` image for the `DDPComponent` class
-
-See the `k8s` `ddp` test cases for how to use the `pytorch-lightning` image for
-the `DDPComponent`.
-
-## How it works
-
-The following sequence diagram illustrates how the creation, registration and
- running of `Pipeline`'s is supported by the infrastructure stack initiated in
- the `Setup` section:
-![BettmenschAI - Sequence diagram](https://github.com/user-attachments/assets/fb930dcc-d856-4224-8a7d-790a85269c73)
-
-## :books: `Models`
-
-![bettmensch.ai models](image/dashboard_3_models.JPG)
-
-We use [mlflow](https://mlflow.org/) as the default model registry backend for
-the time being, using an S3 storage backend for persisting the artifacts.
-
-NOTE: Currently, the user needs access to the mlflow service on the K8s cluster.
-This is achieved by the port forwarding done in `make platform.connect` (see 
-the setup section earlier.)
-
-## :rocket: `Servers`
-
-![bettmensch.ai servers](image/dashboard_4_servers.JPG)
-
-Coming soon.
+See `docker/frontend/makefile` for the full set of targets.
 
 # Credits
 
-This platform makes liberal use of various great open source projects:
-- [ArgoWorkflows](https://argoproj.github.io/workflows/): Kubernetes native 
-workload orchestration. Also powers the popular
- [Kubeflow Pipelines](https://github.com/kubeflow/pipelines), which inspired 
- the `Pipelines` & `Flows` of this project.
-- [hera](https://github.com/argoproj-labs/hera): Official Argo Python SDK for
- defining Workflow(Template)s
-- [streamlit](https://streamlit.io/): A python library for designing 
-interactive dashboards
-  - [streamlit-flow-component](https://github.com/dkapur17/streamlit-flow): A
-   [react-flow](https://reactflow.dev/) integration for streamlit
-  - [st-pages](https://st-pages.streamlit.app/): A nice streamlit plugin for
-   multi-page dashboards
-- [mlflow](https://mlflow.org/): ML experiment tracking, model registry and
-    serving support
+This project makes liberal use of various great open source projects:
+- [FastAPI](https://fastapi.tiangolo.com/): the `pipelines` frontend's API
+  backend.
+- [React](https://react.dev/) + [Vite](https://vitejs.dev/) +
+  [Tailwind CSS](https://tailwindcss.com/): the `pipelines` frontend's UI.
+- [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html):
+  AWS SDK for Python - backs `S3ArtifactStore` (and works against
+  S3-compatible services like MinIO for local development).
+- [psycopg](https://www.psycopg.org/): PostgreSQL adapter for Python -
+  backs `PostgresMetadataStore`.
+- [uv](https://docs.astral.sh/uv/): Python packaging and dependency
+  management.

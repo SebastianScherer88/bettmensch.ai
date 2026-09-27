@@ -1,30 +1,23 @@
 # Docker images
 
-## Dashboard
+## Frontend
 
-To build the dashboard docker image, run
+Read-only React + FastAPI viewer for `pipelines` run/registration
+bookkeeping - see the root README's "Frontend" section for what it shows.
 
-`make dashboard.build`
+For local dev, prefer `make pipelines.up` (from the repository root) - it
+brings up Postgres, MinIO, and this frontend together, wired to talk to
+each other. The targets below are for building/publishing a standalone,
+versioned image instead.
 
-To tag and push the dashboard docker image, run
+To build the frontend docker image, run
 
-`make dashboard.push`
+`make frontend.build`
 
-To run the dashboard container, run
+To tag and push the frontend docker image, run
 
-`make dashboard.run`
+`make frontend.push`
 
-## Pipeline SDK components
+To run the built image standalone (pointed at your own Postgres/S3), run
 
-We have 3 off-the-shelve docker images to support the sdk's pipeline module:
-- `base`
-- `torch` (w/ GPU support)
-- `lightning` (w/ GPU support)
-
-To build a component docker image, run
-
-`make component.build COMPONENT=<base|torch|lightning>`
-
-To tag and push a component docker image, run
-
-`make component.push COMPONENT=<base|torch|lightning>`
+`make frontend.run`

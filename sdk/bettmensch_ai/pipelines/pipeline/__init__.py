@@ -1,9 +1,16 @@
-from .client import hera_client  # noqa: F401
-from .flow import Flow, delete_flow, get_flow, list_flows  # noqa: F401
-from .pipeline import (  # noqa: F401
-    Pipeline,
-    as_pipeline,
-    delete_registered_pipeline,
-    get_registered_pipeline,
-    list_registered_pipelines,
-)
+"""User-facing pipeline definition: `Pipeline`/`@pipeline`, and the
+`AssembledPipeline` it's traced and assembled into.
+"""
+
+from ..io_binding import NO_DEFAULT, PipelineInput, PipelineOutput
+from .assembled_pipeline import AssembledPipeline
+from .pipeline import Pipeline, pipeline
+
+__all__ = [
+    "AssembledPipeline",
+    "NO_DEFAULT",
+    "PipelineInput",
+    "PipelineOutput",
+    "Pipeline",
+    "pipeline",
+]

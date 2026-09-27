@@ -1,0 +1,32 @@
+[project]
+name = "bettmensch.ai"
+version = "1.0.0"
+dependencies = [
+    "boto3>=1.43.95",
+    "pandera>=0.33.1",
+    "polars>=1.44.2",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+]
+
+# Not a hard dependency: only `PostgresMetadataStore` needs it, and it's
+# imported lazily (see metadata_store/postgres_metadata_store.py) so the
+# rest of the package works fine without it. Install with
+# `pip install bettmensch.ai[postgres]` (or `uv sync --extra postgres`) to
+# use PostgresMetadataStore.
+[project.optional-dependencies]
+postgres = [
+    "psycopg[binary]>=3.1",
+]
+# Only needed by docker/frontend's API backend (a thin FastAPI wrapper
+# around PostgresMetadataStore/S3ArtifactStore, serving a separately-built
+# React app as static files), not by the pipelines library itself.
+frontend = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.2.2",
+]

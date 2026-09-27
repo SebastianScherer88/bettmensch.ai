@@ -1,0 +1,75 @@
+{
+  "name": "bettmensch.ai",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  // Lets `docker`/`docker compose` run *inside* this devcontainer while
+  // actually talking to the host's Docker Desktop daemon (via its socket) -
+  // so `make pipelines.docker.up`, `.build`, `.test.docker` etc. all work
+  // from in here without nested/Docker-in-Docker virtualization. This is
+  // the piece Windows can't do natively (no `make`, and running Docker
+  // Desktop's own daemon a second time nested inside a container isn't
+  // practical) - the devcontainer exists specifically to give Windows/
+  // VSCode users a Linux shell with `make`, `uv`, and working `docker
+  // compose` access, without changing anything about how CI or a
+  // native-Linux dev machine runs the same commands.
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // `pipelines.docker.up`'s postgres/minio run as *sibling* containers
+  // on the host's Docker daemon (docker-outside-of-docker), not children of
+  // this devcontainer - so from in here, `localhost:5433`/`localhost:9000`
+  // (sdk/test/conftest.py's defaults, correct for a bare host/CI run) don't
+  // reach them. `host.docker.internal` does, resolved by Docker Desktop
+  // specifically for this sibling-container case. This only affects the
+  // host-style `make pipelines.test` path; `make pipelines.test.docker`
+  // is unaffected either way, since its `test` service joins postgres'/
+  // minio's own compose network directly and reaches them by service name.
+  // UV_PROJECT_ENVIRONMENT: critical - without this, `uv sync` creates its
+  // venv at the default `.venv` *inside the bind-mounted workspace folder*,
+  // which is also whatever `.venv` already exists there from the Windows
+  // host (a different OS's binaries, incompatible with this container).
+  // uv then tries to tear down and rebuild that directory, discovered the
+  // hard way: it partially deleted a real, populated host `.venv` before
+  // erroring out on a Windows-bind-mount I/O quirk, and had to be restored
+  // from uv.lock. Pointing it outside the mounted workspace (a path that
+  // only exists inside this container) means the two environments can
+  // never collide, regardless of what is or isn't already at the host's
+  // own `.venv`.
+  "containerEnv": {
+    "UV_PROJECT_ENVIRONMENT": "/home/vscode/.venv-devcontainer",
+    "BETTMENSCH_AI_TEST_POSTGRES_DSN": "postgresql://bettmensch_ai:bettmensch_ai@host.docker.internal:5433/bettmensch_ai_metadata",
+    "BETTMENSCH_AI_TEST_S3_ENDPOINT_URL": "http://host.docker.internal:9000"
+  },
+
+  // So a bare `pytest`/`python` (as `make pipelines.test` invokes them)
+  // resolves from the venv at UV_PROJECT_ENVIRONMENT above, not whatever
+  // (if anything) is on the base image's system PATH. `remoteEnv` (rather
+  // than folding this into `containerEnv`) is what actually reaches
+  // VSCode's own integrated terminals/tasks, which is where this matters.
+  "remoteEnv": {
+    "PATH": "/home/vscode/.venv-devcontainer/bin:${containerEnv:PATH}"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-azuretools.vscode-docker",
+        "makefile.makefile-tools"
+      ]
+    }
+  },
+
+  "remoteUser": "vscode",
+
+  // postgres/minio/frontend are sibling containers on the host daemon
+  // (docker-outside-of-docker), reachable at these ports on the host
+  // already - `forwardPorts` just tells VSCode to surface them in its own
+  // "Ports" panel too, e.g. for one-click-opening http://localhost:8501.
+  "forwardPorts": [5433, 9000, 9001, 8501]
+}
