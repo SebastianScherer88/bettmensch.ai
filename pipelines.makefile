@@ -1,9 +1,14 @@
 ## pipelines test/install commands.
 ##
 ## Uses `uv` + the root pyproject.toml as the one and only packaging/
-## dependency mechanism for this project - pipelines's own dependencies
-## (boto3, the optional `postgres` extra for psycopg) live there. There is
-## no separate `sdk/setup.py`-based install path any more.
+## dependency mechanism for this project. It's also the root of a small uv
+## workspace: docker/frontend and docker/metadata-service each have their
+## own pyproject.toml for their own deployment-only dependencies
+## (fastapi/uvicorn, psycopg where needed) - see their Dockerfiles. The
+## root `dev` dependency group covers everything needed to run the *test*
+## suite locally (pytest, psycopg, fastapi, uvicorn), so a bare `uv sync`
+## is enough; the root `postgres` extra remains separately for a
+## production consumer of the `PostgresMetadataStore` abstraction itself.
 ##
 ## SCOPE variables:
 ##   SUITE      unit | integration | functional | all (default: unit)
@@ -23,7 +28,6 @@
 ##   make pipelines.test.docker SUITE=functional
 
 ## VARIABLES
-UV_EXTRA?=postgres
 COMPOSE_FILE=docker-compose/pipelines.docker-compose.yaml
 SUITE?=unit
 MODULE?=
@@ -45,8 +49,8 @@ endif
 ## INSTALLATION
 
 pipelines.install:
-	@echo "::group::Installing pipelines dependencies via uv (extra=$(UV_EXTRA))"
-	uv sync --extra $(UV_EXTRA)
+	@echo "::group::Installing pipelines dependencies via uv (dev group: covers the full test suite)"
+	uv sync
 	@echo "::endgroup::"
 
 ## TEST INFRASTRUCTURE (postgres, minio - see pipelines.docker-compose.yaml)

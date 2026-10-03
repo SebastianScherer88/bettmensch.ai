@@ -1277,3 +1277,65 @@ contradicting it.
   container - `tests/integration/pipelines/
   test_remote_metadata_store_integration.py` documents this trade-off
   directly in its own module docstring.
+
+* **Converted the repo into a small uv workspace; moved all test-only
+  dependencies into the root `dev` group; gave `docker/frontend`/
+  `docker/metadata-service` their own component-level `pyproject.toml`.**
+  Before this, the root `pyproject.toml` mixed three different concerns
+  under two optional-dependency extras: `postgres` (psycopg, a genuine
+  main-library abstraction dependency for `PostgresMetadataStore`) and
+  `api` (fastapi/uvicorn, needed by neither the library nor any
+  abstraction - only by the two Docker services' own FastAPI processes).
+  Running the full local test suite required remembering `uv sync --extra
+  postgres --extra api`; a bare `uv sync` only got `pytest`. Fixed by:
+  - `[dependency-groups] dev` now also carries `psycopg`/`fastapi`/
+    `uvicorn`, duplicated from the `postgres` extra and
+    `docker/metadata-service`'s own dependency list respectively, on
+    purpose - this is what lets a bare `uv sync` run the *entire* local
+    test suite (unit directly, integration/functional against the
+    docker-compose stack) with no `--extra` flags.
+    `fastapi`/`uvicorn` specifically back `test_remote_metadata_store_integration.py`,
+    which runs a real instance of the metadata service's FastAPI app in a
+    background thread to test `RemoteMetadataStore` against it - a
+    root-level *test* need, distinct from the same packages' appearance
+    in `docker/metadata-service/pyproject.toml`'s own production
+    dependency list.
+  - The `api` extra is gone entirely. `docker/frontend/pyproject.toml` and
+    `docker/metadata-service/pyproject.toml` are new, real uv workspace
+    member packages (`[tool.uv.workspace] members = [...]` in the root
+    pyproject.toml), each declaring only their own deployment-specific
+    additions (`fastapi`/`uvicorn`, plus `bettmensch.ai[postgres]` for
+    metadata-service) and depending on the root package via `{ workspace
+    = true }`, rather than hand-copying `boto3`/`httpx`/`pydantic`/
+    `polars`/`pandera` into both of them. All three packages resolve
+    against one shared `uv.lock`, so their versions can never drift apart.
+  - The `postgres` extra **stays** at the root, unchanged - this was a
+    deliberate correction mid-discussion. The first instinct was "nobody
+    connects to Postgres directly any more, the metadata service is the
+    gatekeeper, so drop the extra and/or move `PostgresMetadataStore`
+    itself out of the library" - but the `Client`/`Store` abstractions
+    (`PostgresMetadataStore` included) need to stay in the main library
+    for future remote runtimes that report their own step metadata back
+    to a backend, independent of whether this project's *own* deployment
+    happens to route everything through the metadata service today. So:
+    keep the dependency a main-library abstraction genuinely needs
+    (`psycopg`, for `PostgresMetadataStore`), drop the one that was never
+    an abstraction concern at all (`fastapi`/`uvicorn` - `RemoteMetadataStore`
+    only ever needed `httpx`, already a hard dependency).
+  - For a workspace member to depend on the root package via `{ workspace
+    = true }`, the root had to stop being "virtual" (`uv.lock`'s `source =
+    { virtual = "." }` before this change - no `[build-system]` at all)
+    and become a real, buildable package for the first time: a minimal
+    `hatchling` build-system plus `[tool.hatch.build.targets.wheel]
+    packages = ["src/bettmensch_ai"]`. `uv sync` now editable-installs it,
+    which let both Dockerfiles drop `PYTHONPATH=/app/src` (just `/app`
+    now, for `backend` to resolve) - `bettmensch_ai` is a real install, not
+    just a source-copy any more.
+  - Verified `uv sync --package <member> --frozen` live, with the
+    *other* member's `pyproject.toml` (and even its whole directory)
+    temporarily removed from disk entirely: it still succeeded,
+    installing only that member's own scoped dependency set. `--frozen`
+    trusts the already-resolved `uv.lock` completely and never
+    re-discovers workspace members from the filesystem - so neither
+    Dockerfile needs to `COPY` the sibling member's `pyproject.toml`, only
+    its own.

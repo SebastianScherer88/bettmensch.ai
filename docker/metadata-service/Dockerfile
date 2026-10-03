@@ -4,6 +4,11 @@
 # repo root as context (needs the root pyproject.toml/uv.lock plus src/, not
 # just this directory) - see docker-compose/pipelines.docker-compose.yaml's
 # `metadata-service` service.
+#
+# `docker/metadata-service/pyproject.toml` is this service's own uv
+# workspace member - its own deployment deps (fastapi/uvicorn, plus
+# `bettmensch.ai[postgres]` for psycopg) live there, not in the root
+# pyproject.toml; `uv sync --package` below installs only its scope.
 
 ARG BASE_IMAGE_VERSION=3.11-slim
 
@@ -14,14 +19,16 @@ RUN pip install --no-cache-dir uv
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --extra postgres --extra api --frozen
-
+COPY docker/metadata-service/pyproject.toml docker/metadata-service/pyproject.toml
 COPY src ./src
+RUN uv sync --package bettmensch-ai-metadata-service --frozen --no-dev
+
 COPY docker/metadata-service/backend ./backend
 
-# `bettmensch_ai` is source-copied, not pip-installed - matching
-# docker/frontend/Dockerfile's own PYTHONPATH convention.
-ENV PATH="/app/.venv/bin:${PATH}" PYTHONPATH="/app/src:/app"
+# `bettmensch_ai` is a real (editable) install now via the uv workspace, so
+# only `/app` needs to be on PYTHONPATH - matching
+# docker/frontend/Dockerfile's own convention.
+ENV PATH="/app/.venv/bin:${PATH}" PYTHONPATH="/app"
 
 EXPOSE 8081
 

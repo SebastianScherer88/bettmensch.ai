@@ -1,16 +1,12 @@
 version = 1
 revision = 3
 requires-python = ">=3.11"
-resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+
+[manifest]
+members = [
+    "bettmensch-ai",
+    "bettmensch-ai-frontend",
+    "bettmensch-ai-metadata-service",
 ]
 
 [[package]]
@@ -47,7 +43,7 @@ wheels = [
 [[package]]
 name = "bettmensch-ai"
 version = "1.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "boto3" },
     { name = "httpx" },
@@ -58,35 +54,71 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-api = [
-    { name = "fastapi" },
-    { name = "uvicorn" },
-]
 postgres = [
     { name = "psycopg", extra = ["binary"] },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "fastapi" },
+    { name = "psycopg", extra = ["binary"] },
     { name = "pytest" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.95" },
-    { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "pandera", specifier = ">=0.33.1" },
     { name = "polars", specifier = ">=1.44.2" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
-    { name = "uvicorn", marker = "extra == 'api'", specifier = ">=0.30" },
 ]
-provides-extras = ["postgres", "api"]
+provides-extras = ["postgres"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.2.2" }]
+dev = [
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
+    { name = "pytest", specifier = ">=8.2.2" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
+
+[[package]]
+name = "bettmensch-ai-frontend"
+version = "1.0.0"
+source = { virtual = "docker/frontend" }
+dependencies = [
+    { name = "bettmensch-ai" },
+    { name = "fastapi" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bettmensch-ai", editable = "." },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
+
+[[package]]
+name = "bettmensch-ai-metadata-service"
+version = "1.0.0"
+source = { virtual = "docker/metadata-service" }
+dependencies = [
+    { name = "bettmensch-ai", extra = ["postgres"] },
+    { name = "fastapi" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "bettmensch-ai", extras = ["postgres"], editable = "." },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "uvicorn", specifier = ">=0.30" },
+]
 
 [[package]]
 name = "boto3"

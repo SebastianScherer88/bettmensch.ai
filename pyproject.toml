@@ -1,6 +1,11 @@
 [project]
 name = "bettmensch.ai"
 version = "1.0.0"
+# Matches the `python:3.11-slim` base image every Dockerfile in this repo
+# builds from - without this, an unconstrained workspace resolves against
+# whatever Python runs `uv lock` (e.g. 3.12 on a dev machine), risking a
+# lockfile that doesn't actually match what the containers run.
+requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.43.95",
     "httpx>=0.27.0",
@@ -14,22 +19,48 @@ dependencies = [
 # imported lazily (see metadata_store/postgres_metadata_store.py) so the
 # rest of the package works fine without it. Install with
 # `pip install bettmensch.ai[postgres]` (or `uv sync --extra postgres`) to
-# use PostgresMetadataStore.
+# use PostgresMetadataStore directly - a legitimate main-library
+# abstraction, even though this project's own deployment never constructs
+# one outside docker/metadata-service (which gets it via this same extra,
+# see docker/metadata-service/pyproject.toml). `fastapi`/`uvicorn` used to
+# live here too as an `api` extra, but neither the library nor any
+# abstraction ever needed them - only docker/frontend's and
+# docker/metadata-service's own FastAPI processes did, so each now
+# declares them in its own component-level pyproject.toml instead (see
+# `[tool.uv.workspace]` below).
 [project.optional-dependencies]
 postgres = [
     "psycopg[binary]>=3.1",
 ]
-# Only needed by this project's own FastAPI services - docker/frontend's
-# backend (a thin wrapper around PostgresMetadataStore/S3ArtifactStore,
-# serving a separately-built React app as static files) and
-# docker/metadata-service (the metadata service itself) - not by the
-# pipelines library itself.
-api = [
+
+# `psycopg`/`fastapi`/`uvicorn` are duplicated from the `postgres` extra/
+# docker/metadata-service's own pyproject.toml here, deliberately: this is
+# what lets a bare `uv sync` (no `--extra` flags) be enough to run the
+# *entire* local test suite (unit directly, integration/functional against
+# the docker-compose stack) - `fastapi`/`uvicorn` specifically back
+# tests/integration/pipelines/test_remote_metadata_store_integration.py,
+# which runs a real instance of the metadata service's FastAPI app in a
+# background thread to test `RemoteMetadataStore` against it.
+[dependency-groups]
+dev = [
+    "pytest>=8.2.2",
+    "psycopg[binary]>=3.1",
     "fastapi>=0.115",
     "uvicorn>=0.30",
 ]
 
-[dependency-groups]
-dev = [
-    "pytest>=8.2.2",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bettmensch_ai"]
+
+# A small uv workspace: docker/frontend and docker/metadata-service are
+# member packages with their own pyproject.toml, each declaring only their
+# own deployment-specific dependencies (fastapi/uvicorn, psycopg where
+# needed) and depending on this root package via `{ workspace = true }` -
+# so `boto3`/`httpx`/`pydantic`/`polars`/`pandera` are never hand-copied
+# into either of them, and all three resolve against one shared uv.lock.
+[tool.uv.workspace]
+members = ["docker/frontend", "docker/metadata-service"]

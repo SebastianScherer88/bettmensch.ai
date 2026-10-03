@@ -25,8 +25,8 @@ fi
 # whatever `.venv` already exists there from the Windows host (a different,
 # incompatible OS's venv). Do not remove that env var or run `uv sync`
 # without it set.
-echo "Installing pipelines dependencies (uv sync --extra postgres)..."
-uv sync --extra postgres
+echo "Installing pipelines dependencies (uv sync - dev group covers the full test suite)..."
+uv sync
 
 cat <<'EOF'
 

@@ -1,0 +1,12 @@
+[project]
+name = "bettmensch-ai-frontend"
+version = "1.0.0"
+description = "Read-only FastAPI backend for the pipelines frontend viewer."
+dependencies = [
+    "bettmensch.ai",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+"bettmensch.ai" = { workspace = true }

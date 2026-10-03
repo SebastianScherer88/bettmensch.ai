@@ -1,0 +1,12 @@
+[project]
+name = "bettmensch-ai-metadata-service"
+version = "1.0.0"
+description = "FastAPI metadata service - the sole holder of a Postgres connection, exposing BaseMetadataStore over HTTP."
+dependencies = [
+    "bettmensch.ai[postgres]",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+]
+
+[tool.uv.sources]
+"bettmensch.ai" = { workspace = true }

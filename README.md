@@ -32,6 +32,14 @@ the active tree right now; see "Stashed: AWS remote compute" below.
 | `compute/` | `BaseComputeBackend`, `LocalComputeBackend` (the only backend currently active - every `AssembledTask` runs in-process). |
 | `runner/` | `LocalRunner`/`run_locally` - executes an `AssembledPipeline`, materializing through a `Client`'s `ArtifactClient`/`MetadataClient`. |
 
+The root `pyproject.toml` is also the root of a small **uv workspace**:
+`docker/frontend/pyproject.toml` and `docker/metadata-service/pyproject.toml`
+are member packages, each declaring only that service's own deployment
+dependencies (`fastapi`/`uvicorn`, `psycopg` where needed) and depending on
+this root package via `{ workspace = true }` - so the library's own hard
+dependencies never need hand-copying into either of them, and all three
+resolve against one shared `uv.lock`.
+
 # Setup
 
 ## :window: Windows / VSCode (Dev Container)
@@ -50,17 +58,26 @@ native Linux machine or in CI.
 ## :snake: Install
 
 `pipelines` (`bettmensch_ai.pipelines`, under `src/`) uses `uv` and the
-root `pyproject.toml` as its one and only packaging/dependency mechanism -
-there's no separate build/install step for the package itself
-(`pytest.ini`'s `pythonpath = src` makes it importable directly).
+root `pyproject.toml` as its one and only packaging/dependency mechanism.
 
 ```bash
 make pipelines.install
 ```
 
-installs its dependencies (`boto3`, `httpx`, plus the optional `postgres`/
-`api` extras for `PostgresMetadataStore`/the frontend and metadata
-service's FastAPI backends) into a local `uv` venv.
+is a bare `uv sync`: it installs the library's hard dependencies (`boto3`,
+`httpx`, ...) plus everything the `dev` dependency group adds - `pytest`,
+`psycopg`, `fastapi`, `uvicorn` - which is *all* the full local test suite
+(unit/integration/functional) needs, so this one command is enough to run
+every test tier below with no `--extra` flags. `docker/frontend` and
+`docker/metadata-service` each own their own deployment-only dependencies
+in their own `pyproject.toml` instead (see "Package layout" above) - this
+command does not install those; the services' own Dockerfiles do, via
+`uv sync --package <name>`.
+
+The main library's own `psycopg` dependency (for using
+`PostgresMetadataStore` directly, outside the `dev` group's test-running
+convenience) is still available as an opt-in extra: `uv sync --extra
+postgres` or `pip install bettmensch.ai[postgres]`.
 
 ## :whale: Local dev stack (Postgres, MinIO, metadata service, Frontend)
 
