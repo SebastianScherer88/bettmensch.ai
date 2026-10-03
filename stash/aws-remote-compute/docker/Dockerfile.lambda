@@ -1,0 +1,30 @@
+# AWS Lambda task-runtime image: what an `aws_lambda(...)`-placed task
+# actually runs inside, via `bettmensch_ai.pipelines.runner.remote_entrypoint.
+# lambda_handler`. Built from the repo root as context, same as
+# Dockerfile.batch - see infrastructure/aws/README.md for building/pushing
+# this to the ECR repo `infrastructure/aws` provisions.
+#
+# Must be built from AWS's own Lambda base image (container images can only
+# use it as their base to speak the Lambda Runtime API at all) - which
+# means plain `pip install ... -t "${LAMBDA_TASK_ROOT}"` here instead of
+# Dockerfile.batch's `uv sync` + PYTHONPATH pattern: the Lambda Runtime
+# Interface Client this base image bundles only ever looks at
+# `${LAMBDA_TASK_ROOT}` (`/var/task`) and the image's own site-packages, not
+# a separate uv-managed virtualenv it has no way to activate. The base
+# dependency list below is duplicated from pyproject.toml's own
+# `[project.dependencies]` for exactly that reason - keep them in sync by
+# hand if that list changes.
+
+FROM public.ecr.aws/lambda/python:3.11
+
+RUN pip install --no-cache-dir \
+    "boto3>=1.43.95" \
+    "pandera>=0.33.1" \
+    "polars>=1.44.2" \
+    "pydantic>=2.0.0" \
+    "pydantic-settings>=2.0.0" \
+    -t "${LAMBDA_TASK_ROOT}"
+
+COPY src/bettmensch_ai "${LAMBDA_TASK_ROOT}/bettmensch_ai"
+
+CMD ["bettmensch_ai.pipelines.runner.remote_entrypoint.lambda_handler"]

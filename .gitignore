@@ -5,14 +5,14 @@ __pycache__
 *.tfstate
 
 # test outputs
-sdk/test/unit/outputs
-sdk/test/integration/outputs
-sdk/test/docker/outputs
-sdk/test/k8s/outputs
+tests/unit/outputs
+tests/integration/outputs
+tests/docker/outputs
+tests/k8s/outputs
 
 # build outputs
 build/*
-sdk/build/*
+src/build/*
 build_logs
 
 # frontend (React/Vite) build outputs
@@ -34,3 +34,6 @@ infrastructure/terraform/.terraform.tfstate.lock.info
 infrastructure/terraform/terraform.tfstate.backup
 
 .venv
+
+# per-developer Claude Code tool settings, not project config
+.claude/settings.local.json

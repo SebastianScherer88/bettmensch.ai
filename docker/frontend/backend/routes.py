@@ -1,8 +1,10 @@
-"""Read-only REST API over a PostgresMetadataStore/S3ArtifactStore pair.
+"""Read-only REST API over the metadata service/S3ArtifactStore.
 
 This purely reads what a `LocalRunner` (or a real backend orchestrator, for
 the registration endpoints) has already written - it doesn't run, register,
 or delete anything itself, matching the frontend's own read-only remit.
+Metadata is read through a `MetadataClient` (talking to the metadata
+service over HTTP), not a direct Postgres connection - see `stores.py`.
 """
 
 import json
@@ -16,12 +18,12 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from bettmensch_ai.pipelines.artifact_metadata import metadata_key
 from bettmensch_ai.pipelines.artifact_store import BaseArtifactStore
+from bettmensch_ai.pipelines.client import MetadataClient
 from bettmensch_ai.pipelines.materializers import resolve_materializer_from_artifact
-from bettmensch_ai.pipelines.metadata_store import BaseMetadataStore
 from pydantic import BaseModel
 
 from . import schemas
-from .stores import get_artifact_store, get_metadata_store
+from .stores import get_artifact_store, get_metadata_client
 
 router = APIRouter()
 
@@ -50,7 +52,7 @@ def health() -> dict:
 
 
 @router.get("/pipelines", response_model=list[schemas.PipelineSummary])
-def list_pipelines(metadata_store: BaseMetadataStore = Depends(get_metadata_store)):
+def list_pipelines(metadata_client: MetadataClient = Depends(get_metadata_client)):
     """Aggregates assemblies/registrations/runs by pipeline name.
 
     There's no single store method for "list pipelines" - a pipeline isn't
@@ -60,9 +62,9 @@ def list_pipelines(metadata_store: BaseMetadataStore = Depends(get_metadata_stor
     per name while iterating is that pipeline's latest one.
     """
 
-    assemblies = metadata_store.list_pipeline_assemblies()
-    registrations = metadata_store.list_pipeline_registrations()
-    runs = metadata_store.list_pipeline_runs()
+    assemblies = metadata_client.list_pipeline_assemblies()
+    registrations = metadata_client.list_pipeline_registrations()
+    runs = metadata_client.list_pipeline_runs()
 
     names = set()
     latest_assembly_by_name = {}
@@ -111,11 +113,11 @@ def list_pipelines(metadata_store: BaseMetadataStore = Depends(get_metadata_stor
 
 @router.get("/pipelines/{pipeline_name}", response_model=schemas.PipelineDetail)
 def get_pipeline(
-    pipeline_name: str, metadata_store: BaseMetadataStore = Depends(get_metadata_store)
+    pipeline_name: str, metadata_client: MetadataClient = Depends(get_metadata_client)
 ):
-    assemblies = metadata_store.list_pipeline_assemblies(pipeline_name)
-    registrations = metadata_store.list_pipeline_registrations(pipeline_name)
-    runs = metadata_store.list_pipeline_runs(pipeline_name)
+    assemblies = metadata_client.list_pipeline_assemblies(pipeline_name)
+    registrations = metadata_client.list_pipeline_registrations(pipeline_name)
+    runs = metadata_client.list_pipeline_runs(pipeline_name)
 
     if not assemblies and not registrations and not runs:
         raise HTTPException(status_code=404, detail="Pipeline not found")
@@ -136,9 +138,9 @@ def get_pipeline(
 )
 def list_pipeline_assemblies(
     pipeline_name: Optional[str] = None,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    assemblies = metadata_store.list_pipeline_assemblies(pipeline_name=pipeline_name)
+    assemblies = metadata_client.list_pipeline_assemblies(pipeline_name=pipeline_name)
     return [schemas.PipelineAssembly.from_record(a) for a in assemblies]
 
 
@@ -148,10 +150,10 @@ def list_pipeline_assemblies(
 )
 def get_pipeline_assembly(
     pipeline_assembly_id: uuid.UUID,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
     try:
-        assembly = metadata_store.get_pipeline_assembly(pipeline_assembly_id)
+        assembly = metadata_client.get_pipeline_assembly(pipeline_assembly_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Pipeline assembly not found")
     return schemas.PipelineAssembly.from_record(assembly)
@@ -161,9 +163,9 @@ def get_pipeline_assembly(
 def list_pipeline_runs(
     pipeline_name: Optional[str] = None,
     status: Optional[str] = None,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    runs = metadata_store.list_pipeline_runs(pipeline_name=pipeline_name)
+    runs = metadata_client.list_pipeline_runs(pipeline_name=pipeline_name)
     if status:
         runs = [r for r in runs if r.status.value == status]
     return [schemas.PipelineRun.from_record(r) for r in runs]
@@ -172,10 +174,10 @@ def list_pipeline_runs(
 @router.get("/pipeline-runs/{pipeline_run_id}", response_model=schemas.PipelineRun)
 def get_pipeline_run(
     pipeline_run_id: uuid.UUID,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
     try:
-        run = metadata_store.get_pipeline_run(pipeline_run_id)
+        run = metadata_client.get_pipeline_run(pipeline_run_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Pipeline run not found")
     return schemas.PipelineRun.from_record(run)
@@ -187,9 +189,9 @@ def get_pipeline_run(
 )
 def list_task_runs(
     pipeline_run_id: uuid.UUID,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    task_runs = metadata_store.list_task_runs(pipeline_run_id)
+    task_runs = metadata_client.list_task_runs(pipeline_run_id)
     return [schemas.TaskRun.from_record(t) for t in task_runs]
 
 
@@ -200,9 +202,9 @@ def list_task_runs(
 def list_task_outputs(
     pipeline_run_id: uuid.UUID,
     task_name: str,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    outputs = metadata_store.list_task_outputs(pipeline_run_id, task_name)
+    outputs = metadata_client.list_task_outputs(pipeline_run_id, task_name)
     return [schemas.TaskOutput.from_record(o) for o in outputs]
 
 
@@ -212,7 +214,7 @@ def list_artifacts(
     since: Optional[datetime] = None,
     until: Optional[datetime] = None,
     include_metadata: bool = True,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
     artifact_store: BaseArtifactStore = Depends(get_artifact_store),
 ):
     """Searches artifacts by pipeline and/or run date range.
@@ -229,7 +231,7 @@ def list_artifacts(
     `include_metadata=False` for a faster, metadata-less listing.
     """
 
-    runs = metadata_store.list_pipeline_runs(pipeline_name=pipeline_name)
+    runs = metadata_client.list_pipeline_runs(pipeline_name=pipeline_name)
 
     results = []
     for run in runs:
@@ -238,8 +240,8 @@ def list_artifacts(
         if until is not None and run.started_at > until:
             continue
 
-        for task_run in metadata_store.list_task_runs(run.pipeline_run_id):
-            for output in metadata_store.list_task_outputs(
+        for task_run in metadata_client.list_task_runs(run.pipeline_run_id):
+            for output in metadata_client.list_task_outputs(
                 run.pipeline_run_id, task_run.task_name
             ):
                 materializer = None
@@ -314,9 +316,9 @@ def preview_artifact(
 def list_pipeline_registrations(
     pipeline_name: Optional[str] = None,
     active_only: bool = False,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    registrations = metadata_store.list_pipeline_registrations(
+    registrations = metadata_client.list_pipeline_registrations(
         pipeline_name=pipeline_name, active_only=active_only
     )
     return [schemas.PipelineRegistration.from_record(r) for r in registrations]
@@ -328,10 +330,10 @@ def list_pipeline_registrations(
 )
 def get_pipeline_registration(
     pipeline_registration_id: uuid.UUID,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
     try:
-        registration = metadata_store.get_pipeline_registration(pipeline_registration_id)
+        registration = metadata_client.get_pipeline_registration(pipeline_registration_id)
     except KeyError:
         raise HTTPException(status_code=404, detail="Pipeline registration not found")
     return schemas.PipelineRegistration.from_record(registration)
@@ -344,9 +346,9 @@ def get_pipeline_registration(
 def list_triggers(
     pipeline_registration_id: uuid.UUID,
     active_only: bool = False,
-    metadata_store: BaseMetadataStore = Depends(get_metadata_store),
+    metadata_client: MetadataClient = Depends(get_metadata_client),
 ):
-    triggers = metadata_store.list_triggers(
+    triggers = metadata_client.list_triggers(
         pipeline_registration_id, active_only=active_only
     )
     return [schemas.Trigger.from_record(t) for t in triggers]

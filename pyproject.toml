@@ -3,6 +3,7 @@ name = "bettmensch.ai"
 version = "1.0.0"
 dependencies = [
     "boto3>=1.43.95",
+    "httpx>=0.27.0",
     "pandera>=0.33.1",
     "polars>=1.44.2",
     "pydantic>=2.0.0",
@@ -18,10 +19,12 @@ dependencies = [
 postgres = [
     "psycopg[binary]>=3.1",
 ]
-# Only needed by docker/frontend's API backend (a thin FastAPI wrapper
-# around PostgresMetadataStore/S3ArtifactStore, serving a separately-built
-# React app as static files), not by the pipelines library itself.
-frontend = [
+# Only needed by this project's own FastAPI services - docker/frontend's
+# backend (a thin wrapper around PostgresMetadataStore/S3ArtifactStore,
+# serving a separately-built React app as static files) and
+# docker/metadata-service (the metadata service itself) - not by the
+# pipelines library itself.
+api = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
 ]

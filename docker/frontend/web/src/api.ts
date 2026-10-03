@@ -21,6 +21,11 @@ export interface UvRequirements {
   python: string | null;
 }
 
+export interface ComputeBackend {
+  name: string;
+  config: Record<string, unknown>;
+}
+
 export interface DagTask {
   name: string;
   rank: number;
@@ -30,6 +35,7 @@ export interface DagTask {
   resource_requirements: ResourceRequirements;
   uv_requirements: UvRequirements;
   source: string | null;
+  compute_backend: ComputeBackend;
 }
 
 export interface DagOutput {

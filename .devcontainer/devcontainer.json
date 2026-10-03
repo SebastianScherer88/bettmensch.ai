@@ -22,7 +22,7 @@
   // `pipelines.docker.up`'s postgres/minio run as *sibling* containers
   // on the host's Docker daemon (docker-outside-of-docker), not children of
   // this devcontainer - so from in here, `localhost:5433`/`localhost:9000`
-  // (sdk/test/conftest.py's defaults, correct for a bare host/CI run) don't
+  // (tests/conftest.py's defaults, correct for a bare host/CI run) don't
   // reach them. `host.docker.internal` does, resolved by Docker Desktop
   // specifically for this sibling-container case. This only affects the
   // host-style `make pipelines.test` path; `make pipelines.test.docker`

@@ -1,0 +1,11 @@
+# Copy to Pulumi.dev.yaml (git-ignored - never commit real secrets) and fill
+# in real values, or set the same keys with `pulumi config set [--secret]`.
+config:
+  aws:region: us-east-1
+  bettmensch-ai-aws:dbUsername: bettmensch_ai
+  # pulumi config set --secret bettmensch-ai-aws:dbPassword <a-real-password>
+  bettmensch-ai-aws:dbPassword: <set-via-pulumi-config-set---secret>
+  # CIDR allowed to reach RDS/the frontend directly - 0.0.0.0/0 is this
+  # "basic" stack's default (see docs/design-decisions.md), tighten to your
+  # own IP/CIDR if you'd rather not expose these to the whole internet.
+  bettmensch-ai-aws:allowedCidr: 0.0.0.0/0

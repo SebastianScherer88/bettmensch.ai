@@ -1,10 +1,10 @@
 # Convenience entrypoint: `docker compose up` from the repo root brings up
 # the same local dev stack (Postgres, MinIO, the read-only `pipelines`
 # frontend viewer) as `make pipelines.up` - included from, not duplicated
-# from, sdk/test/docker-compose/pipelines.docker-compose.yaml, so there is
+# from, docker-compose/pipelines.docker-compose.yaml, so there is
 # exactly one place that actually defines these services. See that file's
 # own header comment for the other ways to use it (host-only testing,
 # fully containerized testing), and README.md's "Python SDK (`pipelines`)"
 # section for the `make` targets wrapping all of them.
 include:
-  - sdk/test/docker-compose/pipelines.docker-compose.yaml
+  - docker-compose/pipelines.docker-compose.yaml

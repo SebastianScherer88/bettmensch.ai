@@ -1,0 +1,11 @@
+name: bettmensch-ai-aws
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: >
+  Basic, dev-grade AWS stack for bettmensch.ai's pipelines SDK: an S3 bucket
+  (S3ArtifactStore), an RDS Postgres instance (PostgresMetadataStore), IAM
+  roles for the frontend's ECS task, an ECR repo for its image, and an ECS
+  service running the read-only frontend. See README.md before running
+  `pulumi up`.

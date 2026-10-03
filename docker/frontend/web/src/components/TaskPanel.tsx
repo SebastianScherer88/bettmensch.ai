@@ -1,9 +1,10 @@
-import { X, Box, Cpu, HardDrive, Zap, Package, Terminal } from "lucide-react";
+import { X, Box, Cpu, HardDrive, Zap, Package, Terminal, Cloud, MonitorSmartphone } from "lucide-react";
 import type { DagTask, RunStatus, TaskOutput } from "../api";
 import { StatusBadge } from "./StatusBadge";
 import { ArtifactPreviewCard } from "./ArtifactPreviewCard";
 import { SourceVisual } from "./SourceVisual";
 import { CodeBlock } from "./CodeBlock";
+import { JsonTree } from "./JsonTree";
 
 export interface TaskRuntime {
   status: RunStatus;
@@ -27,12 +28,20 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   );
 }
 
+const BACKEND_LABELS: Record<string, string> = {
+  local: "Local",
+  aws_batch: "AWS Batch",
+  aws_lambda: "AWS Lambda",
+};
+
 export function TaskPanel({ task, onClose, runtime }: TaskPanelProps) {
   const hasResources =
     task.resource_requirements.cpu != null ||
     task.resource_requirements.memory != null ||
     task.resource_requirements.gpu != null;
   const hasUv = task.uv_requirements.packages.length > 0 || task.uv_requirements.python != null;
+  const isLocalBackend = task.compute_backend.name === "local";
+  const hasBackendConfig = Object.keys(task.compute_backend.config).length > 0;
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end">
@@ -44,6 +53,16 @@ export function TaskPanel({ task, onClose, runtime }: TaskPanelProps) {
               <Box size={18} className="text-sky-400" />
             </div>
             <h2 className="font-mono text-xl font-semibold text-white">{task.name}</h2>
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                isLocalBackend
+                  ? "border-slate-700 bg-slate-800/60 text-slate-400"
+                  : "border-violet-500/30 bg-violet-500/10 text-violet-300"
+              }`}
+            >
+              {isLocalBackend ? <MonitorSmartphone size={12} /> : <Cloud size={12} />}
+              {BACKEND_LABELS[task.compute_backend.name] ?? task.compute_backend.name}
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -149,6 +168,15 @@ export function TaskPanel({ task, onClose, runtime }: TaskPanelProps) {
                   </span>
                 ))}
               </div>
+            </section>
+          )}
+
+          {!isLocalBackend && hasBackendConfig && (
+            <section>
+              <SectionHeading>
+                {BACKEND_LABELS[task.compute_backend.name] ?? task.compute_backend.name} configuration
+              </SectionHeading>
+              <JsonTree value={task.compute_backend.config} />
             </section>
           )}
 

@@ -2,7 +2,7 @@
 # Runs once, after the devcontainer is created (see devcontainer.json's
 # postCreateCommand). Installs the two things the base python devcontainer
 # image doesn't already have but `make pipelines.*` needs: `make` itself,
-# and `uv` (pipelines's own dependency manager - see sdk/pipelines.makefile).
+# and `uv` (pipelines's own dependency manager - see pipelines.makefile).
 set -euo pipefail
 
 echo "Installing make..."

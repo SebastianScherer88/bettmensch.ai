@@ -30,6 +30,7 @@ export function normalizeDagStructure(raw: unknown): DagStructure {
         resource_requirements: { cpu: null, memory: null, gpu: null },
         uv_requirements: { packages: [], python: null },
         source: null,
+        compute_backend: { name: "local", config: {} },
       };
     }
     const partial = (t ?? {}) as Partial<DagTask>;
@@ -46,6 +47,7 @@ export function normalizeDagStructure(raw: unknown): DagStructure {
       },
       uv_requirements: partial.uv_requirements ?? { packages: [], python: null },
       source: partial.source ?? null,
+      compute_backend: partial.compute_backend ?? { name: "local", config: {} },
     };
   });
 

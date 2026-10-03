@@ -1,0 +1,36 @@
+# AWS Batch task-runtime image: what an `aws_batch(...)`-placed task
+# actually runs inside, via `bettmensch_ai.pipelines.runner.remote_entrypoint`.
+# Built from the repo root as context (needs the root pyproject.toml/uv.lock
+# plus src/, matching docker/frontend/Dockerfile's own convention) - see
+# infrastructure/aws/README.md for building/pushing this to the ECR repo
+# `infrastructure/aws` provisions.
+#
+# Only this project's own base dependencies (boto3, pydantic, ...) are
+# baked in here - a task's own `@uv`-declared third-party packages travel
+# separately, per pipeline run, via `CodeBundler` + the `@uv` decorator
+# (see docs/architecture.md's `CodeBundler` entry) - this image is deploy-
+# time infrastructure, not a per-pipeline artifact.
+
+ARG BASE_IMAGE_VERSION=3.11-slim
+
+FROM python:${BASE_IMAGE_VERSION}
+
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+
+COPY src ./src
+
+# `bettmensch_ai` is source-copied, not pip-installed (matching
+# docker/frontend/Dockerfile's own PYTHONPATH convention - there is no
+# `[build-system]` in pyproject.toml to make `pip install .` work).
+ENV PATH="/app/.venv/bin:${PATH}" PYTHONPATH="/app/src"
+
+# AWS Batch always overrides the full command via `containerOverrides`
+# (see `AwsBatchComputeBackend.run()`/`asl.py`'s `_command()`) - this just
+# needs to be a valid default so the image itself runs standalone too, e.g.
+# for a manual smoke test (`docker run <image> --help`).
+ENTRYPOINT ["python", "-m", "bettmensch_ai.pipelines.runner.remote_entrypoint"]

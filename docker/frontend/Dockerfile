@@ -1,8 +1,8 @@
 # Read-only viewer for `pipelines` run/registration bookkeeping: a FastAPI
 # backend (thin wrapper around PostgresMetadataStore/S3ArtifactStore) serving
 # a React+TypeScript+Vite+Tailwind app as static files. Built from the repo
-# root as context (needs the root pyproject.toml/uv.lock plus sdk/, not just
-# this directory) - see sdk/test/docker-compose/pipelines.docker-compose.yaml's
+# root as context (needs the root pyproject.toml/uv.lock plus src/, not just
+# this directory) - see docker-compose/pipelines.docker-compose.yaml's
 # `frontend` service (local dev stack) and docker/frontend/docker-compose.yaml
 # (versioned build/push, mirroring docker/component's own convention).
 
@@ -27,19 +27,19 @@ RUN pip install --no-cache-dir uv
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --extra postgres --extra frontend --frozen
+RUN uv sync --extra postgres --extra api --frozen
 
-COPY sdk ./sdk
+COPY src ./src
 COPY docker/frontend/backend ./backend
 COPY --from=web-build /web/dist ./backend/static
 
 # `bettmensch_ai` isn't pip-installed here, just source-copied (matching how
-# pytest.ini's `pythonpath = sdk` already makes it importable for tests
-# without an install step, not a Dockerfile-specific shortcut) - so `sdk`
+# pytest.ini's `pythonpath = src` already makes it importable for tests
+# without an install step, not a Dockerfile-specific shortcut) - so `src`
 # needs to be on PYTHONPATH explicitly, and `/app` too so `backend` resolves
 # as a package (uvicorn, like streamlit before it, doesn't add anything
 # useful to sys.path on its own the way `python script.py` does).
-ENV PATH="/app/.venv/bin:${PATH}" PYTHONPATH="/app/sdk:/app"
+ENV PATH="/app/.venv/bin:${PATH}" PYTHONPATH="/app/src:/app"
 
 EXPOSE 8080
 

@@ -91,16 +91,49 @@ save/load path for free.
     `LocalMetadataStore` is Layer 1's concrete, local, SQLite-backed
     default; `PostgresMetadataStore` is a remote, shared, Layer 2-flavoured
     implementation, reachable by every worker in a genuinely distributed
-    run. Deliberately orchestrator-agnostic: `LocalRunner` and a future
-    Layer 2 remote/distributed orchestrator both record into the same
-    interface, so bookkeeping looks the same regardless of how a pipeline
-    was actually run or registered - "however they are orchestrated" is the
-    point, not local-only. This is distinct from the `ArtifactStore`: the
-    artifact store persists *values*, the metadata store persists *what
-    happened* - `record_task_output` stores an artifact key, not the
-    artifact itself. `PostgresMetadataStore` requires the optional
-    `psycopg` dependency (this project's `postgres` extra), imported lazily
-    so the rest of `pipelines` never requires it to be installed.
+    run, talking to Postgres directly; `RemoteMetadataStore` is a third
+    flavour that talks HTTP to the metadata service
+    (`docker/metadata-service/`) instead - see below. Deliberately
+    orchestrator-agnostic: `LocalRunner` and a future Layer 2 remote/
+    distributed orchestrator both record into the same interface, so
+    bookkeeping looks the same regardless of how a pipeline was actually run
+    or registered - "however they are orchestrated" is the point, not
+    local-only. This is distinct from the `ArtifactStore`: the artifact
+    store persists *values*, the metadata store persists *what happened* -
+    `record_task_output` stores an artifact key, not the artifact itself.
+    `PostgresMetadataStore` requires the optional `psycopg` dependency (this
+    project's `postgres` extra), imported lazily so the rest of `pipelines`
+    never requires it to be installed.
+* `Client` (`bettmensch_ai.pipelines.client`): the layer every runtime (a
+    `LocalRunner` script today; later, remote compute) actually holds,
+    instead of a raw store directly. `ArtifactClient`/`MetadataClient` each
+    mirror `BaseArtifactStore`/`BaseMetadataStore`'s own public methods
+    exactly (explicit one-line forwarding methods, same names/signatures) -
+    deliberately *not* a subclass of the store they forward to, so a client
+    and a store can never be type-confused for one another, even though the
+    vocabulary is identical. Each builds its own default store from
+    `ArtifactClientConfig`/`MetadataClientConfig` (env-driven:
+    `local`/`s3` for artifacts, `local`/`remote` for metadata) when none is
+    given explicitly - `local` stays exactly Layer 1's own default
+    (`LocalArtifactStore`/`LocalMetadataStore`); `s3`/`remote` select
+    `S3ArtifactStore`/`RemoteMetadataStore`. `Client` bundles one of each
+    (`.artifact_storage_client`, `.metadata_client`) as the one object a
+    runtime needs to attach. Utilities that take a store
+    (`resolve_materializer_from_artifact`, `CodeBundler.bundle_and_upload`/
+    `download_and_extract`, `assembler.record_assembly`/
+    `record_assembly_from_dicts`) accept either a raw store or the
+    corresponding client, since a client forwards every call identically.
+* `Metadata service` (`docker/metadata-service/`): a FastAPI service
+    exposing the *entire* `BaseMetadataStore` surface (read and write, unlike
+    the read-only frontend API) over REST, backed by a real
+    `PostgresMetadataStore` - the only process in the whole stack that holds
+    a Postgres DSN. Every other metadata consumer (a `LocalRunner` script
+    configured for the `remote` backend, the frontend's backend, later a
+    remote compute task) talks to it via `RemoteMetadataStore`/
+    `MetadataClient` instead of connecting to Postgres directly - mirroring
+    Metaflow's own metadata-service architecture. Brought up alongside
+    `postgres`/`minio`/`frontend` by
+    `docker-compose/pipelines.docker-compose.yaml`.
 * `CodeBundler`: Packages a project root directory into a single archive
     and uploads it to a `BaseArtifactStore`, once per pipeline run, so every
     task's remote runtime unpacks the exact same code regardless of which
@@ -110,12 +143,14 @@ save/load path for free.
     the third-party equivalent (which packages does a task's runtime need
     installed) remains the `@uv` decorator's job, not this.
 * `LocalRunner`: Executes an `AssembledPipeline` locally - runs each
-    `AssembledTask`'s function in topological order. Only two kinds of
-    value are ever materialized through a `BaseArtifactStore` (a
-    `LocalArtifactStore` by default): each pipeline input, once, before any
-    task runs; and each task's output, once computed - the same save/load
-    mechanism a real, distributed Layer 2 execution will eventually use. No
-    task input is ever independently materialized: a `TaskOutput`- or
+    `AssembledTask`'s function in topological order. Takes an
+    `ArtifactClient`/`MetadataClient` (each defaulting to a fresh one, local
+    backend, if omitted) rather than a raw store directly - see `Client`
+    above. Only two kinds of value are ever materialized through the
+    `ArtifactClient`: each pipeline input, once, before any task runs; and
+    each task's output, once computed - the same save/load mechanism a
+    real, distributed Layer 2 execution will eventually use. No task input
+    is ever independently materialized: a `TaskOutput`- or
     `PipelineInput`-bound input is *loaded* from whichever of those was
     already materialized, never re-saved, and a static/literal input is
     used directly, in memory. Before saving a value, `_reconcile_materializer`
@@ -128,8 +163,8 @@ save/load path for free.
     assembly time would) and raises a `MaterializerMismatchWarning` -
     recoverable, so the run continues, but surfaced loudly since it signals
     either a bug or a type hint that should be widened. Also records this
-    run's bookkeeping into a `BaseMetadataStore` (a `LocalMetadataStore` by
-    default): first, the `AssembledPipeline`'s own structure (via
+    run's bookkeeping into the `MetadataClient`: first, the
+    `AssembledPipeline`'s own structure (via
     `assembler.record_assembly` - a no-op if it's unchanged since the last
     recorded assembly of this pipeline, so assembly history stays one entry
     per actual change rather than one per run), referenced from the run
@@ -147,8 +182,8 @@ save/load path for free.
     another. Not the "runtime scheduler" mentioned in the project overview -
     that is Layer 2's job for remote/distributed execution; `LocalRunner` is
     a local-only, single-process convenience for development and testing.
-* `Frontend` (`docker/frontend/`): A read-only viewer for browsing what a
-    `PostgresMetadataStore`/`S3ArtifactStore` pair holds, as three views: a
+* `Frontend` (`docker/frontend/`): A read-only viewer for browsing what the
+    metadata service/`S3ArtifactStore` hold, as three views: a
     **Pipelines** view (every pipeline name the store knows of, whether
     assembled and/or registered, with an interactive DAG visualization per
     assembly/registration and a click-through per-task detail panel -
@@ -161,18 +196,45 @@ save/load path for free.
     **Artifacts** view (every task output searchable by pipeline and run
     date, independent of drilling through a specific run). Split into a
     FastAPI backend
-    (`docker/frontend/backend/`, a thin REST wrapper around the two stores)
-    and a React + TypeScript + Vite + Tailwind app (`docker/frontend/web/`)
-    that the backend serves as static files - one image, built in two
-    Dockerfile stages (Node builds the app, Python serves it). Talks to the
-    remote store flavours directly and only those, since a separate
-    container has no access to whichever machine ran a `LocalRunner`
-    against a local file/SQLite store. Not part of Layer 1's own package
+    (`docker/frontend/backend/`, a thin REST wrapper) and a React +
+    TypeScript + Vite + Tailwind app (`docker/frontend/web/`) that the
+    backend serves as static files - one image, built in two Dockerfile
+    stages (Node builds the app, Python serves it). Metadata is read
+    through a `MetadataClient` configured for the `remote` backend (talking
+    to the metadata service over HTTP, like any other remote metadata
+    consumer - this backend holds no Postgres connection of its own, unlike
+    before the metadata service existed); artifacts are still read directly
+    from a real `S3ArtifactStore`, since there was never a proxying concern
+    on that side (S3 already has its own secure, IAM-scoped direct-access
+    model) - see `get_metadata_client`/`get_artifact_store` in
+    `docker/frontend/backend/stores.py`. A separate container has no access
+    to whichever machine ran a `LocalRunner` against a local file/SQLite
+    store either way. Not part of Layer 1's own package
     (`bettmensch_ai.pipelines`) - it's a separate consumer of it, the same
     as any other script would be, just packaged as its own docker image.
-    Brought up alongside `postgres`/`minio` by
-    `sdk/test/docker-compose/pipelines.docker-compose.yaml` (`make
+    Brought up alongside `postgres`/`minio`/`metadata-service` by
+    `docker-compose/pipelines.docker-compose.yaml` (`make
     pipelines.up`) for local development.
+* `AWS infrastructure` (`infrastructure/aws/`): a basic, dev-grade Pulumi
+    (Python) stack provisioning genuine AWS counterparts of the local
+    docker-compose stack - an S3 bucket for `S3ArtifactStore`, an RDS
+    Postgres instance for `PostgresMetadataStore`, IAM roles for the
+    frontend's ECS task, an ECR repository for the frontend image, and an
+    ECS service running the frontend. See `infrastructure/aws/README.md`
+    for provisioning/pushing images, and `docs/design-decisions.md` for
+    this stack's explicit "basic" scope cuts (default VPC/no NAT, no ALB,
+    `0.0.0.0/0`-reachable by default).
+
+    AWS Batch/Lambda/Step Functions remote compute - `aws_batch()`/
+    `aws_lambda()`, `StepFunctionsCompiler`/`CompiledPipeline`,
+    `RegisteredPipeline`/`RemoteRunner`, `docker/task-runtime/`'s two
+    Dockerfiles, and the corresponding IAM roles/ECR repos/Batch compute
+    environment this stack used to provision for them - have all been
+    stashed (not deleted): the artifact/metadata `Client` abstractions and
+    the metadata service above are that redesign, now complete;
+    re-integrating this stash (updating it to go through
+    `ArtifactClient`/`MetadataClient` rather than a raw store) is tracked as
+    separate future work. See `stash/aws-remote-compute/README.md`.
 
 ## Layer 2: Backend specific compilers, orchestration, status management and schedulers/event triggers
 
@@ -252,28 +314,49 @@ invent a `dag_structure` convention to carry.
 
 ## Testing remote store backends
 
-`S3ArtifactStore` and `PostgresMetadataStore` need something real to talk
-to - `sdk/test/docker-compose/pipelines.docker-compose.yaml` provides a
-disposable local Postgres and MinIO for exactly that. Three test tiers
-build on it:
+`S3ArtifactStore`, `PostgresMetadataStore`, and the metadata service need
+something real to talk to - `docker-compose/pipelines.docker-compose.yaml`
+provides a disposable local Postgres, MinIO, and metadata service for
+exactly that. Three test tiers build on it:
 
-* `sdk/test/unit/pipelines/`: no real infrastructure at all - pure logic
+* `tests/unit/pipelines/`: no real infrastructure at all - pure logic
     (`LocalArtifactStore`/`LocalMetadataStore` against `tmp_path`,
-    `S3ArtifactStore`/`PostgresMetadataStore`'s wiring against mocks).
-* `sdk/test/integration/pipelines/`: one store against its real backend
+    `S3ArtifactStore`/`PostgresMetadataStore`/`RemoteMetadataStore`'s wiring
+    against mocks, and `ArtifactClient`/`MetadataClient`/`Client` building
+    the right default store from config and forwarding calls correctly -
+    `test_remote_metadata_store.py`/`test_client.py`).
+* `tests/integration/pipelines/`: one store/client against its real backend
     in isolation (`S3ArtifactStore` against real MinIO,
-    `PostgresMetadataStore` against real Postgres).
-* `sdk/test/functional/pipelines/`: a full `LocalRunner` pipeline run
+    `PostgresMetadataStore` against real Postgres, `ArtifactClient`
+    configured for `s3` against real MinIO, and `RemoteMetadataStore`
+    against a real instance of the metadata service's FastAPI app running
+    in a background thread of the test process - itself backed by real
+    Postgres - `test_remote_metadata_store_integration.py`/
+    `test_artifact_client_integration.py`).
+* `tests/functional/pipelines/`: a full `LocalRunner` pipeline run
     across all 4 valid `BaseArtifactStore` x `BaseMetadataStore`
     combinations (local/local, local/postgres, s3/local, s3/postgres),
     independently re-loading each task's output from the artifact store
     using only the key the metadata store recorded for it - proving the two
     stores actually agree on what happened, not just that `LocalRunner`
-    claims they do.
+    claims they do - plus a `LocalRunner(ArtifactClient, MetadataClient)`
+    run against the real, docker-compose-*deployed* metadata service (not
+    the integration tier's in-process one) and real MinIO, independently
+    re-fetched both via `MetadataClient` and via one raw `httpx` call
+    directly against the service's own API
+    (`test_metadata_service_e2e.py`) - proving the full
+    `client -> service -> Postgres` path end to end.
 
-`sdk/test/conftest.py`'s `postgres_dsn`/`s3_config` fixtures probe
-reachability once per test session (not per test - each probe takes a
-few seconds when unreachable, so per-test would add up fast) and skip,
-independently per backend, rather than fail, if the compose stack isn't
-up - so `local/local` always runs, and having only one of the two services
-up still runs everything that only needs that one.
+`tests/conftest.py`'s `postgres_dsn`/`s3_config`/`metadata_service_url`
+fixtures probe reachability once per test session (not per test - each
+probe takes a few seconds when unreachable, so per-test would add up fast)
+and skip, independently per backend, rather than fail, if the compose stack
+isn't up - so `local/local` always runs, and having only some of the
+services up still runs everything that only needs those.
+
+A fourth tier existed briefly, `aws`-marked, exercising `aws_batch()`/
+`aws_lambda()` ad-hoc execution and the full `StepFunctionsCompiler.compile
+-> register -> RemoteRunner.run -> deregister` lifecycle against a
+genuinely provisioned AWS stack - the one place in this project's test
+suite where `boto3` wasn't mocked at all. It's been stashed along with the
+remote-compute code it tested - see `stash/aws-remote-compute/README.md`.

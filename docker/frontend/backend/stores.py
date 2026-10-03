@@ -1,24 +1,25 @@
-"""Cached connections to the stores this API reads from.
+"""Cached connections to the stores/clients this API reads from.
 
-`PostgresMetadataStore`/`S3ArtifactStore` are cheap to construct (they don't
-hold a persistent connection open - see their docstrings), but re-reading
-config env vars and re-running schema DDL on every request is wasteful.
-`lru_cache` gives us a process-wide singleton of each, created lazily on
-first use.
+`S3ArtifactStore` is cheap to construct (it doesn't hold a persistent
+connection open - see its docstring), but re-reading config env vars on
+every request is wasteful. `lru_cache` gives us a process-wide singleton,
+created lazily on first use.
+
+Metadata access goes through a `MetadataClient` rather than a
+`PostgresMetadataStore` directly - this API never holds its own Postgres
+connection; it talks to the metadata service (`docker/metadata-service/`)
+over HTTP, the same way every other metadata consumer does.
 """
 
 from functools import lru_cache
 
 from bettmensch_ai.pipelines.artifact_store import S3ArtifactStore, S3ArtifactStoreConfig
-from bettmensch_ai.pipelines.metadata_store import (
-    PostgresMetadataStore,
-    PostgresMetadataStoreConfig,
-)
+from bettmensch_ai.pipelines.client import MetadataClient
 
 
 @lru_cache
-def get_metadata_store() -> PostgresMetadataStore:
-    return PostgresMetadataStore(PostgresMetadataStoreConfig())
+def get_metadata_client() -> MetadataClient:
+    return MetadataClient()
 
 
 @lru_cache

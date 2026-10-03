@@ -1,0 +1,8 @@
+# Real stack config/secrets - copy Pulumi.dev.yaml.example instead.
+Pulumi.*.yaml
+!Pulumi.dev.yaml.example
+.pulumi-passphrase.txt
+
+venv/
+__pycache__/
+*.pyc

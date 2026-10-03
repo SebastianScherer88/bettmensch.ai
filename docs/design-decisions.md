@@ -1079,3 +1079,201 @@ contradicting it.
   violet/amber, deliberately different from the running/succeeded/failed
   status palette already in use elsewhere, to avoid implying a status
   meaning that isn't there).
+
+* **`sdk/test/conftest.py`'s `s3_config` fixture now defaults to the same
+  `bettmensch-ai-artifacts` bucket real usage does, not a separate
+  `bettmensch-ai-test` one.** Caught by a direct question: why would the
+  artifact store - a property of the shared local dev stack - have a
+  test-only instance when the metadata store (the same stack's other half)
+  never did? There wasn't a good answer. `postgres_metadata_store` already
+  defaults to the *same* database real usage does, with the fixture's own
+  docstring stating the reason explicitly: tests isolate their own data via
+  `unique_key_prefix`/a fresh `pipeline_run_id` in every key, not via a
+  separate store. `s3_config` used a separate bucket anyway - an
+  inconsistency, not a deliberate second isolation strategy, and one with a
+  real cost: a test run's bookkeeping (Postgres) was always visible from the
+  frontend, but that same run's actual artifacts (S3) lived in a bucket the
+  frontend never looked at, so its outputs silently 404'd if anyone clicked
+  into them from the UI - exactly what happened when this was investigated.
+  **Supersedes** the "test's own disposable bucket" framing in the
+  `createbuckets` decision above - `createbuckets` itself is unaffected
+  (it still provisions `bettmensch-ai-artifacts` for local-dev usage), only
+  the test suite's fixture default changed to point at that same bucket
+  instead of creating its own. Kept the `BETTMENSCH_AI_TEST_S3_BUCKET`
+  override (mirroring `postgres_dsn`'s own override), so an environment that
+  actually wants isolated test infrastructure (e.g. a shared, long-lived CI
+  Postgres/MinIO where test pollution would be a real problem) can still
+  opt into a separate bucket explicitly - it's just no longer the default
+  for this project's single-shared-local-stack setup.
+
+* **`CompiledPipeline.register()` gained a required, keyword-only
+  `state_machine_role_arn` parameter, passed through to
+  `create_state_machine(..., roleArn=...)`.** Real AWS's own
+  `stepfunctions.create_state_machine` API requires `roleArn` (the role
+  Step Functions itself assumes to call `batch:SubmitJob`/
+  `lambda:InvokeFunction` on its own initiative); this was silently absent
+  before, undetected because every existing test mocked `boto3.client`
+  directly rather than calling real AWS - caught only while building
+  `infrastructure/aws` and its AWS-gated test suite (`test_aws_stepfunctions_
+  functional.py`), the first thing in this project to actually exercise
+  this call for real. Made required (not defaulted/optional) rather than
+  silently omitted when absent, since a state machine created without one
+  would be entirely non-functional - there's no reasonable fallback.
+* **`AwsBatchConfig`/`AwsLambdaConfig` gained an `environment: Dict[str,
+  str]` field, threaded into `_register_batch_job_definition`'s
+  `containerProperties.environment`/`_create_lambda_function`'s
+  `Environment.Variables`.** Neither previously configured the created
+  resource's environment at all, so a dynamically-created Batch job/Lambda
+  function had no way to learn which S3 bucket/region to talk to -
+  `remote_entrypoint.py` constructs `S3ArtifactStore(S3ArtifactStoreConfig())`
+  with no defaults, reading purely from `BETTMENSCH_AI_S3_ARTIFACT_STORE_*`
+  environment variables. Documented as registration-only, unused by ad-hoc
+  execution, the same pattern `image`/`job_role_arn` already use - an
+  ad-hoc-targeted job definition/function already has its own environment,
+  set whenever it was originally registered.
+* **AWS Batch job definitions this project registers are always Fargate-
+  valid**: `platformCapabilities=["FARGATE"]`, a `networkConfiguration`
+  with `assignPublicIp` enabled, and non-empty `VCPU`/`MEMORY`
+  `resourceRequirements` (falling back to new `AwsBatchConfig.default_vcpu`/
+  `.default_memory` fields - Fargate-valid minimal values - when a task
+  declares no `@resource(...)` of its own). Fargate is the only Batch
+  compute environment type `infrastructure/aws` provisions (see below - no EC2
+  fleet to size/manage), and Fargate rejects a job definition missing any
+  of these outright, unlike EC2-backed Batch where they're optional; this
+  stack's subnets have no NAT gateway, so a Fargate task needs its own
+  public IP to reach ECR/S3/RDS at all. Accepted limitation: a
+  GPU-requiring task cannot register onto this stack's compute environment
+  (Fargate doesn't support Batch GPU jobs) - out of scope for a "basic"
+  stack, revisit if a concrete need for one arrives.
+* **`infrastructure/aws`: a basic AWS stack, in Pulumi (Python), not Terraform.**
+  Confirmed directly with the user rather than assumed: this machine has
+  Pulumi's CLI installed and no Terraform CLI, and the rest of this
+  project is all-Python (the SDK, the frontend's FastAPI backend) - Pulumi
+  keeps infrastructure as ordinary, importable, testable Python rather than
+  introducing a second, non-Python toolchain purely for this. v1's own
+  `infrastructure/terraform/` (a Kubernetes/Argo stack, unrelated to this)
+  was removed outright in an earlier decision (see below) and isn't being
+  revived; this is a new, independent stack for Layer 2's AWS-flavoured
+  pieces specifically.
+* **`infrastructure/aws` is deliberately "basic"/dev-grade, not production-hardened -
+  several concrete scope cuts, each accepted explicitly rather than
+  silently decided:** (1) the account's **default VPC and its default
+  (public) subnets**, no new VPC, no NAT gateway - RDS/Batch(Fargate)/ECS
+  all sit in public subnets with security groups (not network isolation)
+  doing the access control, and the default `allowedCidr` is `0.0.0.0/0` so
+  a developer's own `PostgresMetadataStoreConfig`/browser can reach them
+  directly, mirroring how the local docker-compose stack's forwarded ports
+  already work; (2) **no load balancer for the frontend** - its ECS service
+  gets a public IP directly, no stable DNS/HTTPS; (3) **Fargate-only Batch**
+  (see above) - no EC2 compute resources, so no GPU Batch jobs; (4) a
+  **fixed, pre-created Batch job definition + Lambda function**
+  (`infrastructure/aws/test_fixtures.py`), dedicated solely to the new AWS-gated
+  *ad-hoc* execution test (`test_aws_remote_compute_functional.py`) - ad-hoc
+  execution never provisions its own resources (existing rule, matching
+  `S3ArtifactStore` never creating its own bucket), so exercising that path
+  for real needs something pre-existing to run against; the *dynamic*
+  create/register/deregister path is exercised by a separate test
+  (`test_aws_stepfunctions_functional.py`) against resources it creates and
+  tears down itself, proving `CompiledPipeline.register()`/`.deregister()`
+  work end to end against real AWS, not just a mocked `boto3.client`.
+
+* **AWS Batch/Lambda/Step Functions remote compute stashed (not deleted)
+  to `stash/aws-remote-compute/`, on explicit request, in favor of
+  redesigning the artifact/metadata access pattern first.** The request:
+  introduce a `Client` facade in front of both `BaseArtifactStore` and
+  `BaseMetadataStore` - for metadata specifically, the remote-deployment
+  case routes through a new, always-on metadata service (its own ECS
+  deployment) rather than every worker holding a direct Postgres
+  connection, mirroring Metaflow's own architecture; the frontend's own
+  backend becomes a client of that service too, not a special direct-DB
+  consumer. Every piece of the remote-compute layer constructs or depends
+  on today's stores directly - `remote_entrypoint.py` builds its own
+  `S3ArtifactStore`, `CompiledPipeline.register()` calls `metadata_store.
+  register_pipeline(...)` directly, `RemoteRunner` likewise - so keeping
+  three layers (Batch, Lambda, Step Functions) compatible with each step of
+  that redesign would have meant updating all of them in lockstep with an
+  abstraction that wasn't settled yet. Stashing removes that drag without
+  losing the work: everything moved was real, working, AWS-verified code
+  (an actual `pulumi up`, actual Batch/Lambda/Step Functions execution),
+  not a half-finished draft. `stash/aws-remote-compute/README.md` maps
+  every moved file back to its original location and lists what each
+  active file shed to make room for it (`compute/__init__.py`, the
+  top-level `pipelines/__init__.py`, `runner/__init__.py`/`exceptions.py`,
+  `tests/conftest.py`, `infrastructure/aws/{iam,registry,__main__}.py`/
+  `aws.makefile`, `pytest.ini`'s `aws` marker). `compute/
+  {base_compute_backend,local_compute_backend}.py` and `runner/
+  task_execution.py` stayed active - they're generic (every task, local or
+  remote, runs through `execute_task`/`BaseComputeBackend`), not
+  AWS-specific, so nothing about the redesign threatens them. Also
+  discovered in the process: the AWS sandbox account used for this work
+  (shared with other tools - sibling S3 buckets for Metaflow/ZenML/Prefect/
+  Terraform testing were visible in the same account) appears to reset
+  periodically - the real `pulumi up`-created resources were gone, and
+  Pulumi's own state had independently reverted to 0 resources, by the time
+  this stash work began. State and reality agreed (both empty), so this
+  was a non-event for the stash itself, but it's a reason to re-verify
+  rather than assume anything in the stash still exists in AWS when it's
+  eventually brought back.
+
+* **The `Client`/metadata-service redesign (above) is implemented: `Client`
+  is a distinct type, never a store subclass.** First draft made
+  `ArtifactClient`/`MetadataClient` subclass `BaseArtifactStore`/
+  `BaseMetadataStore` and delegate to an internal `self._store` - rejected
+  on review: "the client classes never talk to any storage layer directly,
+  they only talk to the store (meta or artifact)," i.e. a client
+  impersonating the store it wraps defeats the point of having two
+  distinct types at all. Corrected to plain classes holding `self.store`,
+  with every public store method mirrored as an explicit one-line
+  forwarding method (`def save(self, ...): return self.store.save(...)`)
+  - same vocabulary, no inheritance relationship, so a client and a store
+  can never be type-confused for one another. Confirmed with two follow-up
+  decisions: `ArtifactClient`/`MetadataClient` mirror their store's methods
+  exactly (same names/signatures) rather than exposing a narrower surface;
+  and `LocalRunner`'s constructor takes `artifact_client`/`metadata_client`
+  (defaulting to a fresh `ArtifactClient()`/`MetadataClient()`, themselves
+  defaulting to the `local` backend), not a raw store - a runtime holds a
+  `Client`, never a store directly, per the original design.
+* **`httpx` added as a hard dependency, not gated behind an extra.**
+  `RemoteMetadataStore` needs an HTTP client, and - unlike `fastapi`/
+  `uvicorn` (the `api` extra, needed only by the two FastAPI processes,
+  `docker/frontend` and `docker/metadata-service`) - it must be usable by
+  *any* process that might run a `LocalRunner` configured for the `remote`
+  metadata backend, not just those two. Chose `httpx` over `requests`
+  specifically for its typed `Client`/`ASGITransport` API, even though the
+  latter ended up unused in practice (see below).
+* **The metadata service exposes the entire `BaseMetadataStore` surface,
+  read and write - unlike the frontend's existing read-only API.** It's the
+  one process in the stack holding a Postgres DSN; every other metadata
+  consumer (a `LocalRunner` script configured for `remote`, the frontend's
+  backend, later a remote compute task) goes through it instead of
+  connecting to Postgres directly, mirroring Metaflow's own
+  metadata-service architecture. Its response schemas are duplicated from
+  (not imported from) `docker/frontend/backend/schemas.py`, keeping the two
+  Docker images independently deployable rather than coupling their
+  release cycles over a handful of pydantic models.
+* **`ArtifactClient`/`MetadataClient` stay direct for artifacts, go through
+  a service for metadata - not symmetric, and deliberately so.** S3 already
+  has its own secure, IAM-scoped direct-access model, so there was never a
+  proxying concern on the artifact side the way there was for every worker
+  holding its own raw Postgres connection; `ArtifactClient` talks straight
+  to `BaseArtifactStore` (`local`/`s3`) the same way it always did.
+  Utilities that used to take a raw store positionally
+  (`resolve_materializer_from_artifact`, `CodeBundler.bundle_and_upload`/
+  `download_and_extract`, `assembler.record_assembly`/
+  `record_assembly_from_dicts`) now accept either a store or the
+  corresponding client (`Union[BaseArtifactStore, "ArtifactClient"]`/
+  `Union[BaseMetadataStore, "MetadataClient"]`), since a client forwards
+  every call identically and `LocalRunner` only ever has a client to pass
+  them.
+* **`RemoteMetadataStore`'s integration test runs a real uvicorn instance
+  in a background thread, not `httpx.ASGITransport`.** The plan's original
+  intent was an in-process ASGI transport (no real network/subprocess) -
+  but `httpx.ASGITransport` only implements the *async* request path, and
+  `RemoteMetadataStore` opens a fresh *sync* `httpx.Client` per call (to
+  stay a drop-in match for `PostgresMetadataStore`'s own "no long-lived
+  connection" choice); a sync client can't be backed by an async-only
+  transport. A real (but background-thread, same-process, ephemeral-port)
+  uvicorn server sidesteps that mismatch while still needing no separate
+  container - `tests/integration/pipelines/
+  test_remote_metadata_store_integration.py` documents this trade-off
+  directly in its own module docstring.
