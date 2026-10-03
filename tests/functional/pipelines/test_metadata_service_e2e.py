@@ -20,6 +20,7 @@ tests/conftest.py skip this test otherwise).
 import httpx
 import pytest
 from bettmensch_ai.pipelines.client import ArtifactClient, MetadataClient
+from bettmensch_ai.pipelines.artifact_store import S3ArtifactStore
 from bettmensch_ai.pipelines.metadata_store import (
     RemoteMetadataStore,
     RemoteMetadataStoreConfig,
@@ -28,6 +29,7 @@ from bettmensch_ai.pipelines.metadata_store import (
 from bettmensch_ai.pipelines.pipeline import Pipeline, pipeline
 from bettmensch_ai.pipelines.runner import LocalRunner
 from bettmensch_ai.pipelines.task import task
+from bettmensch_ai.pipelines.materializers import resolve_materializer_from_artifact
 
 pytestmark = pytest.mark.functional
 
@@ -46,7 +48,7 @@ def _metadata_service_e2e_pipeline(a: int, b: int, c: int = 3):
 def test_pipeline_run_via_metadata_service_is_visible_through_both_the_client_and_the_raw_api(
     metadata_service_url, s3_config, unique_key_prefix
 ):
-    artifact_client = ArtifactClient(store=_s3_store(s3_config))
+    artifact_client = ArtifactClient(store=S3ArtifactStore(s3_config))
     metadata_client = MetadataClient(
         store=RemoteMetadataStore(
             RemoteMetadataStoreConfig(base_url=f"{metadata_service_url}/api")
@@ -79,7 +81,7 @@ def test_pipeline_run_via_metadata_service_is_visible_through_both_the_client_an
     )
     assert len(add1_outputs) == 1
     final_key = add1_outputs[0].artifact_key
-    final_materializer = _resolve_materializer(artifact_client, final_key)
+    final_materializer = resolve_materializer_from_artifact(artifact_client, final_key)
     assert artifact_client.load(final_materializer, final_key) == 8
 
     # Independently re-fetch the same run directly from the service's own
@@ -102,15 +104,3 @@ def test_pipeline_run_via_metadata_service_is_visible_through_both_the_client_an
     raw_task_names = {t["task_name"] for t in raw_task_runs_response.json()}
 
     assert raw_task_names == set(task_runs)
-
-
-def _s3_store(s3_config):
-    from bettmensch_ai.pipelines.artifact_store import S3ArtifactStore
-
-    return S3ArtifactStore(s3_config)
-
-
-def _resolve_materializer(artifact_client, key):
-    from bettmensch_ai.pipelines.materializers import resolve_materializer_from_artifact
-
-    return resolve_materializer_from_artifact(artifact_client, key)
